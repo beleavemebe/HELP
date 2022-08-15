@@ -1,4 +1,4 @@
-package company.vk.education.siriusapp.theme
+package company.vk.education.siriusapp.ui.theme
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Shapes

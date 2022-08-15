@@ -1,4 +1,4 @@
-package company.vk.education.siriusapp
+package company.vk.education.siriusapp.ui
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
