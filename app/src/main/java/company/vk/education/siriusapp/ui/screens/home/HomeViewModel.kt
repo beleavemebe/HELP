@@ -13,17 +13,18 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val handle: SavedStateHandle,
     private val tripsRepository: TripsRepository,
-) : BaseViewModel<HomeViewState, HomeScreenError>() {
-    private val _viewState = MutableStateFlow(HomeViewState())
-    override val viewState: StateFlow<HomeViewState> = _viewState
+) : BaseViewModel<HomeViewState, HomeScreenIntent, HomeScreenError>() {
+    override val initialState: HomeViewState
+        get() = HomeViewState()
+
+    override fun accept(intent: HomeScreenIntent): Any {
+        return when (intent) {
+            else -> {}
+        }
+    }
 
     override fun mapThrowable(throwable: Throwable): HomeScreenError {
         Log.d("HomeViewModel", "$throwable")
         return HomeScreenError.Unknown
     }
-
-    private inline fun reduce(f: (HomeViewState) -> HomeViewState) {
-        _viewState.value = f(viewState.value)
-    }
-
 }

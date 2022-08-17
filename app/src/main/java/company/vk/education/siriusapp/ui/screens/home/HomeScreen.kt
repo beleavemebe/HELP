@@ -39,6 +39,7 @@ fun HomeScreen(
     BottomSheetScaffold(
         sheetContent = {
             Text(text = state.toString())
+            Trips(state.value.trips)
         }
     ) {
         AndroidView(factory = { mapView })
