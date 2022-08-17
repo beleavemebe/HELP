@@ -47,6 +47,19 @@ fun HomeScreen(
 }
 
 @Composable
+@OptIn(ExperimentalMaterialApi::class)
+fun MainScreen(
+    Content: @Composable () -> Unit,
+    SheetContent: @Composable () -> Unit,
+) {
+    BottomSheetScaffold(
+        sheetContent = { SheetContent() }
+    ) {
+        Content()
+    }
+}
+
+@Composable
 fun ParticipantsRow(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit

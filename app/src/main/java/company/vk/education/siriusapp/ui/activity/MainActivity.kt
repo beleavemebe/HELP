@@ -4,11 +4,16 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.viewinterop.AndroidView
 import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.mapview.MapView
 import company.vk.education.siriusapp.ui.screens.home.HomeScreen
 import company.vk.education.siriusapp.ui.screens.home.HomeViewModel
+import company.vk.education.siriusapp.ui.screens.home.MainScreen
+import company.vk.education.siriusapp.ui.screens.home.Trips
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -22,8 +27,22 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         mapView = MapView(this)
         setContent {
-            HomeScreen(mapView, homeViewModel.viewState.collectAsState())
+            MainScreen(
+                Content = { Map() },
+                SheetContent = { BottomSheet() }
+            )
         }
+    }
+
+    @Composable
+    private fun Map() {
+        AndroidView(factory = { mapView })
+    }
+
+    @Composable
+    private fun BottomSheet() {
+//        Text(text = state.toString())
+//        Trips(state.value.trips)
     }
 
     override fun onStart() {
