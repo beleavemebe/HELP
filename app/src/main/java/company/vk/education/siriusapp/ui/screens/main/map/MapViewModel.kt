@@ -34,7 +34,7 @@ class MapViewModel @Inject constructor(
 
     override fun accept(intent: MainScreenIntent.MapIntent): Any {
         return when (intent) {
-            is MainScreenIntent.MapIntent.ShowProfile -> authService.authViaVk()
+            is MainScreenIntent.MapIntent.ShowProfile -> TODO() //authService.authViaVk()
         }
     }
 }

@@ -1,5 +1,6 @@
 package company.vk.education.siriusapp.ui.screens.main.bottomsheet
 
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
@@ -16,7 +17,7 @@ fun BottomSheet(
     state: State<MainViewState.BottomSheetState>
 ) {
     when (state.value) {
-        is MainViewState.BottomSheetState.SearchTrips -> TODO()
-        is MainViewState.BottomSheetState.CreateTrip -> TODO()
+        is MainViewState.BottomSheetState.SearchTrips -> Text("Search") //TODO()
+        is MainViewState.BottomSheetState.CreateTrip -> Text("Create") //TODO()
     }
 }
