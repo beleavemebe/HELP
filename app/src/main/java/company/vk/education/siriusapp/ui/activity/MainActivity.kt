@@ -1,5 +1,6 @@
 package company.vk.education.siriusapp.ui.activity
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -19,6 +20,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         MapKitFactory.initialize(this)
+        startActivity(Intent(this, LoginActivity::class.java))
         super.onCreate(savedInstanceState)
         mapView = MapView(this)
         setContent {
