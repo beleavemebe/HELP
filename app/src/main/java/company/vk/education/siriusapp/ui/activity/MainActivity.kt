@@ -5,11 +5,13 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material.Text
+import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.viewinterop.AndroidView
 import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.mapview.MapView
+import company.vk.education.siriusapp.domain.model.Location
 import company.vk.education.siriusapp.ui.screens.home.HomeScreen
 import company.vk.education.siriusapp.ui.screens.home.HomeViewModel
 import company.vk.education.siriusapp.ui.screens.home.MainScreen
@@ -32,6 +34,8 @@ class MainActivity : AppCompatActivity() {
                 SheetContent = { BottomSheet() }
             )
         }
+        homeViewModel.consume("Юрга, пр-кт победы 30а")
+        homeViewModel.consume(Location(37.611446, 55.760256))
     }
 
     @Composable

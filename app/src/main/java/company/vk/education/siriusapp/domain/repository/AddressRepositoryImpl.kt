@@ -1,13 +1,32 @@
 package company.vk.education.siriusapp.domain.repository
 
+import company.vk.education.siriusapp.BuildConfig
+import company.vk.education.siriusapp.data.api.GeocoderAPI
+import company.vk.education.siriusapp.data.api.GeocoderMapper
 import company.vk.education.siriusapp.domain.model.Location
+import company.vk.education.siriusapp.domain.repository.AddressRepository
+import javax.inject.Inject
 
-object AddressRepositoryImpl : AddressRepository {
-    override fun getLocationOfAnAddress(address: String): Location {
-        return Location.LOCATION_UNKNOWN
+class AddressRepositoryImpl @Inject constructor(
+    private val geocoderAPI: GeocoderAPI,
+    private val geocoderMapper: GeocoderMapper
+) : AddressRepository {
+    override suspend fun getLocationOfAnAddress(address: String): Location {
+        return geocoderMapper.map(
+            geocoderAPI.convert(
+                address,
+                BuildConfig.GEOCODER_API_KEY
+            )
+        ).location
     }
 
-    override fun getAddressOfLocation(location: Location): String {
-        return "Not yet implemented"
+    override suspend fun getAddressOfLocation(location: Location): String {
+        return geocoderMapper.map(
+            geocoderAPI.convert(
+                "${location.latitude} ${location.longitude}",
+                BuildConfig.GEOCODER_API_KEY
+            )
+        ).name
     }
+
 }
