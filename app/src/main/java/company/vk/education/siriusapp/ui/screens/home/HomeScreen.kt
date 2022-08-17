@@ -32,22 +32,6 @@ import java.text.SimpleDateFormat
 
 @Composable
 @OptIn(ExperimentalMaterialApi::class)
-fun HomeScreen(
-    mapView: MapView,
-    state: State<HomeViewState>
-) {
-    BottomSheetScaffold(
-        sheetContent = {
-            Text(text = state.toString())
-            Trips(state.value.trips)
-        }
-    ) {
-        AndroidView(factory = { mapView })
-    }
-}
-
-@Composable
-@OptIn(ExperimentalMaterialApi::class)
 fun MainScreen(
     Content: @Composable () -> Unit,
     SheetContent: @Composable () -> Unit,

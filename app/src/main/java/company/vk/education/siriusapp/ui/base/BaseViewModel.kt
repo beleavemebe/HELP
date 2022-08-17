@@ -16,30 +16,29 @@ abstract class BaseViewModel<State : BaseViewState, Intent : BaseViewIntent, Err
     private val _viewState: MutableStateFlow<State> by lazy { MutableStateFlow(initialState) }
     val viewState: StateFlow<State> = _viewState
 
-    abstract fun accept(intent: Intent): Any
-
     @ShitiusDsl
     protected fun reduce(f: (prevState: State) -> State) {
         val newState = f(_viewState.value)
         _viewState.value = newState
     }
 
-    abstract fun mapThrowable(throwable: Throwable): Err
+    open fun accept(intent: Intent): Any = Unit
+
+    open fun mapThrowable(throwable: Throwable): Err = error(throwable.toString())
 
     private val _errors = MutableSharedFlow<Err>(replay = 1)
-
     val errors: Flow<Err> = _errors
-
-    fun execute(block: suspend () -> Unit) {
-        viewModelScope.launch(exceptionHandler) {
-            block()
-        }
-    }
 
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
         viewModelScope.launch {
             val err = mapThrowable(throwable)
             _errors.emit(err)
+        }
+    }
+
+    protected fun execute(block: suspend () -> Unit) {
+        viewModelScope.launch(exceptionHandler) {
+            block()
         }
     }
 }

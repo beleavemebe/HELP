@@ -1,4 +1,4 @@
-package company.vk.education.siriusapp.domain.repository
+package company.vk.education.siriusapp.data
 
 import company.vk.education.siriusapp.BuildConfig
 import company.vk.education.siriusapp.data.api.GeocoderAPI

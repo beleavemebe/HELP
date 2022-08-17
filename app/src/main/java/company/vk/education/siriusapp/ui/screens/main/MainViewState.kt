@@ -8,10 +8,11 @@ import java.util.*
 sealed class MainViewState : BaseViewState {
     sealed class MapViewState : MainViewState() {
         data class Idle(
-            val profilePic: String,
+            val profilePicUrl: String? = null,
         ) : MapViewState()
 
         data class ChoosingAddress(
+            val profilePicUrl: String? = null,
             val addressToChoose: AddressToChoose,
             val currentlyChosenAddress: String
         ) : MapViewState()
@@ -19,11 +20,11 @@ sealed class MainViewState : BaseViewState {
 
     sealed class BottomSheetState : MainViewState() {
         data class SearchTrips(
-            val startAddress: String,
-            val endAddress: String,
-            val date: Date,
-            val time: HourAndMinute,
-            val trips: List<Trip>
+            val startAddress: String = "",
+            val endAddress: String = "",
+            val date: Date = Date(),
+            val time: HourAndMinute = HourAndMinute(),
+            val trips: List<Trip>? = null
         ) : BottomSheetState()
 
         data class CreateTrip(
@@ -34,6 +35,6 @@ sealed class MainViewState : BaseViewState {
             val freePlaces: Int,
             val taxiService: TaxiService,
             val verifyInstantly: Boolean
-        )
+        ) : BottomSheetState()
     }
 }
