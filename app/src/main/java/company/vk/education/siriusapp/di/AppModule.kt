@@ -1,6 +1,6 @@
 package company.vk.education.siriusapp.di
 
-import company.vk.education.siriusapp.data.FakeAuthService
+import company.vk.education.siriusapp.data.AuthServiceImpl
 import company.vk.education.siriusapp.data.TripsRepositoryImpl
 import company.vk.education.siriusapp.domain.repository.AddressRepository
 import company.vk.education.siriusapp.data.AddressRepositoryImpl
@@ -21,5 +21,5 @@ object AppModule {
     fun provideGeocoder(addressRepositoryImpl: AddressRepositoryImpl): AddressRepository = addressRepositoryImpl
 
     @Provides
-    fun provideAuthService(): AuthService = FakeAuthService()
+    fun provideAuthService(): AuthService = AuthServiceImpl()
 }

@@ -13,7 +13,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MapViewModel @Inject constructor(
-    authService: AuthService
+    private val authService: AuthService
 ) : BaseViewModel<MainViewState.MapViewState, MainScreenIntent.MapIntent, Nothing>() {
 
     init {
@@ -34,7 +34,7 @@ class MapViewModel @Inject constructor(
 
     override fun accept(intent: MainScreenIntent.MapIntent): Any {
         return when (intent) {
-            is MainScreenIntent.MapIntent.ShowProfile -> TODO("navigate to auth or smth")
+            is MainScreenIntent.MapIntent.ShowProfile -> authService.authViaVk()
         }
     }
 }
