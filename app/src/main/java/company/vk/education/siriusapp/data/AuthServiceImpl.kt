@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
 class AuthServiceImpl @Inject constructor(
-    @ApplicationContext private val context: Context
 ) : AuthService {
     override val authState: StateFlow<AuthState>
         get() = MutableStateFlow(AuthState())
