@@ -16,7 +16,7 @@ fun BottomSheet(
     state: State<MainViewState.BottomSheetState>
 ) {
     when (state.value) {
-        is MainViewState.BottomSheetState.SearchTrips -> TODO()
-        is MainViewState.BottomSheetState.CreateTrip -> TODO()
+        is MainViewState.BottomSheetState.SearchTrips -> {}
+        is MainViewState.BottomSheetState.CreateTrip -> {}
     }
 }
