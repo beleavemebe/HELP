@@ -22,6 +22,7 @@ import com.yandex.mapkit.mapview.MapView
 import company.vk.education.siriusapp.R
 import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
 import company.vk.education.siriusapp.ui.screens.main.MainViewState
+import company.vk.education.siriusapp.ui.theme.Spacing16dp
 
 @Composable
 fun MapScreen(
@@ -62,7 +63,7 @@ fun ProfileView(url: String? = null, onClick: () -> Unit) {
         ),
         contentScale = ContentScale.Crop,
         modifier = Modifier
-            .padding(top = 16.dp, end = 16.dp)
+            .padding(top = Spacing16dp, end = Spacing16dp)
             .size(40.dp)
             .clip(CircleShape)
             .clickable { onClick() }
