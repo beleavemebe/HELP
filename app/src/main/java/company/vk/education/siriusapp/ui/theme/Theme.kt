@@ -40,7 +40,7 @@ fun AppTheme(
 
     MaterialTheme(
         colors = colors,
-        typography = Typography,
+        typography = AppTypography.Typography,
         shapes = Shapes,
         content = content
     )
