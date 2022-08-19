@@ -6,8 +6,8 @@ import javax.inject.Inject
 
 class GeocoderMapper @Inject constructor() : Mapper<Response, AddressResponse> {
     override fun map(arg: Response): AddressResponse =
-        with(arg.response.collection.members[0].geoObject) {
+        arg.response.collection.members.firstOrNull()?.geoObject?.run {
             val (lon, lat) = point.pos.split(" ").map { it.toDouble() }
-            return AddressResponse(name, Location(lat, lon))
-        }
+            AddressResponse(name, Location(lat, lon))
+        } ?: AddressResponse.EMPTY_ADDRESS
 }

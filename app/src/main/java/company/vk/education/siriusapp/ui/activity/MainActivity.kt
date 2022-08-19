@@ -3,6 +3,7 @@ package company.vk.education.siriusapp.ui.activity
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.mapview.MapView
 import company.vk.education.siriusapp.ui.screens.main.MainScreen
@@ -10,10 +11,13 @@ import company.vk.education.siriusapp.domain.service.AuthService
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.BottomSheetScreen
 import company.vk.education.siriusapp.ui.screens.main.map.MapScreen
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+
     private lateinit var mapView: MapView
 
     @Inject

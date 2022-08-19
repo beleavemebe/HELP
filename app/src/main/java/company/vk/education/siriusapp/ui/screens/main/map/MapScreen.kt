@@ -18,8 +18,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.yandex.mapkit.ScreenPoint
 import com.yandex.mapkit.mapview.MapView
 import company.vk.education.siriusapp.R
+import company.vk.education.siriusapp.domain.model.Location
 import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
 import company.vk.education.siriusapp.ui.screens.main.MainViewState
 import company.vk.education.siriusapp.ui.theme.Spacing16dp
@@ -28,17 +30,36 @@ import company.vk.education.siriusapp.ui.theme.Spacing16dp
 fun MapScreen(
     mapView: MapView,
     viewModel: MapViewModel = viewModel()
-) = Map(
-    mapView = mapView,
-    state = viewModel.viewState.collectAsState(),
-    onProfileClicked = { viewModel.accept(MainScreenIntent.MapIntent.ShowProfile) }
-)
+) {
+    Map(
+        mapView = mapView,
+        state = viewModel.viewState.collectAsState(),
+        onLocationChosen = {
+            viewModel.accept(
+                MainScreenIntent.MapIntent.LocationChosen(
+                    Location(
+                        mapView.map.cameraPosition.target.latitude,
+                        mapView.map.cameraPosition.target.longitude
+                    )
+                )
+            )
+        },
+        onProfileClicked = { viewModel.accept(MainScreenIntent.MapIntent.ShowProfile) }
+    )
+    viewModel.observeLocation(mapView)
+}
 
 @Composable
-fun Map(mapView: MapView, state: State<MainViewState.MapViewState>, onProfileClicked: () -> Unit) {
+fun Map(
+    mapView: MapView,
+    state: State<MainViewState.MapViewState>,
+    onLocationChosen: () -> Unit,
+    onProfileClicked: () -> Unit
+) {
     Box(contentAlignment = Alignment.TopEnd) {
         AndroidView(factory = { mapView })
         ProfileView(state = state.value, onClick = onProfileClicked)
+        ChoosingScreen(state = state.value, map = mapView, onClick = onLocationChosen)
     }
 }
 
@@ -64,7 +85,7 @@ fun ProfileView(url: String? = null, onClick: () -> Unit) {
         contentScale = ContentScale.Crop,
         modifier = Modifier
             .padding(top = Spacing16dp, end = Spacing16dp)
-            .size(40.dp)
+            .size(64.dp)
             .clip(CircleShape)
             .clickable { onClick() }
     )

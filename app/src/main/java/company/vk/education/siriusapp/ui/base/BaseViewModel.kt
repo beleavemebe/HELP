@@ -17,7 +17,7 @@ abstract class BaseViewModel<State : BaseViewState, Intent : BaseViewIntent, Err
     val viewState: StateFlow<State> = _viewState
 
     @ShitiusDsl
-    protected fun reduce(f: (prevState: State) -> State) {
+    protected fun reduce(f: suspend (prevState: State) -> State) = viewModelScope.launch {
         val newState = f(_viewState.value)
         _viewState.value = newState
     }
