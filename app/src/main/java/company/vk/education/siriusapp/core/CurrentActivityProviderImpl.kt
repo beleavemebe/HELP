@@ -8,25 +8,17 @@ import javax.inject.Singleton
 @Singleton
 class CurrentActivityProviderImpl @Inject constructor() : CurrentActivityProvider {
 
-    private val resumedActivityList = LinkedList<ActivityRecord>()
-    
-    private val lastResumedActivity: ComponentActivity?
-        get() = resumedActivityList.maxByOrNull { it.lastResumedTime }?.activity
+    private val resumedActivityList = LinkedList<ComponentActivity>()
 
     override val currentActivity: ComponentActivity?
-        get() = lastResumedActivity
+        get() = resumedActivityList.first
     
-    fun activityResumed(activity: ComponentActivity) {
-        resumedActivityList.removeAll { it.activity == activity }
-        resumedActivityList.addFirst(ActivityRecord(activity, System.currentTimeMillis()))
+    fun activityCreated(activity: ComponentActivity) {
+        resumedActivityList.removeAll { it == activity }
+        resumedActivityList.addFirst(activity)
     }
 
-    fun activityPaused(activity: ComponentActivity) {
-        resumedActivityList.removeAll { it.activity == activity }
+    fun activityDestroyed(activity: ComponentActivity) {
+        resumedActivityList.removeAll { it == activity }
     }
-
-    private data class ActivityRecord(
-        val activity: ComponentActivity,
-        val lastResumedTime: Long
-    )
 }

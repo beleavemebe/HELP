@@ -6,4 +6,5 @@ import kotlinx.coroutines.flow.Flow
 interface AuthService {
     val authState: Flow<AuthState>
     fun auth()
+    fun init()
 }
