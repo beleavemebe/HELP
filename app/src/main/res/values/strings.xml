@@ -7,4 +7,5 @@
     <string name="time">Time</string>
     <string name="no_trips_found">No trips found</string>
     <string name="create_a_trip">Create a trip</string>
+    <integer name="com_vk_sdk_AppId">51403589</integer>
 </resources>

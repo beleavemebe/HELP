@@ -5,5 +5,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface AuthService {
     val authState: Flow<AuthState>
-    fun authViaVk()
+    fun auth()
+    fun init()
 }

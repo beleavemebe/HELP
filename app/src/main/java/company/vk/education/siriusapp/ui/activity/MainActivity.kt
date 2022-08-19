@@ -6,13 +6,18 @@ import androidx.appcompat.app.AppCompatActivity
 import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.mapview.MapView
 import company.vk.education.siriusapp.ui.screens.main.MainScreen
+import company.vk.education.siriusapp.domain.service.AuthService
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.BottomSheetScreen
 import company.vk.education.siriusapp.ui.screens.main.map.MapScreen
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private lateinit var mapView: MapView
+
+    @Inject
+    lateinit var authService: AuthService
 
     override fun onCreate(savedInstanceState: Bundle?) {
         MapKitFactory.initialize(this)

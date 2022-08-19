@@ -1,9 +1,8 @@
 package company.vk.education.siriusapp.di
 
 import android.util.Log
-import company.vk.education.siriusapp.BuildConfig
+import company.vk.education.siriusapp.data.GEOCODER_URL
 import company.vk.education.siriusapp.data.api.GeocoderAPI
-import company.vk.education.siriusapp.ui.GEOCODER_URL
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

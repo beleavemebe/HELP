@@ -24,6 +24,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import company.vk.education.siriusapp.R
@@ -53,7 +57,6 @@ fun BottomSheet(
             SearchTrips(stateValue, onDateClicked, onTimeClicked)
         }
         is MainViewState.BottomSheetState.CreateTrip -> {}
-    }
 }
 
 @Composable
