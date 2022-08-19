@@ -57,6 +57,7 @@ fun BottomSheet(
             SearchTrips(stateValue, onDateClicked, onTimeClicked)
         }
         is MainViewState.BottomSheetState.CreateTrip -> {}
+    }
 }
 
 @Composable
