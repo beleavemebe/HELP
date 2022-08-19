@@ -42,6 +42,11 @@ android {
 
 dependencies {
 
+    implementation "androidx.datastore:datastore-preferences:1.0.0"
+
+    implementation 'com.vk:android-sdk-core:3.5.1'
+    implementation 'com.vk:android-sdk-api:3.5.1' // generated models and api methods
+
     implementation 'com.yandex.android:maps.mobile:4.1.0-lite'
     implementation "io.coil-kt:coil-compose:2.1.0"
 
@@ -65,7 +70,7 @@ dependencies {
     kapt "com.google.dagger:hilt-android-compiler:$hilt_version"
 
     implementation 'androidx.core:core-ktx:1.8.0'
-    implementation 'androidx.appcompat:appcompat:1.4.2'
+    implementation 'androidx.appcompat:appcompat:1.5.0'
     implementation 'com.google.android.material:material:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     testImplementation 'junit:junit:4.13.2'
