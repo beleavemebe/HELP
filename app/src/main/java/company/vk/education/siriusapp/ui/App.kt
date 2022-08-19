@@ -22,9 +22,10 @@ class App : Application() {
         MapKitFactory.setApiKey(BuildConfig.MAP_KIT_API_KEY)
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityCreated(p0: Activity, p1: Bundle?) {
-                if (p0 is ComponentActivity)
+                if (p0 is ComponentActivity) {
                     activityProvider.activityCreated(p0)
-                authService.init()
+                    authService.init()
+                }
             }
 
             override fun onActivityStarted(p0: Activity) {
