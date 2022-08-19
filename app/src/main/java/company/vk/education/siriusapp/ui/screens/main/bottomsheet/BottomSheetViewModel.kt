@@ -14,12 +14,12 @@ class BottomSheetViewModel @Inject constructor(
 
     override fun accept(intent: MainScreenIntent.BottomSheetIntent): Any {
         return when (intent) {
-            is MainScreenIntent.BottomSheetIntent.PickStartOnTheMap -> TODO()
-            is MainScreenIntent.BottomSheetIntent.PickEndOnTheMap -> TODO()
-            is MainScreenIntent.BottomSheetIntent.PickTripDate -> TODO()
-            is MainScreenIntent.BottomSheetIntent.PickTripTime -> TODO()
-            is MainScreenIntent.BottomSheetIntent.PickTaxiService -> TODO()
-            is MainScreenIntent.BottomSheetIntent.PickTaxiVehicleClass -> TODO()
+            is MainScreenIntent.BottomSheetIntent.PickStartOnTheMap -> {}
+            is MainScreenIntent.BottomSheetIntent.PickEndOnTheMap -> {}
+            is MainScreenIntent.BottomSheetIntent.PickTripDate -> {}
+            is MainScreenIntent.BottomSheetIntent.PickTripTime -> {}
+            is MainScreenIntent.BottomSheetIntent.PickTaxiService -> {}
+            is MainScreenIntent.BottomSheetIntent.PickTaxiVehicleClass -> {}
         }
     }
 }
