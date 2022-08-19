@@ -71,7 +71,7 @@ class AuthServiceImpl @Inject constructor(
                             id.toString(),
                             "$firstName $lastName",
                             null,
-                            UserContacts(phone ?: "", "vk.com/id$id", null)
+                            UserContacts(phone ?: "", buildProfileURL(id), null)
                         )
                         getPhoto(user)
                     }
@@ -90,8 +90,11 @@ class AuthServiceImpl @Inject constructor(
                 }
 
                 override fun success(result: PhotosGetResponse) {
-                    user.imageUrl = result.items.firstOrNull()?.sizes?.maxBy { it.height }?.url
-                    authCompleted(user)
+                    authCompleted(
+                        user.copy(
+                            imageUrl = result.items.firstOrNull()?.sizes?.maxBy { it.height }?.url
+                        )
+                    )
                 }
             })
     }
@@ -100,6 +103,8 @@ class AuthServiceImpl @Inject constructor(
         Log.d("VK", user.toString())
         _authState.value = AuthState(false, user)
     }
+
+    private fun buildProfileURL(userId: UserId) = "https://vk.com/id$userId"
 
     override fun init() {
         Log.d("VK", "AuthService initialization")

@@ -11,8 +11,6 @@ import company.vk.education.siriusapp.domain.service.AuthService
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
-const val GEOCODER_URL = "https://geocode-maps.yandex.ru/"
-
 @HiltAndroidApp
 class App : Application() {
 
