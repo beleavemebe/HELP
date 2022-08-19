@@ -1,4 +1,10 @@
 <resources>
     <string name="app_name">Shitius</string>
     <string name="profile_pic">Profile Picture</string>
+    <string name="my_location">My location</string>
+    <string name="location">Location</string>
+    <string name="calendar">Calendar</string>
+    <string name="time">Time</string>
+    <string name="no_trips_found">No trips found</string>
+    <string name="create_a_trip">Create a trip</string>
 </resources>
