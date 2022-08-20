@@ -1,6 +1,7 @@
 package company.vk.education.siriusapp.ui.screens.main
 
 import androidx.lifecycle.viewModelScope
+import com.yandex.mapkit.map.CameraListener
 import company.vk.education.siriusapp.domain.model.AuthState
 import company.vk.education.siriusapp.domain.model.Location
 import company.vk.education.siriusapp.domain.repository.AddressRepository
@@ -24,6 +25,20 @@ class MainViewModel @Inject constructor(
             mapState = MapViewState(),
             bottomSheetState = BottomSheetState()
         )
+
+    private val _cameraListener = CameraListener { map, cameraPosition, cameraUpdateReason, finished ->
+        if (finished) {
+            updatePickedLocation(
+                Location(
+                    cameraPosition.target.latitude,
+                    cameraPosition.target.longitude
+                )
+            )
+        }
+    }
+
+    val cameraListener: CameraListener
+        get() = _cameraListener
 
     init {
         authService.authState
