@@ -21,24 +21,25 @@ import coil.compose.AsyncImage
 import com.yandex.mapkit.mapview.MapView
 import company.vk.education.siriusapp.R
 import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
+import company.vk.education.siriusapp.ui.screens.main.MainScreenState
+import company.vk.education.siriusapp.ui.screens.main.MainViewModel
 import company.vk.education.siriusapp.ui.screens.main.MainViewState
 import company.vk.education.siriusapp.ui.theme.Spacing16dp
 
 @Composable
 fun MapScreen(
     mapView: MapView,
-    viewModel: MapViewModel = viewModel()
+    viewModel: MainViewModel = viewModel()
 ) = Map(
     mapView = mapView,
-    state = viewModel.viewState.collectAsState(),
-    onProfileClicked = { viewModel.accept(MainScreenIntent.MapIntent.ShowProfile) }
-)
+    state = viewModel.viewState.collectAsState()
+) { viewModel.accept(MainScreenIntent.MapIntent.ShowProfile) }
 
 @Composable
-fun Map(mapView: MapView, state: State<MainViewState.MapViewState>, onProfileClicked: () -> Unit) {
+fun Map(mapView: MapView, state: State<MainScreenState>, onProfileClicked: () -> Unit) {
     Box(contentAlignment = Alignment.TopEnd) {
         AndroidView(factory = { mapView })
-        ProfileView(state = state.value, onClick = onProfileClicked)
+        ProfileView(state = state.value.mapState, onClick = onProfileClicked)
     }
 }
 

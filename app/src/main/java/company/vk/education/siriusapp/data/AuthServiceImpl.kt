@@ -19,15 +19,15 @@ import company.vk.education.siriusapp.domain.model.UserContacts
 import company.vk.education.siriusapp.domain.service.AuthService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
 class AuthServiceImpl @Inject constructor(
     private val currentActivityProvider: CurrentActivityProvider
 ) : AuthService {
     private val _authState = MutableStateFlow(AuthState())
-
     override val authState: StateFlow<AuthState>
-        get() = _authState
+        get() = _authState.asStateFlow()
 
 
     private val vkContract = ActivityResultCallback<VKAuthenticationResult> {

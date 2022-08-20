@@ -9,12 +9,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-abstract class BaseViewModel<State : BaseViewState, Intent : BaseViewIntent, Err> : ViewModel() {
-
-    abstract val initialState: State
+abstract class BaseViewModel<State : BaseViewState, Intent : BaseViewIntent, Error>(
+) : ViewModel(), HelpViewModel<State, Intent, Error> {
 
     private val _viewState: MutableStateFlow<State> by lazy { MutableStateFlow(initialState) }
-    val viewState: StateFlow<State> = _viewState
+    override val viewState: StateFlow<State> = _viewState
 
     @ShitiusDsl
     protected fun reduce(f: (prevState: State) -> State) {
@@ -22,12 +21,12 @@ abstract class BaseViewModel<State : BaseViewState, Intent : BaseViewIntent, Err
         _viewState.value = newState
     }
 
-    open fun accept(intent: Intent): Any = Unit
+    override fun accept(intent: Intent): Any = Unit
 
-    open fun mapThrowable(throwable: Throwable): Err = error(throwable.toString())
+    open fun mapThrowable(throwable: Throwable): Error = error(throwable.toString())
 
-    private val _errors = MutableSharedFlow<Err>(replay = 1)
-    val errors: Flow<Err> = _errors
+    private val _errors = MutableSharedFlow<Error>(replay = 1)
+    override val errors: Flow<Error> = _errors
 
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
         viewModelScope.launch {
