@@ -8,6 +8,7 @@ import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -22,16 +23,20 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.yandex.mapkit.mapview.MapView
+import com.yandex.mapkit.user_location.UserLocationLayer
 import company.vk.education.siriusapp.R
 import company.vk.education.siriusapp.ui.screens.main.AddressToChoose
 import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
 import company.vk.education.siriusapp.ui.screens.main.MainViewModel
 import company.vk.education.siriusapp.ui.theme.*
+import company.vk.education.siriusapp.ui.utils.log
+import company.vk.education.siriusapp.ui.utils.moveToUser
 import company.vk.education.siriusapp.ui.utils.pickedLocation
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+
 
 val MainViewModel.mapState: StateFlow<MapViewState>
     get() = viewState
@@ -45,12 +50,14 @@ val MainViewModel.mapState: StateFlow<MapViewState>
 @Composable
 fun MapScreen(
     mapView: MapView,
+    userLocationLayer: UserLocationLayer,
     viewModel: MainViewModel = viewModel()
 ) {
     val state by viewModel.mapState.collectAsState()
 
     Map(
         mapView = mapView,
+        userLocationLayer = userLocationLayer,
         state = state,
         onProfileClicked = { viewModel.accept(MainScreenIntent.MapIntent.ShowProfile) },
         onLocationChosen = { addressToChoose ->
@@ -60,12 +67,18 @@ fun MapScreen(
             )
         }
     )
+
+    LaunchedEffect(key1 = null, block = {
+        log("launched effect")
+        mapView.map.addCameraListener(viewModel.cameraListener)
+    })
 }
 
 
 @Composable
 fun Map(
     mapView: MapView,
+    userLocationLayer: UserLocationLayer,
     state: MapViewState,
     onLocationChosen: (AddressToChoose) -> Unit,
     onProfileClicked: () -> Unit
@@ -74,6 +87,30 @@ fun Map(
         AndroidView(factory = { mapView })
         ChooseLocation(state = state, map = mapView, onClick = onLocationChosen)
         ProfileView(state = state, onProfileClicked = onProfileClicked)
+        ToUserLocationFAB(mapView, userLocationLayer)
+    }
+}
+
+@Composable
+private fun ToUserLocationFAB(
+    mapView: MapView,
+    userLocationLayer: UserLocationLayer
+) {
+    Box(contentAlignment = Alignment.BottomEnd, modifier = Modifier.padding(Spacing16dp)) {
+        Spacer(modifier = Modifier.fillMaxHeight(0.8f))
+        Button(
+            onClick = { mapView.moveToUser(userLocationLayer) },
+            modifier = Modifier
+                .clip(CircleShape)
+                .size(64.dp),
+            colors = ButtonDefaults.buttonColors(backgroundColor = OnBlue)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_location),
+                contentDescription = "user location",
+                modifier = Modifier.fillMaxSize()
+            )
+        }
     }
 }
 
@@ -93,7 +130,8 @@ fun ChooseLocation(state: MapViewState, map: MapView, onClick: (AddressToChoose)
                 contentDescription = "pin",
                 modifier = Modifier
                     .size(64.dp)
-                    .offset(0.dp, (-8).dp))
+                    .offset(0.dp, (-8).dp)
+            )
         }
 
         Column(
