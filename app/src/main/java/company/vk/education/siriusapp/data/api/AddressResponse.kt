@@ -5,7 +5,7 @@ import company.vk.education.siriusapp.domain.model.Location
 
 class AddressResponse(val name: String, val location: Location) {
     companion object {
-        val EMPTY_ADDRESS = AddressResponse("UNKNOWN", Location(.0, .0))
+        val EMPTY_ADDRESS = AddressResponse("UNKNOWN", Location.LOCATION_UNKNOWN)
     }
 }
 
