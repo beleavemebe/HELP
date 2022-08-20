@@ -1,5 +1,6 @@
 package company.vk.education.siriusapp.ui.screens.main.bottomsheet
 
+import android.util.Log
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -46,8 +47,12 @@ fun BottomSheetScreen(
     viewModel: MainViewModel = viewModel()
 ) = BottomSheet(
     viewModel.viewState.collectAsState(),
-    onPickStartOnTheMapClicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.PickStartOnTheMap) },
-    onPickEndOnTheMapClicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.PickEndOnTheMap) },
+    onPickStartOnTheMapClicked = {
+        Log.d("ViewModel", "pickTripStart")
+        viewModel.accept(MainScreenIntent.BottomSheetIntent.PickStartOnTheMap) },
+    onPickEndOnTheMapClicked = {
+        Log.d("ViewModel", "pickTripEnd")
+        viewModel.accept(MainScreenIntent.BottomSheetIntent.PickEndOnTheMap) },
     onDateClicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.PickTripDate) },
     onTimeClicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.PickTripTime) }
 )
@@ -191,6 +196,7 @@ fun TripMainControls(
         IconAndTextField(
             iconPainter = painterResource(id = R.drawable.ic_my_location),
             iconDescription = stringResource(id = R.string.my_location),
+            onIconClicked = onPickStartOnTheMapClicked,
         ) {
             VKUITextField(
                 value = tripStartLocation,
@@ -202,7 +208,8 @@ fun TripMainControls(
         Spacer(Modifier.height(Spacing16dp))
         IconAndTextField(
             iconPainter = painterResource(id = R.drawable.ic_location),
-            iconDescription = stringResource(id = R.string.location)
+            iconDescription = stringResource(id = R.string.location),
+            onIconClicked = onPickEndOnTheMapClicked
         ) {
             var tripEndLocation by remember { mutableStateOf(endAddress) }
             VKUITextField(

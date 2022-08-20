@@ -32,19 +32,22 @@ import company.vk.education.siriusapp.ui.theme.Spacing16dp
 fun MapScreen(
     mapView: MapView,
     viewModel: MainViewModel = viewModel()
-) = Map(
-    mapView = mapView,
-    state = viewModel.viewState.collectAsState(),
-    onLocationChosen = { viewModel.accept(
-        MainScreenIntent.MapIntent.LocationChosen(
-            Location(
-                mapView.map.cameraPosition.target.latitude,
-                mapView.map.cameraPosition.target.longitude
-            )
-        ))
-    },
-    onProfileClicked = { viewModel.accept(MainScreenIntent.MapIntent.ShowProfile) }
-)
+) {
+    viewModel.observeLocation(mapView)
+    Map(
+        mapView = mapView,
+        state = viewModel.viewState.collectAsState(),
+        onLocationChosen = { viewModel.accept(
+            MainScreenIntent.MapIntent.LocationChosen(
+                Location(
+                    mapView.map.cameraPosition.target.latitude,
+                    mapView.map.cameraPosition.target.longitude
+                )
+            ))
+        },
+        onProfileClicked = { viewModel.accept(MainScreenIntent.MapIntent.ShowProfile) }
+    )
+}
 
 @Composable
 fun Map(mapView: MapView, state: State<MainScreenState>, onLocationChosen: () -> Unit, onProfileClicked: () -> Unit) {
@@ -52,7 +55,6 @@ fun Map(mapView: MapView, state: State<MainScreenState>, onLocationChosen: () ->
         AndroidView(factory = { mapView })
         ChoosingScreen(state = state.value.mapState, map = mapView, onClick = onLocationChosen)
         ProfileView(state = state.value.mapState, onClick = onProfileClicked)
-        viewModel.observeLocation(mapView)
     }
 }
 
