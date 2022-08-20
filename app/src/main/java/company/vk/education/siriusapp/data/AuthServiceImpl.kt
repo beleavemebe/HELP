@@ -26,8 +26,7 @@ class AuthServiceImpl @Inject constructor(
     private val currentActivityProvider: CurrentActivityProvider
 ) : AuthService {
     private val _authState = MutableStateFlow(AuthState())
-    override val authState: StateFlow<AuthState>
-        get() = _authState.asStateFlow()
+    override val authState = _authState.asStateFlow()
 
 
     private val vkContract = ActivityResultCallback<VKAuthenticationResult> {
