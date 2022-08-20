@@ -7,5 +7,11 @@
     <string name="time">Time</string>
     <string name="no_trips_found">No trips found</string>
     <string name="create_a_trip">Create a trip</string>
+    <string name="date">Date</string>
+    <string name="fill_the_forms">Fill the forms</string>
+    <string name="free_places">Free places</string>
+    <string name="map">Map</string>
+    <string name="pick_start_address">Pick start address</string>
+    <string name="pick_end_address">Pick end address</string>
     <integer name="com_vk_sdk_AppId">51403589</integer>
 </resources>

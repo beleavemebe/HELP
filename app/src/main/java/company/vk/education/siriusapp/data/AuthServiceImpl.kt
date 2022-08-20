@@ -1,6 +1,5 @@
 package company.vk.education.siriusapp.data
 
-import android.util.Log
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.ActivityResultLauncher
 import com.vk.api.sdk.VK
@@ -17,26 +16,26 @@ import company.vk.education.siriusapp.domain.model.AuthState
 import company.vk.education.siriusapp.domain.model.User
 import company.vk.education.siriusapp.domain.model.UserContacts
 import company.vk.education.siriusapp.domain.service.AuthService
+import company.vk.education.siriusapp.ui.utils.log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
 class AuthServiceImpl @Inject constructor(
     private val currentActivityProvider: CurrentActivityProvider
 ) : AuthService {
     private val _authState = MutableStateFlow(AuthState())
-
-    override val authState: StateFlow<AuthState>
-        get() = _authState
+    override val authState = _authState.asStateFlow()
 
 
     private val vkContract = ActivityResultCallback<VKAuthenticationResult> {
         when (it) {
             is VKAuthenticationResult.Success -> {
-                Log.d("VK", "Success login")
+                log("Success login")
             }
             is VKAuthenticationResult.Failed -> {
-                Log.d("VK", "Login failed")
+                log( "Login failed")
             }
         }
     }
@@ -61,11 +60,11 @@ class AuthServiceImpl @Inject constructor(
             AccountService().accountGetProfileInfo(),
             object : VKApiCallback<AccountUserSettings> {
                 override fun fail(error: Exception) {
-                    Log.d("VK", "Failed to get user info")
+                    log("Failed to get user info")
                 }
 
                 override fun success(result: AccountUserSettings) {
-                    Log.d("VK", result.toString())
+                    log(result.toString())
                     with(result) {
                         val user = User(
                             id.toString(),
@@ -85,7 +84,7 @@ class AuthServiceImpl @Inject constructor(
             PhotosService().photosGet(UserId(user.id.toLong()), "profile", rev = true),
             object : VKApiCallback<PhotosGetResponse> {
                 override fun fail(error: Exception) {
-                    Log.d("VK", "Get photo failed")
+                    log("Get photo failed")
                     authCompleted(user)
                 }
 
@@ -100,14 +99,14 @@ class AuthServiceImpl @Inject constructor(
     }
 
     private fun authCompleted(user: User) {
-        Log.d("VK", user.toString())
+        log(user.toString())
         _authState.value = AuthState(false, user)
     }
 
     private fun buildProfileURL(userId: UserId) = "https://vk.com/id$userId"
 
     override fun init() {
-        Log.d("VK", "AuthService initialization")
+        log("AuthService initialization")
         vkLogin = VK.login(
             currentActivityProvider.currentActivity
                 ?: throw IllegalStateException("Activity is not initialized"), vkContract

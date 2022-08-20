@@ -1,5 +1,6 @@
 package company.vk.education.siriusapp.ui.screens.main.bottomsheet
 
+import android.text.format.DateFormat
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -7,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
@@ -19,56 +21,147 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import company.vk.education.siriusapp.R
+import company.vk.education.siriusapp.domain.model.TaxiService
 import company.vk.education.siriusapp.domain.model.Trip
 import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
-import company.vk.education.siriusapp.ui.screens.main.MainViewState
+import company.vk.education.siriusapp.ui.screens.main.MainViewModel
 import company.vk.education.siriusapp.ui.theme.*
+import company.vk.education.siriusapp.ui.utils.formatOrEmpty
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import java.text.SimpleDateFormat
+import java.util.*
+
+val MainViewModel.bottomSheetState get() = viewState
+    .map { it.bottomSheetState }
+    .stateIn(
+        viewModelScope,
+        SharingStarted.Lazily,
+        initialState.bottomSheetState
+    )
 
 @Composable
 fun BottomSheetScreen(
-    viewModel: BottomSheetViewModel = viewModel()
-) = BottomSheet(
-    viewModel.viewState.collectAsState(),
-    onDateClicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.PickTripDate) },
-    onTimeClicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.PickTripTime) },
-)
-
-@Composable
-fun BottomSheet(
-    state: State<MainViewState.BottomSheetState>,
-    onDateClicked: () -> Unit,
-    onTimeClicked: () -> Unit,
+    viewModel: MainViewModel = viewModel()
 ) {
-    when (val stateValue = state.value) {
-        is MainViewState.BottomSheetState.SearchTrips -> {
-            SearchTrips(stateValue, onDateClicked, onTimeClicked)
-        }
-        is MainViewState.BottomSheetState.CreateTrip -> {}
-    }
+    val state by viewModel.bottomSheetState.collectAsState()
+
+    BottomSheet(
+        state = state,
+        onPickStartOnTheMapClicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.PickStartOnTheMap) },
+        onPickEndOnTheMapClicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.PickEndOnTheMap) },
+        onDateClicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.PickTripDate) },
+        onTimeClicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.PickTripTime) }
+    )
 }
 
 @Composable
-fun SearchTrips(
-    state: MainViewState.BottomSheetState.SearchTrips,
+fun BottomSheet(
+    state: BottomSheetState,
+    onPickStartOnTheMapClicked: () -> Unit,
+    onPickEndOnTheMapClicked: () -> Unit,
     onDateClicked: () -> Unit,
     onTimeClicked: () -> Unit,
 ) {
     Column {
-        TripControls(state.startAddress, state.endAddress, onDateClicked, onTimeClicked)
-        if (state.trips != null) {
+        TripMainControls(
+            state.startAddress,
+            state.endAddress,
+            onPickStartOnTheMapClicked,
+            onPickEndOnTheMapClicked,
+            formatDate(state.date),
+            formatTime(state.date),
+            onDateClicked,
+            onTimeClicked
+        )
+
+        if (state.isSearchingTrips) {
+            SearchTrips(state)
+        } else {
+            CreateTrip(state)
+        }
+    }
+}
+
+fun formatDate(date: Date?): String {
+    return date.formatOrEmpty("dd MMM.")
+}
+
+fun formatTime(date: Date?): String {
+    return date.formatOrEmpty("HH:mm")
+}
+
+@Composable
+fun TripCreationControls(freePlaces: Int?, taxiService: TaxiService?) {
+    var freePlacesAmount by remember { mutableStateOf(freePlaces) }
+    IconAndTextField(
+        iconPainter = painterResource(id = R.drawable.ic_user),
+        iconDescription = stringResource(id = R.string.free_places),
+    ) {
+        VKUITextField(
+            value = freePlacesAmount?.toString() ?: "",
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            hint = stringResource(id = R.string.free_places),
+            onValueChange = { freePlacesAmount = it.toInt() },
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+
+    var pickedTaxiService by remember { mutableStateOf(taxiService) }
+    IconAndTextField(
+        iconPainter = painterResource(id = R.drawable.ic_user),
+        iconDescription = stringResource(id = R.string.free_places),
+    ) {
+        VKUITextField(
+            value = pickedTaxiService?.toString() ?: "",
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            hint = stringResource(id = R.string.free_places),
+            onValueChange = { pickedTaxiService = TaxiService.Yandex },
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+
+}
+
+@Composable
+@Preview
+fun TripCreationControlsPreview() = AppTheme {
+    TripCreationControls(freePlaces = 2, taxiService = TaxiService.Yandex)
+}
+
+@Composable
+fun CreateTrip(
+    state: BottomSheetState,
+) {
+    Column(
+        Modifier.padding(Spacing16dp)
+    ) {
+        TripCreationControls(state.freePlaces, state.taxiService)
+    }
+}
+
+
+@Composable
+fun SearchTrips(
+    state: BottomSheetState,
+) {
+    Column(
+        Modifier.padding(Spacing16dp)
+    ) {
+        if (state.trips == null) {
+            FillTheForms()
+        } else {
             if (state.trips.isEmpty()) {
                 NoTripsFound()
             } else {
@@ -79,62 +172,116 @@ fun SearchTrips(
 }
 
 @Composable
-fun TripControls(
+fun FillTheForms() {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Text(text = stringResource(R.string.fill_the_forms))
+    }
+}
+
+@Composable
+@Preview
+fun TripControlsPreview() {
+    AppTheme {
+        Box(modifier = Modifier.padding(Spacing16dp)) {
+            TripMainControls(
+                startAddress = "",
+                endAddress = "",
+                tripDate = "",
+                tripTime = "",
+                onDateClicked = {},
+                onTimeClicked = {},
+                onPickEndOnTheMapClicked = {},
+                onPickStartOnTheMapClicked = {},
+            )
+        }
+    }
+}
+
+@Composable
+fun TripMainControls(
     startAddress: String,
     endAddress: String,
+    onPickStartOnTheMapClicked: () -> Unit,
+    onPickEndOnTheMapClicked: () -> Unit,
+    tripDate: String,
+    tripTime: String,
     onDateClicked: () -> Unit,
     onTimeClicked: () -> Unit
 ) {
-
-    var tripStartLocation by remember { mutableStateOf(startAddress) }
-    IconAndTextField(
-        iconPainter = painterResource(id = R.drawable.ic_my_location),
-        iconDescription = stringResource(id = R.string.my_location),
+    Column(
+        Modifier.padding(Spacing16dp)
     ) {
-        VKUITextField(
-            value = tripStartLocation,
-            onValueChange = { tripStartLocation = it },
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
-    Spacer(Modifier.height(Spacing16dp))
-    IconAndTextField(
-        iconPainter = painterResource(id = R.drawable.ic_location),
-        iconDescription = stringResource(id = R.string.location)
-    ) {
-        var tripEndLocation by remember { mutableStateOf(endAddress) }
-        VKUITextField(
-            value = tripEndLocation,
-            onValueChange = { tripEndLocation = it },
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
-    Spacer(Modifier.height(Spacing16dp))
-    Row {
         IconAndTextField(
-            iconPainter = painterResource(id = R.drawable.ic_calendar),
-            iconDescription = stringResource(R.string.calendar),
-            modifier = { fillMaxWidth(0.5f) }
+            iconPainter = painterResource(id = R.drawable.ic_my_location),
+            iconDescription = stringResource(id = R.string.my_location),
         ) {
             VKUITextField(
-                value = "Today",
-                onValueChange = {},
-                readOnly = true,
-                modifier = Modifier.clickable { onDateClicked() })
-            Spacer(modifier = Modifier.width(Spacing8dp))
+                value = startAddress,
+                hint = stringResource(id = R.string.my_location),
+                onValueChange = { /*tripStartLocation = it*/ },
+                modifier = Modifier.fillMaxWidth(),
+                trailingIcon = {
+                    Text(
+                        text = stringResource(R.string.map),
+                        color = Blue,
+                        modifier = Modifier.clickable { onPickStartOnTheMapClicked() }
+                    )
+                }
+            )
         }
+
+        Spacer(Modifier.height(Spacing16dp))
+
         IconAndTextField(
-            iconPainter = painterResource(id = R.drawable.ic_clock),
-            iconDescription = stringResource(R.string.time),
-            before = {
+            iconPainter = painterResource(id = R.drawable.ic_location),
+            iconDescription = stringResource(id = R.string.location),
+        ) {
+            VKUITextField(
+                value = endAddress,
+                hint = stringResource(id = R.string.location),
+                onValueChange = { /*tripEndLocation = it*/ },
+                modifier = Modifier.fillMaxWidth(),
+                trailingIcon = {
+                    Text(
+                        text = stringResource(R.string.map),
+                        color = Blue,
+                        modifier = Modifier.clickable { onPickEndOnTheMapClicked() }
+                    )
+                }
+            )
+        }
+        Spacer(Modifier.height(Spacing16dp))
+        Row {
+            IconAndTextField(
+                iconPainter = painterResource(id = R.drawable.ic_calendar),
+                iconDescription = stringResource(R.string.calendar),
+                modifier = { fillMaxWidth(0.5f) }
+            ) {
+                VKUITextField(
+                    value = tripDate,
+                    hint = stringResource(id = R.string.date),
+                    onValueChange = {},
+                    readOnly = true,
+                    modifier = Modifier.clickable { onDateClicked() })
                 Spacer(modifier = Modifier.width(Spacing8dp))
             }
-        ) {
-            VKUITextField(
-                value = "13:13",
-                onValueChange = {},
-                readOnly = true,
-                modifier = Modifier.clickable { onTimeClicked() })
+            IconAndTextField(
+                iconPainter = painterResource(id = R.drawable.ic_clock),
+                iconDescription = stringResource(R.string.time),
+                before = {
+                    Spacer(modifier = Modifier.width(Spacing8dp))
+                }
+            ) {
+                VKUITextField(
+                    value = tripTime,
+                    hint = stringResource(id = R.string.time),
+                    onValueChange = {},
+                    readOnly = true,
+                    modifier = Modifier.clickable { onTimeClicked() })
+            }
         }
     }
 }

@@ -1,10 +1,10 @@
 package company.vk.education.siriusapp.domain.service
 
 import company.vk.education.siriusapp.domain.model.AuthState
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 
 interface AuthService {
-    val authState: Flow<AuthState>
+    val authState: StateFlow<AuthState>
     fun auth()
     fun init()
 }
