@@ -23,7 +23,7 @@ class AddressRepositoryImpl @Inject constructor(
     override suspend fun getAddressOfLocation(location: Location): String {
         return geocoderMapper.map(
             geocoderAPI.convert(
-                "${location.latitude} ${location.longitude}",
+                "${location.longitude} ${location.latitude}",
                 BuildConfig.GEOCODER_API_KEY
             )
         ).name

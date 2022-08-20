@@ -18,8 +18,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.yandex.mapkit.ScreenPoint
 import com.yandex.mapkit.mapview.MapView
 import company.vk.education.siriusapp.R
+import company.vk.education.siriusapp.domain.model.Location
 import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
 import company.vk.education.siriusapp.ui.screens.main.MainScreenState
 import company.vk.education.siriusapp.ui.screens.main.MainViewModel
@@ -32,14 +34,25 @@ fun MapScreen(
     viewModel: MainViewModel = viewModel()
 ) = Map(
     mapView = mapView,
-    state = viewModel.viewState.collectAsState()
-) { viewModel.accept(MainScreenIntent.MapIntent.ShowProfile) }
+    state = viewModel.viewState.collectAsState(),
+    onLocationChosen = { viewModel.accept(
+        MainScreenIntent.MapIntent.LocationChosen(
+            Location(
+                mapView.map.cameraPosition.target.latitude,
+                mapView.map.cameraPosition.target.longitude
+            )
+        ))
+    },
+    onProfileClicked = { viewModel.accept(MainScreenIntent.MapIntent.ShowProfile) }
+)
 
 @Composable
-fun Map(mapView: MapView, state: State<MainScreenState>, onProfileClicked: () -> Unit) {
+fun Map(mapView: MapView, state: State<MainScreenState>, onLocationChosen: () -> Unit, onProfileClicked: () -> Unit) {
     Box(contentAlignment = Alignment.TopEnd) {
         AndroidView(factory = { mapView })
+        ChoosingScreen(state = state.value.mapState, map = mapView, onClick = onLocationChosen)
         ProfileView(state = state.value.mapState, onClick = onProfileClicked)
+        viewModel.observeLocation(mapView)
     }
 }
 
@@ -65,7 +78,7 @@ fun ProfileView(url: String? = null, onClick: () -> Unit) {
         contentScale = ContentScale.Crop,
         modifier = Modifier
             .padding(top = Spacing16dp, end = Spacing16dp)
-            .size(40.dp)
+            .size(64.dp)
             .clip(CircleShape)
             .clickable { onClick() }
     )

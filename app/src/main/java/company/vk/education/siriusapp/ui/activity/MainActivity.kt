@@ -3,7 +3,8 @@ package company.vk.education.siriusapp.ui.activity
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.material.*
+import androidx.compose.material.BottomSheetScaffold
+import androidx.compose.material.ExperimentalMaterialApi
 import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.mapview.MapView
 import company.vk.education.siriusapp.domain.service.AuthService
@@ -15,6 +16,7 @@ import javax.inject.Inject
 @AndroidEntryPoint
 @OptIn(ExperimentalMaterialApi::class)
 class MainActivity : AppCompatActivity() {
+
     private lateinit var mapView: MapView
 
     @Inject
