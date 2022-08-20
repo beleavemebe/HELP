@@ -7,6 +7,8 @@ import java.util.*
 data class BottomSheetState(
     val startAddress: String = "",
     val endAddress: String = "",
+    val isShowingDatePicker: Boolean = false,
+    val isShowingTimePicker: Boolean = false,
     val date: Date? = null,
     val isSearchingTrips: Boolean = true,
     val freePlaces: Int? = null,

@@ -1,6 +1,5 @@
 package company.vk.education.siriusapp.ui.screens.main.bottomsheet
 
-import android.text.format.DateFormat
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -26,17 +25,24 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.google.android.material.datepicker.MaterialDatePicker
+import com.google.android.material.timepicker.MaterialTimePicker
 import company.vk.education.siriusapp.R
 import company.vk.education.siriusapp.domain.model.TaxiService
 import company.vk.education.siriusapp.domain.model.Trip
+import company.vk.education.siriusapp.ui.screens.main.HourAndMinute
 import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
 import company.vk.education.siriusapp.ui.screens.main.MainViewModel
 import company.vk.education.siriusapp.ui.theme.*
 import company.vk.education.siriusapp.ui.utils.formatOrEmpty
+import company.vk.education.siriusapp.ui.utils.getHourAndMinute
+import company.vk.education.siriusapp.ui.utils.log
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -62,7 +68,9 @@ fun BottomSheetScreen(
         onPickStartOnTheMapClicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.PickStartOnTheMap) },
         onPickEndOnTheMapClicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.PickEndOnTheMap) },
         onDateClicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.PickTripDate) },
-        onTimeClicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.PickTripTime) }
+        onTimeClicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.PickTripTime) },
+        onDatePicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.TripDatePicked(it)) },
+        onTimePicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.TripTimePicked(it)) },
     )
 }
 
@@ -73,6 +81,8 @@ fun BottomSheet(
     onPickEndOnTheMapClicked: () -> Unit,
     onDateClicked: () -> Unit,
     onTimeClicked: () -> Unit,
+    onDatePicked: (Date?) -> Unit,
+    onTimePicked: (HourAndMinute) -> Unit,
 ) {
     Column {
         TripMainControls(
@@ -91,11 +101,21 @@ fun BottomSheet(
         } else {
             CreateTrip(state)
         }
+
+        if (state.isShowingDatePicker) {
+            DatePicker(prevDate = state.date, onDatePicked = { onDatePicked(it) })
+        } else if (state.isShowingTimePicker) {
+            require(state.date != null) {
+                "Cannot set time when the date is null"
+            }
+
+            TimePicker(pickedDate = state.date, onTimePicked = { onTimePicked(it) })
+        }
     }
 }
 
 fun formatDate(date: Date?): String {
-    return date.formatOrEmpty("dd MMM.")
+    return date.formatOrEmpty("d MMM")
 }
 
 fun formatTime(date: Date?): String {
@@ -120,7 +140,7 @@ fun TripCreationControls(freePlaces: Int?, taxiService: TaxiService?) {
 
     var pickedTaxiService by remember { mutableStateOf(taxiService) }
     IconAndTextField(
-        iconPainter = painterResource(id = R.drawable.ic_user),
+        iconPainter = painterResource(id = R.drawable.ic_car),
         iconDescription = stringResource(id = R.string.free_places),
     ) {
         VKUITextField(
@@ -258,6 +278,7 @@ fun TripMainControls(
             IconAndTextField(
                 iconPainter = painterResource(id = R.drawable.ic_calendar),
                 iconDescription = stringResource(R.string.calendar),
+                onIconClicked = { onDateClicked() },
                 modifier = { fillMaxWidth(0.5f) }
             ) {
                 VKUITextField(
@@ -265,12 +286,14 @@ fun TripMainControls(
                     hint = stringResource(id = R.string.date),
                     onValueChange = {},
                     readOnly = true,
-                    modifier = Modifier.clickable { onDateClicked() })
+                    modifier = Modifier.clickable { onDateClicked() }
+                )
                 Spacer(modifier = Modifier.width(Spacing8dp))
             }
             IconAndTextField(
                 iconPainter = painterResource(id = R.drawable.ic_clock),
                 iconDescription = stringResource(R.string.time),
+                onIconClicked = { onTimeClicked() },
                 before = {
                     Spacer(modifier = Modifier.width(Spacing8dp))
                 }
