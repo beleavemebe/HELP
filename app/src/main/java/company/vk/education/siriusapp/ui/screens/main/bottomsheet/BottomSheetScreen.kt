@@ -36,6 +36,7 @@ import company.vk.education.siriusapp.domain.model.Trip
 import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
 import company.vk.education.siriusapp.ui.screens.main.MainViewModel
 import company.vk.education.siriusapp.ui.theme.*
+import company.vk.education.siriusapp.ui.utils.formatOrEmpty
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -94,21 +95,12 @@ fun BottomSheet(
 }
 
 fun formatDate(date: Date?): String {
-    return if (date == null) {
-        ""
-    } else {
-        DateFormat.format("dd MMM.", date).toString()
-    }
+    return date.formatOrEmpty("dd MMM.")
 }
 
 fun formatTime(date: Date?): String {
-    return if (date == null) {
-        ""
-    } else {
-        DateFormat.format("HH:mm", date).toString()
-    }
+    return date.formatOrEmpty("HH:mm")
 }
-
 
 @Composable
 fun TripCreationControls(freePlaces: Int?, taxiService: TaxiService?) {
