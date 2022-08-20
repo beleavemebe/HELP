@@ -65,7 +65,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         requestLocationPermission()
         mapInit()
-        mapView = MapView(this)
         setContent {
             BottomSheetScaffold(
                 sheetContent = {
@@ -90,6 +89,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun mapInit() {
+        mapView = MapView(this)
         val mapKit = MapKitFactory.getInstance()
         mapKit.resetLocationManagerToDefault()
         userLocationLayer = mapKit.createUserLocationLayer(mapView.mapWindow)
