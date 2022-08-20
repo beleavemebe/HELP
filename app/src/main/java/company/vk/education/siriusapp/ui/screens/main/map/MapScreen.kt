@@ -1,13 +1,15 @@
 package company.vk.education.siriusapp.ui.screens.main.map
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -16,54 +18,117 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.yandex.mapkit.ScreenPoint
 import com.yandex.mapkit.mapview.MapView
 import company.vk.education.siriusapp.R
-import company.vk.education.siriusapp.domain.model.Location
+import company.vk.education.siriusapp.ui.screens.main.AddressToChoose
 import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
-import company.vk.education.siriusapp.ui.screens.main.MainScreenState
 import company.vk.education.siriusapp.ui.screens.main.MainViewModel
-import company.vk.education.siriusapp.ui.screens.main.MainViewState
-import company.vk.education.siriusapp.ui.theme.Spacing16dp
+import company.vk.education.siriusapp.ui.theme.*
+import company.vk.education.siriusapp.ui.utils.pickedLocation
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+
+val MainViewModel.mapState: StateFlow<MapViewState>
+    get() = viewState
+        .map { it.mapState }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.Lazily,
+            initialState.mapState
+        )
 
 @Composable
 fun MapScreen(
     mapView: MapView,
     viewModel: MainViewModel = viewModel()
 ) {
-    viewModel.observeLocation(mapView)
+    val state by viewModel.mapState.collectAsState()
+
     Map(
         mapView = mapView,
-        state = viewModel.viewState.collectAsState(),
-        onLocationChosen = { viewModel.accept(
-            MainScreenIntent.MapIntent.LocationChosen(
-                Location(
-                    mapView.map.cameraPosition.target.latitude,
-                    mapView.map.cameraPosition.target.longitude
-                )
-            ))
-        },
-        onProfileClicked = { viewModel.accept(MainScreenIntent.MapIntent.ShowProfile) }
+        state = state,
+        onProfileClicked = { viewModel.accept(MainScreenIntent.MapIntent.ShowProfile) },
+        onLocationChosen = { addressToChoose ->
+            val location = mapView.pickedLocation
+            viewModel.accept(
+                MainScreenIntent.MapIntent.AddressChosen(addressToChoose, location)
+            )
+        }
     )
 }
 
+
 @Composable
-fun Map(mapView: MapView, state: State<MainScreenState>, onLocationChosen: () -> Unit, onProfileClicked: () -> Unit) {
+fun Map(
+    mapView: MapView,
+    state: MapViewState,
+    onLocationChosen: (AddressToChoose) -> Unit,
+    onProfileClicked: () -> Unit
+) {
     Box(contentAlignment = Alignment.TopEnd) {
         AndroidView(factory = { mapView })
-        ChoosingScreen(state = state.value.mapState, map = mapView, onClick = onLocationChosen)
-        ProfileView(state = state.value.mapState, onClick = onProfileClicked)
+        ChooseLocation(state = state, map = mapView, onClick = onLocationChosen)
+        ProfileView(state = state, onProfileClicked = onProfileClicked)
     }
 }
 
 @Composable
-fun ProfileView(state: MainViewState.MapViewState, onClick: () -> Unit) {
-    when (state) {
-        is MainViewState.MapViewState.ChoosingAddress -> {}
-        is MainViewState.MapViewState.Idle -> ProfileView(state.profilePicUrl, onClick)
+fun ChooseLocation(state: MapViewState, map: MapView, onClick: (AddressToChoose) -> Unit) {
+    if (state.isChoosingAddress) {
+        require(state.addressToChoose != null) {
+            "State does not specify which address is being chosen. $state"
+        }
+
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.pin),
+                contentDescription = "pin",
+                modifier = Modifier
+                    .size(64.dp)
+                    .offset(0.dp, (-8).dp))
+        }
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            val pickAddress = when (state.addressToChoose) {
+                AddressToChoose.START -> stringResource(id = R.string.pick_start_address)
+                AddressToChoose.END -> stringResource(id = R.string.pick_end_address)
+            }
+
+            Text(pickAddress, style = AppTypography.title2)
+            Text(state.currentlyChosenAddress.toString(), style = AppTypography.title1Bold)
+            Spacer(modifier = Modifier.fillMaxHeight(0.7f))
+
+            Button(
+                onClick = { onClick(state.addressToChoose) },
+                colors = ButtonDefaults.buttonColors(Blue),
+                shape = Shapes.medium,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+            ) {
+                Text("Выбрать местоположение", style = AppTypography.subheadMedium, color = OnBlue)
+            }
+        }
     }
+}
+
+@Composable
+fun ProfileView(state: MapViewState, onProfileClicked: () -> Unit) {
+    if (state.isChoosingAddress) return
+    ProfileView(state.profilePicUrl, onProfileClicked)
 }
 
 @Composable

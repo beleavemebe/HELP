@@ -24,7 +24,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import company.vk.education.siriusapp.ui.screens.main.MainViewState
+import company.vk.education.siriusapp.ui.screens.main.bottomsheet.BottomSheetState
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.SearchTrips
 
 @Composable
@@ -32,10 +32,10 @@ import company.vk.education.siriusapp.ui.screens.main.bottomsheet.SearchTrips
 fun AppTextFieldPreview() = AppTheme {
     Box(Modifier.background(Color.White)) {
         SearchTrips(
-            MainViewState.BottomSheetState.SearchTrips(
+            BottomSheetState(
                 startAddress = "My location",
                 endAddress = "Sochi park",
-            ), {}, {}, {} , {}
+            )
         )
     }
 }
@@ -57,7 +57,9 @@ fun IconAndTextField(
         Image(
             painter = iconPainter,
             contentDescription = iconDescription,
-            modifier = Modifier.size(IconSize).clickable { onIconClicked() }
+            modifier = Modifier
+                .size(IconSize)
+                .clickable { onIconClicked() }
         )
         Spacer(modifier = Modifier.width(Spacing16dp))
         textField()
@@ -95,7 +97,9 @@ fun VKUITextField(
     TextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = Modifier.height(TextFieldHeight).then(modifier),
+        modifier = Modifier
+            .height(TextFieldHeight)
+            .then(modifier),
         enabled = enabled,
         readOnly = readOnly,
         textStyle = textStyle,
@@ -122,7 +126,7 @@ fun TextField(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     readOnly: Boolean = false,
-    textStyle: TextStyle = LocalTextStyle.current,
+    textStyle: TextStyle = AppTypography.text,
     label: @Composable (() -> Unit)? = null,
     placeholder: @Composable (() -> Unit)? = null,
     leadingIcon: @Composable (() -> Unit)? = null,
@@ -134,8 +138,7 @@ fun TextField(
     singleLine: Boolean = false,
     maxLines: Int = Int.MAX_VALUE,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
-    shape: Shape =
-        MaterialTheme.shapes.small.copy(bottomEnd = ZeroCornerSize, bottomStart = ZeroCornerSize),
+    shape: Shape = MaterialTheme.shapes.small.copy(bottomEnd = ZeroCornerSize, bottomStart = ZeroCornerSize),
     colors: TextFieldColors = TextFieldDefaults.textFieldColors()
 ) {
     // If color is not provided via the text style, use content color as a default
@@ -149,7 +152,11 @@ fun TextField(
         value = value,
         modifier = modifier
             .background(colors.backgroundColor(enabled).value, shape)
-            .indicatorLine(enabled, isError, interactionSource, colors)
+            .indicatorLine(false, isError, interactionSource, TextFieldDefaults.textFieldColors(
+                focusedIndicatorColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+            ))
             .defaultMinSize(
                 minWidth = TextFieldDefaults.MinWidth,
                 minHeight = TextFieldDefaults.MinHeight
@@ -180,7 +187,7 @@ fun TextField(
                 isError = isError,
                 interactionSource = interactionSource,
                 colors = colors,
-                contentPadding = PaddingValues(vertical = 4.dp, horizontal = 12.dp)
+                contentPadding = PaddingValues(vertical = 8.dp, horizontal = 12.dp)
             )
         }
     )

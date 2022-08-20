@@ -1,8 +1,8 @@
 package company.vk.education.siriusapp.di
 
-import android.util.Log
 import company.vk.education.siriusapp.data.GEOCODER_URL
 import company.vk.education.siriusapp.data.api.GeocoderAPI
+import company.vk.education.siriusapp.ui.utils.log
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,11 +19,11 @@ class NetworkModule {
     @Provides
     fun provideOkHttp() : OkHttpClient {
         return OkHttpClient.Builder()
-            .addInterceptor(HttpLoggingInterceptor {
-                Log.d("OkHttpClient", it)
-            }.apply {
-                level = HttpLoggingInterceptor.Level.BODY
-            })
+            .addInterceptor(
+                HttpLoggingInterceptor(::log).apply {
+                    level = HttpLoggingInterceptor.Level.BODY
+                }
+            )
             .build()
     }
 

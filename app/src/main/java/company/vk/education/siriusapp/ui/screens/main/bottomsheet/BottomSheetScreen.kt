@@ -1,6 +1,6 @@
 package company.vk.education.siriusapp.ui.screens.main.bottomsheet
 
-import android.util.Log
+import android.text.format.DateFormat
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -21,70 +21,104 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import company.vk.education.siriusapp.R
 import company.vk.education.siriusapp.domain.model.TaxiService
 import company.vk.education.siriusapp.domain.model.Trip
 import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
-import company.vk.education.siriusapp.ui.screens.main.MainScreenState
 import company.vk.education.siriusapp.ui.screens.main.MainViewModel
-import company.vk.education.siriusapp.ui.screens.main.MainViewState
 import company.vk.education.siriusapp.ui.theme.*
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import java.text.SimpleDateFormat
+import java.util.*
+
+val MainViewModel.bottomSheetState get() = viewState
+    .map { it.bottomSheetState }
+    .stateIn(
+        viewModelScope,
+        SharingStarted.Lazily,
+        initialState.bottomSheetState
+    )
 
 @Composable
 fun BottomSheetScreen(
     viewModel: MainViewModel = viewModel()
-) = BottomSheet(
-    viewModel.viewState.collectAsState(),
-    onPickStartOnTheMapClicked = {
-        Log.d("ViewModel", "pickTripStart")
-        viewModel.accept(MainScreenIntent.BottomSheetIntent.PickStartOnTheMap) },
-    onPickEndOnTheMapClicked = {
-        Log.d("ViewModel", "pickTripEnd")
-        viewModel.accept(MainScreenIntent.BottomSheetIntent.PickEndOnTheMap) },
-    onDateClicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.PickTripDate) },
-    onTimeClicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.PickTripTime) }
-)
+) {
+    val state by viewModel.bottomSheetState.collectAsState()
+
+    BottomSheet(
+        state = state,
+        onPickStartOnTheMapClicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.PickStartOnTheMap) },
+        onPickEndOnTheMapClicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.PickEndOnTheMap) },
+        onDateClicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.PickTripDate) },
+        onTimeClicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.PickTripTime) }
+    )
+}
 
 @Composable
 fun BottomSheet(
-    state: State<MainScreenState>,
+    state: BottomSheetState,
     onPickStartOnTheMapClicked: () -> Unit,
     onPickEndOnTheMapClicked: () -> Unit,
     onDateClicked: () -> Unit,
     onTimeClicked: () -> Unit,
 ) {
-    when (val stateValue = state.value.bottomSheetState) {
-        is MainViewState.BottomSheetState.SearchTrips -> {
-            SearchTrips(stateValue, onPickStartOnTheMapClicked, onPickEndOnTheMapClicked, onDateClicked, onTimeClicked)
+    Column {
+        TripMainControls(
+            state.startAddress,
+            state.endAddress,
+            onPickStartOnTheMapClicked,
+            onPickEndOnTheMapClicked,
+            formatDate(state.date),
+            formatTime(state.date),
+            onDateClicked,
+            onTimeClicked
+        )
+
+        if (state.isSearchingTrips) {
+            SearchTrips(state)
+        } else {
+            CreateTrip(state)
         }
-        is MainViewState.BottomSheetState.CreateTrip -> {
-            CreateTrip(stateValue, onPickStartOnTheMapClicked, onPickEndOnTheMapClicked, onDateClicked, onTimeClicked)
-        }
+    }
+}
+
+fun formatDate(date: Date?): String {
+    return if (date == null) {
+        ""
+    } else {
+        DateFormat.format("dd MMM.", date).toString()
+    }
+}
+
+fun formatTime(date: Date?): String {
+    return if (date == null) {
+        ""
+    } else {
+        DateFormat.format("HH:mm", date).toString()
     }
 }
 
 
 @Composable
-fun TripCreationControls(freePlaces: Int, taxiService: TaxiService) {
+fun TripCreationControls(freePlaces: Int?, taxiService: TaxiService?) {
     var freePlacesAmount by remember { mutableStateOf(freePlaces) }
     IconAndTextField(
         iconPainter = painterResource(id = R.drawable.ic_user),
         iconDescription = stringResource(id = R.string.free_places),
     ) {
         VKUITextField(
-            value = freePlacesAmount.toString(),
+            value = freePlacesAmount?.toString() ?: "",
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             hint = stringResource(id = R.string.free_places),
             onValueChange = { freePlacesAmount = it.toInt() },
@@ -98,10 +132,10 @@ fun TripCreationControls(freePlaces: Int, taxiService: TaxiService) {
         iconDescription = stringResource(id = R.string.free_places),
     ) {
         VKUITextField(
-            value = freePlacesAmount.toString(),
+            value = pickedTaxiService?.toString() ?: "",
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             hint = stringResource(id = R.string.free_places),
-            onValueChange = { freePlacesAmount = it.toInt() },
+            onValueChange = { pickedTaxiService = TaxiService.Yandex },
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -116,16 +150,11 @@ fun TripCreationControlsPreview() = AppTheme {
 
 @Composable
 fun CreateTrip(
-    state: MainViewState.BottomSheetState.CreateTrip,
-    onPickStartOnTheMapClicked: () -> Unit,
-    onPickEndOnTheMapClicked: () -> Unit,
-    onDateClicked: () -> Unit,
-    onTimeClicked: () -> Unit
+    state: BottomSheetState,
 ) {
     Column(
         Modifier.padding(Spacing16dp)
     ) {
-        TripMainControls(state.startAddress, state.endAddress, onPickStartOnTheMapClicked, onPickEndOnTheMapClicked, onDateClicked, onTimeClicked)
         TripCreationControls(state.freePlaces, state.taxiService)
     }
 }
@@ -133,16 +162,11 @@ fun CreateTrip(
 
 @Composable
 fun SearchTrips(
-    state: MainViewState.BottomSheetState.SearchTrips,
-    onPickStartOnTheMapClicked: () -> Unit,
-    onPickEndOnTheMapClicked: () -> Unit,
-    onDateClicked: () -> Unit,
-    onTimeClicked: () -> Unit,
+    state: BottomSheetState,
 ) {
     Column(
         Modifier.padding(Spacing16dp)
     ) {
-        TripMainControls(state.startAddress, state.endAddress, onPickStartOnTheMapClicked, onPickEndOnTheMapClicked, onDateClicked, onTimeClicked)
         if (state.trips == null) {
             FillTheForms()
         } else {
@@ -173,6 +197,8 @@ fun TripControlsPreview() {
             TripMainControls(
                 startAddress = "",
                 endAddress = "",
+                tripDate = "",
+                tripTime = "",
                 onDateClicked = {},
                 onTimeClicked = {},
                 onPickEndOnTheMapClicked = {},
@@ -188,35 +214,51 @@ fun TripMainControls(
     endAddress: String,
     onPickStartOnTheMapClicked: () -> Unit,
     onPickEndOnTheMapClicked: () -> Unit,
+    tripDate: String,
+    tripTime: String,
     onDateClicked: () -> Unit,
     onTimeClicked: () -> Unit
 ) {
-    Column {
-        var tripStartLocation by remember { mutableStateOf(startAddress) }
+    Column(
+        Modifier.padding(Spacing16dp)
+    ) {
         IconAndTextField(
             iconPainter = painterResource(id = R.drawable.ic_my_location),
             iconDescription = stringResource(id = R.string.my_location),
-            onIconClicked = onPickStartOnTheMapClicked,
         ) {
             VKUITextField(
-                value = tripStartLocation,
+                value = startAddress,
                 hint = stringResource(id = R.string.my_location),
-                onValueChange = { tripStartLocation = it },
-                modifier = Modifier.fillMaxWidth()
+                onValueChange = { /*tripStartLocation = it*/ },
+                modifier = Modifier.fillMaxWidth(),
+                trailingIcon = {
+                    Text(
+                        text = stringResource(R.string.map),
+                        color = Blue,
+                        modifier = Modifier.clickable { onPickStartOnTheMapClicked() }
+                    )
+                }
             )
         }
+
         Spacer(Modifier.height(Spacing16dp))
+
         IconAndTextField(
             iconPainter = painterResource(id = R.drawable.ic_location),
             iconDescription = stringResource(id = R.string.location),
-            onIconClicked = onPickEndOnTheMapClicked
         ) {
-            var tripEndLocation by remember { mutableStateOf(endAddress) }
             VKUITextField(
-                value = tripEndLocation,
+                value = endAddress,
                 hint = stringResource(id = R.string.location),
-                onValueChange = { tripEndLocation = it },
-                modifier = Modifier.fillMaxWidth()
+                onValueChange = { /*tripEndLocation = it*/ },
+                modifier = Modifier.fillMaxWidth(),
+                trailingIcon = {
+                    Text(
+                        text = stringResource(R.string.map),
+                        color = Blue,
+                        modifier = Modifier.clickable { onPickEndOnTheMapClicked() }
+                    )
+                }
             )
         }
         Spacer(Modifier.height(Spacing16dp))
@@ -227,7 +269,7 @@ fun TripMainControls(
                 modifier = { fillMaxWidth(0.5f) }
             ) {
                 VKUITextField(
-                    value = "Today",
+                    value = tripDate,
                     hint = stringResource(id = R.string.date),
                     onValueChange = {},
                     readOnly = true,
@@ -242,7 +284,7 @@ fun TripMainControls(
                 }
             ) {
                 VKUITextField(
-                    value = "13:13",
+                    value = tripTime,
                     hint = stringResource(id = R.string.time),
                     onValueChange = {},
                     readOnly = true,
