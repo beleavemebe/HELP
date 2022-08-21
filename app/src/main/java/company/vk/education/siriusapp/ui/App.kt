@@ -24,7 +24,7 @@ class App : Application() {
             override fun onActivityCreated(p0: Activity, p1: Bundle?) {
                 if (p0 is ComponentActivity) {
                     activityProvider.activityCreated(p0)
-                    authService.init()
+                    authService.prepare()
                 }
             }
 

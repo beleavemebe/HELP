@@ -1,6 +1,7 @@
 package company.vk.education.siriusapp.ui.screens.main.map
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -102,13 +103,16 @@ private fun ToUserLocationFAB(
             onClick = { mapView.moveToUser(userLocationLayer) },
             modifier = Modifier
                 .clip(CircleShape)
-                .size(64.dp),
-            colors = ButtonDefaults.buttonColors(backgroundColor = OnBlue)
+                .size(FabSize)
+                .border(2.dp, Blue, CircleShape),
+            colors = ButtonDefaults.buttonColors(backgroundColor = OnBlue),
+            contentPadding = PaddingValues(Spacing8dp)
         ) {
             Image(
                 painter = painterResource(id = R.drawable.ic_location),
-                contentDescription = "user location",
-                modifier = Modifier.fillMaxSize()
+                contentDescription = stringResource(id = R.string.my_location),
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.FillHeight
             )
         }
     }
@@ -145,9 +149,9 @@ fun ChooseLocation(state: MapViewState, map: MapView, onClick: (AddressToChoose)
                 AddressToChoose.END -> stringResource(id = R.string.pick_end_address)
             }
 
-            Text(pickAddress, style = AppTypography.title2)
-            Text(state.currentlyChosenAddress.toString(), style = AppTypography.title1Bold)
-            Spacer(modifier = Modifier.fillMaxHeight(0.7f))
+            Text(pickAddress, style = AppTypography.subhead)
+            Text(state.currentlyChosenAddress ?: stringResource(R.string.calculating), style = AppTypography.headlineMedium)
+            Spacer(modifier = Modifier.fillMaxHeight(0.85f))
 
             Button(
                 onClick = { onClick(state.addressToChoose) },
@@ -155,9 +159,9 @@ fun ChooseLocation(state: MapViewState, map: MapView, onClick: (AddressToChoose)
                 shape = Shapes.medium,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp)
+                    .height(FabSize)
             ) {
-                Text("Выбрать местоположение", style = AppTypography.subheadMedium, color = OnBlue)
+                Text(stringResource(R.string.pick), style = AppTypography.subheadMedium, color = OnBlue)
             }
         }
     }
@@ -166,7 +170,19 @@ fun ChooseLocation(state: MapViewState, map: MapView, onClick: (AddressToChoose)
 @Composable
 fun ProfileView(state: MapViewState, onProfileClicked: () -> Unit) {
     if (state.isChoosingAddress) return
-    ProfileView(state.profilePicUrl, onProfileClicked)
+    AsyncImage(
+        model = state.profilePicUrl,
+        contentDescription = stringResource(id = R.string.profile_pic),
+        placeholder = painterResource(id = R.drawable.profile_avatar_placeholder),
+        error = painterResource(id = R.drawable.profile_avatar_placeholder),
+        contentScale = ContentScale.Crop,
+        modifier = Modifier
+            .padding(top = Spacing16dp, end = Spacing16dp)
+            .size(FabSize)
+            .clip(CircleShape)
+            .border(2.dp, Blue, CircleShape)
+            .clickable { onProfileClicked() }
+    )
 }
 
 @Composable

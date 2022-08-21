@@ -46,6 +46,8 @@ class MainViewModel @Inject constructor(
         authService.authState
             .onEach(::updateState)
             .launchIn(viewModelScope)
+
+        authService.auth()
     }
 
     private fun updateState(authState: AuthState) = reduce {
@@ -132,12 +134,11 @@ class MainViewModel @Inject constructor(
     ) = reduce {
         val address = addressRepository.getAddressOfLocation(addressLocation)
         it.copy(
-            mapState = MapViewState(isChoosingAddress = false),
-            bottomSheetState = run {
-                val bss = it.bottomSheetState
+            mapState = it.mapState.copy(isChoosingAddress = false),
+            bottomSheetState = it.bottomSheetState.run {
                 when (addressToChoose) {
-                    AddressToChoose.START -> bss.copy(startAddress = address)
-                    AddressToChoose.END -> bss.copy(endAddress = address)
+                    AddressToChoose.START -> copy(startAddress = address)
+                    AddressToChoose.END -> copy(endAddress = address)
                 }
             }
         )

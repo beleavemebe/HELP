@@ -105,7 +105,7 @@ class AuthServiceImpl @Inject constructor(
 
     private fun buildProfileURL(userId: UserId) = "https://vk.com/id$userId"
 
-    override fun init() {
+    override fun prepare() {
         log("AuthService initialization")
         vkLogin = VK.login(
             currentActivityProvider.currentActivity

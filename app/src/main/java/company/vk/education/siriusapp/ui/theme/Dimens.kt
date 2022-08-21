@@ -10,5 +10,5 @@ val Spacing16dp = 16.dp
 val Spacing32dp = 32.dp
 
 val IconSize = 32.dp
-
 val TextFieldHeight = 36.dp
+val FabSize = 48.dp

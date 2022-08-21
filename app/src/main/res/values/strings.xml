@@ -1,17 +1,19 @@
 <resources>
-    <string name="app_name">Shitius</string>
-    <string name="profile_pic">Profile Picture</string>
-    <string name="my_location">My location</string>
-    <string name="location">Location</string>
-    <string name="calendar">Calendar</string>
-    <string name="time">Time</string>
-    <string name="no_trips_found">No trips found</string>
-    <string name="create_a_trip">Create a trip</string>
-    <string name="date">Date</string>
-    <string name="fill_the_forms">Fill the forms</string>
-    <string name="free_places">Free places</string>
-    <string name="map">Map</string>
-    <string name="pick_start_address">Pick start address</string>
-    <string name="pick_end_address">Pick end address</string>
+    <string name="app_name">HELP</string>
+    <string name="profile_pic">Фото профиля</string>
+    <string name="my_location">Моё местоположение</string>
+    <string name="location">Место</string>
+    <string name="calendar">Календарь</string>
+    <string name="time">Время</string>
+    <string name="no_trips_found">Поездок по запросу не найдено</string>
+    <string name="create_a_trip">Создать поездку</string>
+    <string name="date">Дата</string>
+    <string name="fill_the_forms">Заполните поля</string>
+    <string name="free_places">Мест для брони</string>
+    <string name="map">Карта</string>
+    <string name="pick_start_address">Выберите начальный адрес</string>
+    <string name="pick_end_address">Выберите конечный адрес</string>
+    <string name="pick">Выбрать</string>
+    <string name="calculating">Вычисляем…</string>
     <integer name="com_vk_sdk_AppId">51403589</integer>
 </resources>
