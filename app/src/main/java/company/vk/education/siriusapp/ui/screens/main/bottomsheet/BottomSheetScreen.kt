@@ -197,7 +197,7 @@ fun FillTheForms() {
         contentAlignment = Alignment.Center,
         modifier = Modifier.fillMaxSize()
     ) {
-        Text(text = stringResource(R.string.fill_the_forms))
+        Text(text = stringResource(R.string.fill_the_forms), style = AppTypography.subhead.copy(color = TextHint))
     }
 }
 
