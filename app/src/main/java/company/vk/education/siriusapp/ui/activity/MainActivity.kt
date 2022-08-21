@@ -1,18 +1,17 @@
 package company.vk.education.siriusapp.ui.activity
 
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.graphics.PointF
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.material.BottomSheetScaffold
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.ui.graphics.colorspace.ColorSpaces
+import androidx.compose.material.*
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.layers.ObjectEvent
 import com.yandex.mapkit.map.IconStyle
@@ -24,11 +23,10 @@ import com.yandex.mapkit.user_location.UserLocationView
 import com.yandex.runtime.image.ImageProvider
 import company.vk.education.siriusapp.R
 import company.vk.education.siriusapp.domain.service.AuthService
+import company.vk.education.siriusapp.ui.screens.main.MainViewModel
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.BottomSheetScreen
 import company.vk.education.siriusapp.ui.screens.main.map.MapScreen
 import company.vk.education.siriusapp.ui.theme.Blue
-import company.vk.education.siriusapp.ui.theme.Blue900
-import company.vk.education.siriusapp.ui.utils.log
 import company.vk.education.siriusapp.ui.utils.moveToUser
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
@@ -72,10 +70,15 @@ class MainActivity : AppCompatActivity() {
         requestLocationPermission()
         mapInit()
         setContent {
+            val state = rememberBottomSheetState(initialValue = BottomSheetValue.Collapsed)
+            val scaffoldState = rememberBottomSheetScaffoldState(bottomSheetState = state)
+            viewModel(MainViewModel::class.java).bottomSheetUIState = state
             BottomSheetScaffold(
                 sheetContent = {
                     BottomSheetScreen()
-                }
+                },
+                scaffoldState = scaffoldState,
+                sheetPeekHeight = 170.dp
             ) {
                 MapScreen(mapView, userLocationLayer)
             }

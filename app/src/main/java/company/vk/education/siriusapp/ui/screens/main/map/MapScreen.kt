@@ -98,7 +98,7 @@ private fun ToUserLocationFAB(
     userLocationLayer: UserLocationLayer
 ) {
     Box(contentAlignment = Alignment.BottomEnd, modifier = Modifier.padding(Spacing16dp)) {
-        Spacer(modifier = Modifier.fillMaxHeight(0.8f))
+        Spacer(modifier = Modifier.fillMaxHeight(0.75f))
         Button(
             onClick = { mapView.moveToUser(userLocationLayer) },
             modifier = Modifier
@@ -134,7 +134,7 @@ fun ChooseLocation(state: MapViewState, map: MapView, onClick: (AddressToChoose)
                 contentDescription = "pin",
                 modifier = Modifier
                     .size(64.dp)
-                    .offset(0.dp, (-8).dp)
+                    .offset(0.dp, (-24).dp)
             )
         }
 
@@ -150,8 +150,11 @@ fun ChooseLocation(state: MapViewState, map: MapView, onClick: (AddressToChoose)
             }
 
             Text(pickAddress, style = AppTypography.subhead)
-            Text(state.currentlyChosenAddress ?: stringResource(R.string.calculating), style = AppTypography.headlineMedium)
-            Spacer(modifier = Modifier.fillMaxHeight(0.85f))
+            Text(
+                state.currentlyChosenAddress ?: stringResource(R.string.calculating),
+                style = AppTypography.headlineMedium
+            )
+            Spacer(modifier = Modifier.fillMaxHeight(0.75f))
 
             Button(
                 onClick = { onClick(state.addressToChoose) },
@@ -161,7 +164,11 @@ fun ChooseLocation(state: MapViewState, map: MapView, onClick: (AddressToChoose)
                     .fillMaxWidth()
                     .height(FabSize)
             ) {
-                Text(stringResource(R.string.pick), style = AppTypography.subheadMedium, color = OnBlue)
+                Text(
+                    stringResource(R.string.pick),
+                    style = AppTypography.subheadMedium,
+                    color = OnBlue
+                )
             }
         }
     }
