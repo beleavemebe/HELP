@@ -4,7 +4,9 @@ import androidx.lifecycle.viewModelScope
 import com.yandex.mapkit.map.CameraListener
 import company.vk.education.siriusapp.domain.model.AuthState
 import company.vk.education.siriusapp.domain.model.Location
+import company.vk.education.siriusapp.domain.model.TripRoute
 import company.vk.education.siriusapp.domain.repository.AddressRepository
+import company.vk.education.siriusapp.domain.repository.TripsRepository
 import company.vk.education.siriusapp.domain.service.AuthService
 import company.vk.education.siriusapp.ui.base.BaseViewModel
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.BottomSheetState
@@ -14,6 +16,7 @@ import company.vk.education.siriusapp.ui.utils.setHourAndMinute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
 
@@ -21,6 +24,7 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     private val authService: AuthService,
     private val addressRepository: AddressRepository,
+    private val tripsRepository: TripsRepository,
 ) : BaseViewModel<MainScreenState, MainScreenIntent, Nothing>() {
     override val initialState =
         MainScreenState(
@@ -86,12 +90,13 @@ class MainViewModel @Inject constructor(
 
     private fun setTripDate(date: Date?) = reduce {
         val prevSheetState = it.bottomSheetState
-        it.copy(
+        val state = it.copy(
             bottomSheetState = prevSheetState.copy(
                 isShowingDatePicker = false,
                 date = date
             )
         )
+        checkIfAllFormsAreFilled(state)
     }
 
     private fun pickTripTime() = reduce {
@@ -110,12 +115,13 @@ class MainViewModel @Inject constructor(
             "Cannot set time when the date is null"
         }
 
-        it.copy(
+        val state = it.copy(
             bottomSheetState = prevSheetState.copy(
                 isShowingTimePicker = false,
                 date = prevSheetState.date.setHourAndMinute(hourAndMinute)
             )
         )
+        checkIfAllFormsAreFilled(state)
     }
 
     private fun updatePickedLocation(location: Location) = reduce {
@@ -133,7 +139,7 @@ class MainViewModel @Inject constructor(
         addressToChoose: AddressToChoose
     ) = reduce {
         val address = addressRepository.getAddressOfLocation(addressLocation)
-        it.copy(
+        val state = it.copy(
             mapState = it.mapState.copy(isChoosingAddress = false),
             bottomSheetState = it.bottomSheetState.run {
                 when (addressToChoose) {
@@ -142,6 +148,7 @@ class MainViewModel @Inject constructor(
                 }
             }
         )
+        checkIfAllFormsAreFilled(state)
     }
 
     private fun pickTripStart() = reduce {
@@ -158,5 +165,40 @@ class MainViewModel @Inject constructor(
             addressToChoose = AddressToChoose.END
         )
         it.copy(mapState = newMapState)
+    }
+
+    private fun MainScreenState.allFormsAreFilled() = bottomSheetState.run {
+        val areAddressesSpecified = startAddress != "" && endAddress != ""
+        val arePickersHidden = !isShowingDatePicker && !isShowingTimePicker
+        areAddressesSpecified && arePickersHidden && date != null
+    }
+
+    private fun checkIfAllFormsAreFilled(state: MainScreenState): MainScreenState {
+        return if (state.allFormsAreFilled().not()) {
+            state
+        } else {
+            viewModelScope.launch {
+                loadTrips(
+                    state.bottomSheetState.startAddress,
+                    state.bottomSheetState.endAddress,
+                    state.bottomSheetState.date ?: error("allFormsAreFilled returned true but date was null")
+                )
+            }
+
+            state.copy(bottomSheetState = state.bottomSheetState.copy(areTripsLoading = true))
+        }
+    }
+
+    private fun loadTrips(startAddress: String, endAddress: String, date: Date) = reduce {
+        val startAddressLocation = addressRepository.getLocationOfAnAddress(startAddress)
+        val endAddressLocation = addressRepository.getLocationOfAnAddress(endAddress)
+        val trips = tripsRepository.getTrips(TripRoute(startAddressLocation, endAddressLocation, date))
+
+        it.copy(
+            bottomSheetState = it.bottomSheetState.copy(
+                areTripsLoading = false,
+                trips = trips
+            )
+        )
     }
 }

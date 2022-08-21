@@ -11,6 +11,7 @@ data class BottomSheetState(
     val isShowingTimePicker: Boolean = false,
     val date: Date? = null,
     val isSearchingTrips: Boolean = true,
+    val areTripsLoading: Boolean = false,
     val freePlaces: Int? = null,
     val taxiService: TaxiService? = null,
     val verifyInstantly: Boolean = false,

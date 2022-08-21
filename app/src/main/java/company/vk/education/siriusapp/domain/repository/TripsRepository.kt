@@ -4,7 +4,7 @@ import company.vk.education.siriusapp.domain.model.Trip
 import company.vk.education.siriusapp.domain.model.TripRoute
 
 interface TripsRepository {
-    fun getTrips(route: TripRoute)
+    suspend fun getTrips(route: TripRoute): List<Trip>
     fun getTripDetails(id: String): Trip
     fun joinTrip(trip: Trip)
     fun publishTrip(trip: Trip)

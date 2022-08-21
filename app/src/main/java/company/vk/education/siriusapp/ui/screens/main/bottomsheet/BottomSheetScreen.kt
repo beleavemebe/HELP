@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -179,7 +180,9 @@ fun SearchTrips(
     Column(
         Modifier.padding(Spacing16dp)
     ) {
-        if (state.trips == null) {
+        if (state.areTripsLoading) {
+            Loading()
+        } else if (state.trips == null) {
             FillTheForms()
         } else {
             if (state.trips.isEmpty()) {
@@ -188,6 +191,13 @@ fun SearchTrips(
                 Trips(trips = state.trips)
             }
         }
+    }
+}
+
+@Composable
+private fun Loading() {
+    Box(modifier = Modifier.fillMaxSize()) {
+        CircularProgressIndicator(color = Blue)
     }
 }
 
