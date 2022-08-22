@@ -2,6 +2,8 @@ package company.vk.education.siriusapp.ui.screens.main.bottomsheet
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -277,7 +279,6 @@ fun TripMainControls(
             IconAndTextField(
                 iconPainter = painterResource(id = R.drawable.ic_calendar),
                 iconDescription = stringResource(R.string.calendar),
-                onIconClicked = { onDateClicked() },
                 modifier = { fillMaxWidth(0.5f) }
             ) {
                 VKUITextField(
@@ -285,14 +286,13 @@ fun TripMainControls(
                     hint = stringResource(id = R.string.date),
                     onValueChange = {},
                     readOnly = true,
-                    modifier = Modifier.clickable { onDateClicked() }
+                    interactionSource = textFieldInteractionSource(onDateClicked)
                 )
                 Spacer(modifier = Modifier.width(Spacing8dp))
             }
             IconAndTextField(
                 iconPainter = painterResource(id = R.drawable.ic_clock),
                 iconDescription = stringResource(R.string.time),
-                onIconClicked = { onTimeClicked() },
                 before = {
                     Spacer(modifier = Modifier.width(Spacing8dp))
                 }
@@ -302,11 +302,25 @@ fun TripMainControls(
                     hint = stringResource(id = R.string.time),
                     onValueChange = {},
                     readOnly = true,
-                    modifier = Modifier.clickable { onTimeClicked() })
+                    interactionSource = textFieldInteractionSource(onTimeClicked)
+                )
             }
         }
     }
 }
+
+@Composable
+private fun textFieldInteractionSource(onClick: () -> Unit) =
+    remember { MutableInteractionSource() }
+        .also { interactionSource ->
+            LaunchedEffect(interactionSource) {
+                interactionSource.interactions.collect {
+                    if (it is PressInteraction.Release) {
+                        onClick()
+                    }
+                }
+            }
+        }
 
 @Composable
 private fun TextFieldMapIcon(

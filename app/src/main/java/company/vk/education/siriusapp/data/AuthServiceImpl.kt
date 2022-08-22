@@ -33,6 +33,7 @@ class AuthServiceImpl @Inject constructor(
         when (it) {
             is VKAuthenticationResult.Success -> {
                 log("Success login")
+                collectUserInfo()
             }
             is VKAuthenticationResult.Failed -> {
                 log( "Login failed")
@@ -55,7 +56,12 @@ class AuthServiceImpl @Inject constructor(
                     VKScope.PHONE
                 )
             )
+        } else {
+            collectUserInfo()
         }
+    }
+
+    private fun collectUserInfo() {
         VK.execute(
             AccountService().accountGetProfileInfo(),
             object : VKApiCallback<AccountUserSettings> {
@@ -103,7 +109,7 @@ class AuthServiceImpl @Inject constructor(
         _authState.value = AuthState(false, user)
     }
 
-    private fun buildProfileURL(userId: UserId) = "https://vk.com/id$userId"
+    private fun buildProfileURL(userId: UserId) = "$VK_USER_URL$userId"
 
     override fun prepare() {
         log("AuthService initialization")

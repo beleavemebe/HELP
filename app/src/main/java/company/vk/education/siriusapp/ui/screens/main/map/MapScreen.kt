@@ -97,23 +97,25 @@ private fun ToUserLocationFAB(
     mapView: MapView,
     userLocationLayer: UserLocationLayer
 ) {
-    Box(contentAlignment = Alignment.BottomEnd, modifier = Modifier.padding(Spacing16dp)) {
-        Spacer(modifier = Modifier.fillMaxHeight(0.75f))
-        Button(
-            onClick = { mapView.moveToUser(userLocationLayer) },
-            modifier = Modifier
-                .clip(CircleShape)
-                .size(FabSize)
-                .border(2.dp, Blue, CircleShape),
-            colors = ButtonDefaults.buttonColors(backgroundColor = OnBlue),
-            contentPadding = PaddingValues(Spacing8dp)
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_location),
-                contentDescription = stringResource(id = R.string.my_location),
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.FillHeight
-            )
+    Box(contentAlignment = Alignment.BottomEnd, modifier = Modifier.padding(Spacing16dp).fillMaxSize()) {
+        Column {
+            Button(
+                onClick = { mapView.moveToUser(userLocationLayer) },
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .size(FabSize)
+                    .border(2.dp, Blue, CircleShape),
+                colors = ButtonDefaults.buttonColors(backgroundColor = OnBlue),
+                contentPadding = PaddingValues(Spacing8dp)
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_location),
+                    contentDescription = stringResource(id = R.string.my_location),
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.FillHeight
+                )
+            }
+            Spacer(Modifier.height(175.dp + Spacing32dp + Spacing8dp))
         }
     }
 }
@@ -137,7 +139,6 @@ fun ChooseLocation(state: MapViewState, map: MapView, onClick: (AddressToChoose)
                     .offset(0.dp, (-24).dp)
             )
         }
-
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
@@ -154,21 +155,24 @@ fun ChooseLocation(state: MapViewState, map: MapView, onClick: (AddressToChoose)
                 state.currentlyChosenAddress ?: stringResource(R.string.calculating),
                 style = AppTypography.headlineMedium
             )
-            Spacer(modifier = Modifier.fillMaxHeight(0.75f))
-
-            Button(
-                onClick = { onClick(state.addressToChoose) },
-                colors = ButtonDefaults.buttonColors(Blue),
-                shape = Shapes.medium,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(FabSize)
-            ) {
-                Text(
-                    stringResource(R.string.pick),
-                    style = AppTypography.subheadMedium,
-                    color = OnBlue
-                )
+        }
+        Box(modifier = Modifier.fillMaxSize().padding(Spacing16dp, 0.dp), contentAlignment = Alignment.BottomCenter) {
+            Column {
+                Button(
+                    onClick = { onClick(state.addressToChoose) },
+                    colors = ButtonDefaults.buttonColors(Blue),
+                    shape = Shapes.medium,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(FabSize)
+                ) {
+                    Text(
+                        stringResource(R.string.pick),
+                        style = AppTypography.subheadMedium,
+                        color = OnBlue
+                    )
+                }
+                Spacer(modifier = Modifier.height(175.dp + Spacing4dp))
             }
         }
     }
