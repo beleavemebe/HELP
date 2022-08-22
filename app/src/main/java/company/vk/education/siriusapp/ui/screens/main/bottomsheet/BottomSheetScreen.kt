@@ -23,18 +23,14 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import company.vk.education.siriusapp.R
-import company.vk.education.siriusapp.domain.model.TaxiService
-import company.vk.education.siriusapp.domain.model.TaxiVehicleClass
-import company.vk.education.siriusapp.domain.model.Trip
+import company.vk.education.siriusapp.domain.model.*
 import company.vk.education.siriusapp.ui.screens.main.HourAndMinute
 import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
 import company.vk.education.siriusapp.ui.screens.main.MainViewModel
@@ -42,6 +38,7 @@ import company.vk.education.siriusapp.ui.theme.*
 import company.vk.education.siriusapp.ui.utils.LocalTaxiServiceToStringResMapper
 import company.vk.education.siriusapp.ui.utils.LocalTaxiVehicleClassToStringResMapper
 import company.vk.education.siriusapp.ui.utils.formatOrEmpty
+import company.vk.education.siriusapp.ui.utils.log
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -613,78 +610,79 @@ fun Trips(trips: List<Trip>) {
     }
 }
 
+@Preview
+@Composable
+fun showTrip() {
+    TripItem(
+        trip = Trip(
+            route = TripRoute(),
+            freePlaces = 3,
+            host = User("123", "ivan", "", UserContacts("123")),
+            passengers = listOf(),
+            taxiService = TaxiService.Yandex,
+            taxiVehicleClass = TaxiService.Yandex.YandexVehicleClass.Comfort
+        )
+    )
+}
+
 @Composable
 fun TripItem(trip: Trip) {
-    Row(Modifier.padding(16.dp)) {
-        Column {
-            Text("Поездка ${trip.id}", style = AppTypography.Typography.h3)
-            Row(
-                Modifier.fillMaxWidth(),
-                Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(verticalArrangement = Arrangement.Bottom) {
-                    Text("от ${trip.route.startLocation}", style = AppTypography.Typography.body1)
-                    Text("до ${trip.route.endLocation}", style = AppTypography.Typography.body1)
-                }
-                Column(
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text("старт в", style = AppTypography.Typography.body2)
-                    Text(
-                        SimpleDateFormat("HH:mm").format(trip.route.date),
-                        style = AppTypography.Typography.h2,
-                        color = Blue900
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(modifier = Modifier
-                .fillMaxWidth()
-                .height(32.dp),
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(backgroundColor = Blue900),
-                onClick = {
-                    println("Присоединяюсь")
-                }) {
+    Row(Modifier.padding(Spacing16dp)) {
+        Surface(shape = RoundedCornerShape(16.dp), elevation = 4.dp, modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(Spacing16dp)) {
                 Row(
-                    modifier = Modifier.fillMaxSize(),
+                    Modifier
+                        .fillMaxWidth()
+                        .height(Spacing32dp),
                     Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Spacer(Modifier.fillMaxWidth(0.2f))
-                    Text("Присоединиться", fontSize = 12.sp, color = Color.White)
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        SimpleDateFormat(
+                            "dd.MM в HH:mm",
+                            Locale.getDefault()
+                        ).format(trip.route.date),
+                        style = AppTypography.headline,
+                    )
                     ParticipantsRow {
                         var offset = 0
                         trip.passengers.forEachIndexed { i, url ->
-                            //Spacer(modifier = Modifier.size(4.dp))
                             AsyncImage(
                                 model = url, contentDescription = "userPhoto",
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier
                                     .size(16.dp)
                                     .clip(CircleShape)
-                                    .border(2.dp, Blue900, CircleShape)
-                                    //.offset(offset.dp, 0.dp)
+                                    .border(2.dp, OnBlue, CircleShape)
                                     .zIndex(5 - i.toFloat())
-                                //.rightPhoto(i.toFloat())
                             )
                             println(offset)
                             offset += 26
                         }
                     }
                 }
+
+                val serviceMapper = LocalTaxiServiceToStringResMapper.current
+                val vehicleClassMapper = LocalTaxiVehicleClassToStringResMapper.current
+                val taxiService = stringResource(id = serviceMapper.map(trip.taxiService))
+                val vehicleClass = stringResource(id = vehicleClassMapper.map(trip.taxiVehicleClass))
+                Text(
+                    "$taxiService · $vehicleClass · 200m away",
+                    style = AppTypography.caption1,
+                    color = Color.LightGray
+                )
+                Spacer(modifier = Modifier.height(Spacing12dp))
+                Button(modifier = Modifier
+                    .fillMaxWidth()
+                    .height(32.dp),
+                    shape = RoundedCornerShape(Spacing8dp),
+                    colors = ButtonDefaults.buttonColors(backgroundColor = Blue900),
+                    onClick = {
+                        log("Присоединяюсь")
+                    }) {
+                    Text(stringResource(id = R.string.join), style = AppTypography.caption2Medium, color = OnBlue)
+                }
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                "${trip.freePlaces} мест свободно",
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center,
-                fontSize = 14.sp,
-                color = Color.LightGray
-            )
         }
     }
 }
