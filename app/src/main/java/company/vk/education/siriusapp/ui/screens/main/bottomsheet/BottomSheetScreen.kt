@@ -277,7 +277,6 @@ fun TripMainControls(
             IconAndTextField(
                 iconPainter = painterResource(id = R.drawable.ic_calendar),
                 iconDescription = stringResource(R.string.calendar),
-                onIconClicked = { onDateClicked() },
                 modifier = { fillMaxWidth(0.5f) }
             ) {
                 VKUITextField(
@@ -285,14 +284,14 @@ fun TripMainControls(
                     hint = stringResource(id = R.string.date),
                     onValueChange = {},
                     readOnly = true,
-                    modifier = Modifier.clickable { onDateClicked() }
+                    modifier = Modifier.clickable { onDateClicked() },
+                    enabled = false
                 )
                 Spacer(modifier = Modifier.width(Spacing8dp))
             }
             IconAndTextField(
                 iconPainter = painterResource(id = R.drawable.ic_clock),
                 iconDescription = stringResource(R.string.time),
-                onIconClicked = { onTimeClicked() },
                 before = {
                     Spacer(modifier = Modifier.width(Spacing8dp))
                 }
@@ -302,7 +301,9 @@ fun TripMainControls(
                     hint = stringResource(id = R.string.time),
                     onValueChange = {},
                     readOnly = true,
-                    modifier = Modifier.clickable { onTimeClicked() })
+                    modifier = Modifier.clickable { onTimeClicked() },
+                    enabled = false
+                )
             }
         }
     }

@@ -48,10 +48,6 @@ class MainActivity : AppCompatActivity() {
         override fun onObjectAdded(userLocationView: UserLocationView) {
             userLocationView.pin.setIcon(
                 ImageProvider.fromResource(this@MainActivity, R.drawable.ic_my_location),
-                IconStyle().setAnchor(PointF(0.5f, 0.5f))
-                    .setRotationType(RotationType.ROTATE)
-                    .setZIndex(1f)
-                    .setScale(0.5f)
             )
             userLocationView.accuracyCircle.fillColor = Blue.toArgb()
             lifecycleScope.launch {

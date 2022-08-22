@@ -44,7 +44,6 @@ fun AppTextFieldPreview() = AppTheme {
 fun IconAndTextField(
     iconPainter: Painter,
     iconDescription: String,
-    onIconClicked: () -> Unit = {},
     modifier: Modifier.() -> Modifier = { this },
     before: @Composable RowScope.() -> Unit = {},
     textField: @Composable RowScope.() -> Unit,
@@ -57,9 +56,7 @@ fun IconAndTextField(
         Image(
             painter = iconPainter,
             contentDescription = iconDescription,
-            modifier = Modifier
-                .size(IconSize)
-                .clickable { onIconClicked() }
+            modifier = Modifier.size(IconSize)
         )
         Spacer(modifier = Modifier.width(Spacing16dp))
         textField()
