@@ -15,7 +15,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 @Module
 @InstallIn(SingletonComponent::class)
 class NetworkModule {
-
     @Provides
     fun provideOkHttp() : OkHttpClient {
         return OkHttpClient.Builder()
@@ -50,5 +49,4 @@ class NetworkModule {
     fun provideApiService(@GeoQualifier retrofit: Retrofit) : GeocoderAPI {
         return retrofit.create(GeocoderAPI::class.java)
     }
-
 }
