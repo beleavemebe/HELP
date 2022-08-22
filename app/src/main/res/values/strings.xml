@@ -15,5 +15,6 @@
     <string name="pick_end_address">Выберите конечный адрес</string>
     <string name="pick">Выбрать</string>
     <string name="calculating">Вычисляем…</string>
+    <string name="join">Присоединиться</string>
     <integer name="com_vk_sdk_AppId">51403589</integer>
 </resources>
