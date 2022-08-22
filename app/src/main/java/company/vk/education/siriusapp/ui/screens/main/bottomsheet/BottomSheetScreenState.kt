@@ -4,7 +4,7 @@ import company.vk.education.siriusapp.domain.model.TaxiService
 import company.vk.education.siriusapp.domain.model.Trip
 import java.util.*
 
-data class BottomSheetState(
+data class BottomSheetScreenState(
     val startAddress: String = "",
     val endAddress: String = "",
     val isShowingDatePicker: Boolean = false,

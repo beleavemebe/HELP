@@ -1,5 +1,7 @@
 package company.vk.education.siriusapp.ui.screens.main
 
+import androidx.compose.material.BottomSheetState
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.lifecycle.viewModelScope
 import com.yandex.mapkit.map.CameraListener
 import company.vk.education.siriusapp.domain.model.AuthState
@@ -9,11 +11,12 @@ import company.vk.education.siriusapp.domain.repository.AddressRepository
 import company.vk.education.siriusapp.domain.repository.TripsRepository
 import company.vk.education.siriusapp.domain.service.AuthService
 import company.vk.education.siriusapp.ui.base.BaseViewModel
-import company.vk.education.siriusapp.ui.screens.main.bottomsheet.BottomSheetState
+import company.vk.education.siriusapp.ui.screens.main.bottomsheet.BottomSheetScreenState
 import company.vk.education.siriusapp.ui.screens.main.map.MapViewState
 import company.vk.education.siriusapp.ui.utils.log
 import company.vk.education.siriusapp.ui.utils.setHourAndMinute
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -29,10 +32,10 @@ class MainViewModel @Inject constructor(
     override val initialState =
         MainScreenState(
             mapState = MapViewState(),
-            bottomSheetState = BottomSheetState()
+            bottomSheetScreenState = BottomSheetScreenState()
         )
 
-    private val _cameraListener = CameraListener { map, cameraPosition, cameraUpdateReason, finished ->
+    private val _cameraListener = CameraListener { _, cameraPosition, _, finished ->
         if (finished) {
             updatePickedLocation(
                 Location(
@@ -80,18 +83,18 @@ class MainViewModel @Inject constructor(
     }
 
     private fun pickTripDate() = reduce {
-        val prevSheetState = it.bottomSheetState
+        val prevSheetState = it.bottomSheetScreenState
         it.copy(
-            bottomSheetState = prevSheetState.copy(
+            bottomSheetScreenState = prevSheetState.copy(
                 isShowingDatePicker = true,
             )
         )
     }
 
     private fun setTripDate(date: Date?) = reduce {
-        val prevSheetState = it.bottomSheetState
+        val prevSheetState = it.bottomSheetScreenState
         val state = it.copy(
-            bottomSheetState = prevSheetState.copy(
+            bottomSheetScreenState = prevSheetState.copy(
                 isShowingDatePicker = false,
                 date = date
             )
@@ -100,23 +103,23 @@ class MainViewModel @Inject constructor(
     }
 
     private fun pickTripTime() = reduce {
-        val prevSheetState = it.bottomSheetState
+        val prevSheetState = it.bottomSheetScreenState
         if (prevSheetState.date == null) return@reduce it
         it.copy(
-            bottomSheetState = prevSheetState.copy(
+            bottomSheetScreenState = prevSheetState.copy(
                 isShowingTimePicker = true
             )
         )
     }
 
     private fun setTripTime(hourAndMinute: HourAndMinute) = reduce {
-        val prevSheetState = it.bottomSheetState
+        val prevSheetState = it.bottomSheetScreenState
         require(prevSheetState.date != null) {
             "Cannot set time when the date is null"
         }
 
         val state = it.copy(
-            bottomSheetState = prevSheetState.copy(
+            bottomSheetScreenState = prevSheetState.copy(
                 isShowingTimePicker = false,
                 date = prevSheetState.date.setHourAndMinute(hourAndMinute)
             )
@@ -140,8 +143,9 @@ class MainViewModel @Inject constructor(
     ) = reduce {
         val address = addressRepository.getAddressOfLocation(addressLocation)
         val state = it.copy(
+            isBottomSheetExpanded = addressToChoose == AddressToChoose.END,
             mapState = it.mapState.copy(isChoosingAddress = false),
-            bottomSheetState = it.bottomSheetState.run {
+            bottomSheetScreenState = it.bottomSheetScreenState.run {
                 when (addressToChoose) {
                     AddressToChoose.START -> copy(startAddress = address)
                     AddressToChoose.END -> copy(endAddress = address)
@@ -151,23 +155,20 @@ class MainViewModel @Inject constructor(
         checkIfAllFormsAreFilled(state)
     }
 
-    private fun pickTripStart() = reduce {
+
+    private fun pickTripRoute(adressToChoose: AddressToChoose) = reduce {
         val newMapState = it.mapState.copy(
             isChoosingAddress = true,
-            addressToChoose = AddressToChoose.START
+            addressToChoose = adressToChoose
         )
-        it.copy(mapState = newMapState)
+        it.copy(mapState = newMapState, isBottomSheetExpanded = false)
     }
 
-    private fun pickTripEnd() = reduce {
-        val newMapState = it.mapState.copy(
-            isChoosingAddress = true,
-            addressToChoose = AddressToChoose.END
-        )
-        it.copy(mapState = newMapState)
-    }
+    private fun pickTripStart() = pickTripRoute(AddressToChoose.START)
 
-    private fun MainScreenState.allFormsAreFilled() = bottomSheetState.run {
+    private fun pickTripEnd() = pickTripRoute(AddressToChoose.END)
+
+    private fun MainScreenState.allFormsAreFilled() = bottomSheetScreenState.run {
         val areAddressesSpecified = startAddress != "" && endAddress != ""
         val arePickersHidden = !isShowingDatePicker && !isShowingTimePicker
         areAddressesSpecified && arePickersHidden && date != null
@@ -179,23 +180,25 @@ class MainViewModel @Inject constructor(
         } else {
             viewModelScope.launch {
                 loadTrips(
-                    state.bottomSheetState.startAddress,
-                    state.bottomSheetState.endAddress,
-                    state.bottomSheetState.date ?: error("allFormsAreFilled returned true but date was null")
+                    state.bottomSheetScreenState.startAddress,
+                    state.bottomSheetScreenState.endAddress,
+                    state.bottomSheetScreenState.date
+                        ?: error("allFormsAreFilled returned true but date was null")
                 )
             }
 
-            state.copy(bottomSheetState = state.bottomSheetState.copy(areTripsLoading = true))
+            state.copy(bottomSheetScreenState = state.bottomSheetScreenState.copy(areTripsLoading = true))
         }
     }
 
     private fun loadTrips(startAddress: String, endAddress: String, date: Date) = reduce {
         val startAddressLocation = addressRepository.getLocationOfAnAddress(startAddress)
         val endAddressLocation = addressRepository.getLocationOfAnAddress(endAddress)
-        val trips = tripsRepository.getTrips(TripRoute(startAddressLocation, endAddressLocation, date))
+        val trips =
+            tripsRepository.getTrips(TripRoute(startAddressLocation, endAddressLocation, date))
 
         it.copy(
-            bottomSheetState = it.bottomSheetState.copy(
+            bottomSheetScreenState = it.bottomSheetScreenState.copy(
                 areTripsLoading = false,
                 trips = trips
             )

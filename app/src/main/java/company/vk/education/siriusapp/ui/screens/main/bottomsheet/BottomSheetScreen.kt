@@ -26,14 +26,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.google.android.material.datepicker.MaterialDatePicker
-import com.google.android.material.timepicker.MaterialTimePicker
 import company.vk.education.siriusapp.R
 import company.vk.education.siriusapp.domain.model.TaxiService
 import company.vk.education.siriusapp.domain.model.Trip
@@ -42,28 +38,26 @@ import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
 import company.vk.education.siriusapp.ui.screens.main.MainViewModel
 import company.vk.education.siriusapp.ui.theme.*
 import company.vk.education.siriusapp.ui.utils.formatOrEmpty
-import company.vk.education.siriusapp.ui.utils.getHourAndMinute
-import company.vk.education.siriusapp.ui.utils.log
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import java.text.SimpleDateFormat
 import java.util.*
 
-val MainViewModel.bottomSheetState get() = viewState
-    .map { it.bottomSheetState }
-    .stateIn(
-        viewModelScope,
-        SharingStarted.Lazily,
-        initialState.bottomSheetState
-    )
+val MainViewModel.bottomSheetState
+    get() = viewState
+        .map { it.bottomSheetScreenState }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.Lazily,
+            initialState.bottomSheetScreenState
+        )
 
 @Composable
 fun BottomSheetScreen(
     viewModel: MainViewModel = viewModel()
 ) {
     val state by viewModel.bottomSheetState.collectAsState()
-
     BottomSheet(
         state = state,
         onPickStartOnTheMapClicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.PickStartOnTheMap) },
@@ -77,7 +71,7 @@ fun BottomSheetScreen(
 
 @Composable
 fun BottomSheet(
-    state: BottomSheetState,
+    state: BottomSheetScreenState,
     onPickStartOnTheMapClicked: () -> Unit,
     onPickEndOnTheMapClicked: () -> Unit,
     onDateClicked: () -> Unit,
@@ -163,7 +157,7 @@ fun TripCreationControlsPreview() = AppTheme {
 
 @Composable
 fun CreateTrip(
-    state: BottomSheetState,
+    state: BottomSheetScreenState,
 ) {
     Column(
         Modifier.padding(Spacing16dp)
@@ -175,7 +169,7 @@ fun CreateTrip(
 
 @Composable
 fun SearchTrips(
-    state: BottomSheetState,
+    state: BottomSheetScreenState,
 ) {
     Column(
         Modifier.padding(Spacing16dp)
@@ -207,7 +201,10 @@ fun FillTheForms() {
         contentAlignment = Alignment.Center,
         modifier = Modifier.fillMaxSize()
     ) {
-        Text(text = stringResource(R.string.fill_the_forms), style = AppTypography.subhead.copy(color = TextHint))
+        Text(
+            text = stringResource(R.string.fill_the_forms),
+            style = AppTypography.subhead.copy(color = TextHint)
+        )
     }
 }
 
@@ -254,11 +251,7 @@ fun TripMainControls(
                 onValueChange = { /*tripStartLocation = it*/ },
                 modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
-                    Text(
-                        text = stringResource(R.string.map),
-                        color = Blue,
-                        modifier = Modifier.clickable { onPickStartOnTheMapClicked() }
-                    )
+                    TextFieldMapIcon(onPickStartOnTheMapClicked)
                 }
             )
         }
@@ -275,11 +268,7 @@ fun TripMainControls(
                 onValueChange = { /*tripEndLocation = it*/ },
                 modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
-                    Text(
-                        text = stringResource(R.string.map),
-                        color = Blue,
-                        modifier = Modifier.clickable { onPickEndOnTheMapClicked() }
-                    )
+                    TextFieldMapIcon(onPickEndOnTheMapClicked)
                 }
             )
         }
@@ -317,6 +306,19 @@ fun TripMainControls(
             }
         }
     }
+}
+
+@Composable
+private fun TextFieldMapIcon(
+    onPickEndOnTheMapClicked: () -> Unit,
+) {
+    Text(
+        text = stringResource(R.string.map),
+        color = Blue,
+        modifier = Modifier.clickable {
+            onPickEndOnTheMapClicked()
+        }
+    )
 }
 
 @Preview

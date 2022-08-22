@@ -24,7 +24,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import company.vk.education.siriusapp.ui.screens.main.bottomsheet.BottomSheetState
+import company.vk.education.siriusapp.ui.screens.main.bottomsheet.BottomSheetScreenState
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.SearchTrips
 
 @Composable
@@ -32,7 +32,7 @@ import company.vk.education.siriusapp.ui.screens.main.bottomsheet.SearchTrips
 fun AppTextFieldPreview() = AppTheme {
     Box(Modifier.background(Color.White)) {
         SearchTrips(
-            BottomSheetState(
+            BottomSheetScreenState(
                 startAddress = "My location",
                 endAddress = "Sochi park",
             )
