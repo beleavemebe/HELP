@@ -1,7 +1,5 @@
 package company.vk.education.siriusapp.ui.screens.main
 
-import androidx.compose.material.BottomSheetState
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.lifecycle.viewModelScope
 import com.yandex.mapkit.map.CameraListener
 import company.vk.education.siriusapp.domain.model.AuthState
@@ -16,7 +14,6 @@ import company.vk.education.siriusapp.ui.screens.main.map.MapViewState
 import company.vk.education.siriusapp.ui.utils.log
 import company.vk.education.siriusapp.ui.utils.setHourAndMinute
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -63,8 +60,9 @@ class MainViewModel @Inject constructor(
     }
 
     override fun accept(intent: MainScreenIntent): Any {
+        log("Got intent: $intent")
         return when (intent) {
-            is MainScreenIntent.MapIntent.ShowProfile -> authService.auth()
+            is MainScreenIntent.MapIntent.ShowProfile -> authOrViewMyProfile()
             is MainScreenIntent.BottomSheetIntent.PickStartOnTheMap -> pickTripStart()
             is MainScreenIntent.BottomSheetIntent.PickEndOnTheMap -> pickTripEnd()
             is MainScreenIntent.BottomSheetIntent.PickTripDate -> pickTripDate()
@@ -79,6 +77,20 @@ class MainViewModel @Inject constructor(
             is MainScreenIntent.MapIntent.UpdatePickedLocation -> updatePickedLocation(intent.location)
             is MainScreenIntent.BottomSheetIntent.TripDatePicked -> setTripDate(intent.date)
             is MainScreenIntent.BottomSheetIntent.TripTimePicked -> setTripTime(intent.hourAndMinute)
+            is MainScreenIntent.DismissUserModalSheet -> hideUserSheet()
+        }
+    }
+
+    private fun hideUserSheet() = reduce {
+        it.copy(isShowingProfile = false, profileToShow = null)
+    }
+
+    private fun authOrViewMyProfile() {
+        val authState = authService.authState.value
+        if (authState.isUnknown.not() && authState.user == null) {
+            authService.auth()
+        } else reduce {
+            it.copy(isShowingProfile = true, profileToShow = authState.user)
         }
     }
 

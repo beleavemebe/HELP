@@ -37,7 +37,6 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
-@OptIn(ExperimentalMaterialApi::class)
 class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels()
 
@@ -76,9 +75,6 @@ class MainActivity : AppCompatActivity() {
         override fun onObjectUpdated(p0: UserLocationView, p1: ObjectEvent) {}
     }
 
-    @Inject
-    lateinit var authService: AuthService
-
     override fun onCreate(savedInstanceState: Bundle?) {
         MapKitFactory.initialize(this)
         super.onCreate(savedInstanceState)
@@ -86,7 +82,9 @@ class MainActivity : AppCompatActivity() {
         mapInit()
         setContent {
             val mainScreenState by viewModel.viewState.collectAsState()
-            MainScreen(mainScreenState, mapView, userLocationLayer)
+            MainScreen(mainScreenState, mapView, userLocationLayer) {
+                viewModel.accept(MainScreenIntent.DismissUserModalSheet)
+            }
         }
     }
 
