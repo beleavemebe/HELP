@@ -6,6 +6,8 @@ import kotlinx.coroutines.CoroutineScope
 import java.util.*
 
 sealed class MainScreenIntent : BaseViewIntent {
+    object DismissUserModalSheet : MainScreenIntent()
+
     sealed class MapIntent : MainScreenIntent() {
         data class UpdatePickedLocation(val location: Location) : MapIntent()
         data class AddressChosen(val addressToChoose: AddressToChoose, val addressLocation: Location) : MapIntent()

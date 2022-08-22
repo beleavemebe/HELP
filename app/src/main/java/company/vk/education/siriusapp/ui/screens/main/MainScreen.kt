@@ -1,10 +1,7 @@
 package company.vk.education.siriusapp.ui.screens.main
 
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.unit.dp
 import com.yandex.mapkit.mapview.MapView
 import com.yandex.mapkit.user_location.UserLocationLayer
@@ -19,6 +16,7 @@ fun MainScreen(
     state: MainScreenState,
     mapView: MapView,
     userLocationLayer: UserLocationLayer,
+    onDismissSheet: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
     val bottomSheetState = rememberBottomSheetState(initialValue = BottomSheetValue.Collapsed)
@@ -35,5 +33,28 @@ fun MainScreen(
         sheetPeekHeight = 170.dp
     ) {
         MapScreen(mapView, userLocationLayer)
+    }
+
+    if (state.profileToShow != null) {
+        val modalBottomSheetState = rememberModalBottomSheetState(
+            initialValue = ModalBottomSheetValue.Hidden,
+            skipHalfExpanded = true,
+            confirmStateChange = { pendingState ->
+                if (pendingState == ModalBottomSheetValue.Hidden) {
+                    onDismissSheet()
+                }
+                false
+            }
+        )
+
+        UserModalSheet(state.profileToShow, modalBottomSheetState)
+
+        scope.launch {
+            if (state.isShowingProfile) {
+                modalBottomSheetState.show()
+            } else {
+                modalBottomSheetState.hide()
+            }
+        }
     }
 }
