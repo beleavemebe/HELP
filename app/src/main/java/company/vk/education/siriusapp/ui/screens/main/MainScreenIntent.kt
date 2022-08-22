@@ -11,6 +11,7 @@ sealed class MainScreenIntent : BaseViewIntent {
     sealed class MapIntent : MainScreenIntent() {
         data class UpdatePickedLocation(val location: Location) : MapIntent()
         data class AddressChosen(val addressToChoose: AddressToChoose, val addressLocation: Location) : MapIntent()
+        data class UserLocationAcquired(val location: Location) : MainScreenIntent()
         object ShowProfile : MapIntent()
     }
 

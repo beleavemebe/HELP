@@ -1,5 +1,6 @@
 package company.vk.education.siriusapp.ui.screens.main.bottomsheet
 
+import company.vk.education.siriusapp.domain.model.Location
 import company.vk.education.siriusapp.domain.model.TaxiService
 import company.vk.education.siriusapp.domain.model.Trip
 import java.util.*
@@ -7,6 +8,8 @@ import java.util.*
 data class BottomSheetScreenState(
     val startAddress: String = "",
     val endAddress: String = "",
+    val startLocation: Location = Location.LOCATION_UNKNOWN,
+    val endLocation: Location = Location.LOCATION_UNKNOWN,
     val isShowingDatePicker: Boolean = false,
     val isShowingTimePicker: Boolean = false,
     val date: Date? = null,

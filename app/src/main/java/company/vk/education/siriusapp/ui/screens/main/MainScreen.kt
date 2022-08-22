@@ -21,16 +21,22 @@ fun MainScreen(
     val scope = rememberCoroutineScope()
     val bottomSheetState = rememberBottomSheetState(initialValue = BottomSheetValue.Collapsed)
     val scaffoldState = rememberBottomSheetScaffoldState(bottomSheetState = bottomSheetState)
+    val sheetPeekHeight = if (state.mapState.isChoosingAddress) 0.dp else 170.dp
     scope.launch {
-        if (state.isBottomSheetExpanded) bottomSheetState.expand() else bottomSheetState.collapse()
+        if (state.isBottomSheetExpanded) {
+            if (bottomSheetState.isExpanded.not()) bottomSheetState.expand()
+        } else {
+            if (bottomSheetState.isCollapsed.not()) bottomSheetState.collapse()
+        }
     }
+
 
     BottomSheetScaffold(
         sheetContent = {
             BottomSheetScreen()
         },
         scaffoldState = scaffoldState,
-        sheetPeekHeight = 170.dp
+        sheetPeekHeight = sheetPeekHeight
     ) {
         MapScreen(mapView, userLocationLayer)
     }

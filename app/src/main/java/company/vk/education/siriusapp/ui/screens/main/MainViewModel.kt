@@ -16,7 +16,6 @@ import company.vk.education.siriusapp.ui.utils.setHourAndMinute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
 
@@ -25,7 +24,7 @@ class MainViewModel @Inject constructor(
     private val authService: AuthService,
     private val addressRepository: AddressRepository,
     private val tripsRepository: TripsRepository,
-) : BaseViewModel<MainScreenState, MainScreenIntent, Nothing>() {
+) : BaseViewModel<MainScreenState, MainScreenIntent, Nothing, MainScreenViewEffect>() {
     override val initialState =
         MainScreenState(
             mapState = MapViewState(),
@@ -78,6 +77,20 @@ class MainViewModel @Inject constructor(
             is MainScreenIntent.BottomSheetIntent.TripDatePicked -> setTripDate(intent.date)
             is MainScreenIntent.BottomSheetIntent.TripTimePicked -> setTripTime(intent.hourAndMinute)
             is MainScreenIntent.DismissUserModalSheet -> hideUserSheet()
+            is MainScreenIntent.MapIntent.UserLocationAcquired -> setStartLocationIfNotAlready(intent.location)
+        }
+    }
+
+    private fun setStartLocationIfNotAlready(location: Location) {
+        val alreadyPickedStartLocation = viewState.value.bottomSheetScreenState.startAddress.isBlank().not()
+        if (alreadyPickedStartLocation) return
+
+        execute {
+            chooseAddress(location, AddressToChoose.START)
+        }
+
+        viewEffect {
+            MainScreenViewEffect.MoveMapToLocation(location)
         }
     }
 
@@ -155,12 +168,11 @@ class MainViewModel @Inject constructor(
     ) = reduce {
         val address = addressRepository.getAddressOfLocation(addressLocation)
         val state = it.copy(
-            isBottomSheetExpanded = addressToChoose == AddressToChoose.END,
             mapState = it.mapState.copy(isChoosingAddress = false),
             bottomSheetScreenState = it.bottomSheetScreenState.run {
                 when (addressToChoose) {
-                    AddressToChoose.START -> copy(startAddress = address)
-                    AddressToChoose.END -> copy(endAddress = address)
+                    AddressToChoose.START -> copy(startAddress = address, startLocation = addressLocation)
+                    AddressToChoose.END -> copy(endAddress = address, endLocation = addressLocation)
                 }
             }
         )
@@ -168,12 +180,27 @@ class MainViewModel @Inject constructor(
     }
 
 
-    private fun pickTripRoute(adressToChoose: AddressToChoose) = reduce {
-        val newMapState = it.mapState.copy(
-            isChoosingAddress = true,
-            addressToChoose = adressToChoose
-        )
-        it.copy(mapState = newMapState, isBottomSheetExpanded = false)
+    private fun pickTripRoute(addressToChoose: AddressToChoose) {
+        reduce {
+            val newMapState = it.mapState.copy(
+                isChoosingAddress = true,
+                addressToChoose = addressToChoose
+            )
+            it.copy(mapState = newMapState, isBottomSheetExpanded = false)
+        }
+
+        viewEffect {
+            val sheetState = viewState.value.bottomSheetScreenState
+            when {
+                addressToChoose == AddressToChoose.START && sheetState.startAddress.isNotBlank() -> {
+                    MainScreenViewEffect.MoveMapToLocation(sheetState.startLocation)
+                }
+                addressToChoose == AddressToChoose.END && sheetState.endAddress.isNotBlank() ->  {
+                    MainScreenViewEffect.MoveMapToLocation(sheetState.endLocation)
+                }
+                else -> null
+            }
+        }
     }
 
     private fun pickTripStart() = pickTripRoute(AddressToChoose.START)
@@ -190,7 +217,7 @@ class MainViewModel @Inject constructor(
         return if (state.allFormsAreFilled().not()) {
             state
         } else {
-            viewModelScope.launch {
+            execute {
                 loadTrips(
                     state.bottomSheetScreenState.startAddress,
                     state.bottomSheetScreenState.endAddress,
@@ -199,7 +226,10 @@ class MainViewModel @Inject constructor(
                 )
             }
 
-            state.copy(bottomSheetScreenState = state.bottomSheetScreenState.copy(areTripsLoading = true))
+            state.copy(
+                isBottomSheetExpanded = true,
+                bottomSheetScreenState = state.bottomSheetScreenState.copy(areTripsLoading = true)
+            )
         }
     }
 

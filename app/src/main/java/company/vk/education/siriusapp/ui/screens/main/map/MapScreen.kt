@@ -172,7 +172,7 @@ fun ChooseLocation(state: MapViewState, map: MapView, onClick: (AddressToChoose)
                         color = OnBlue
                     )
                 }
-                Spacer(modifier = Modifier.height(175.dp + Spacing4dp))
+                Spacer(modifier = Modifier.height(Spacing16dp))
             }
         }
     }

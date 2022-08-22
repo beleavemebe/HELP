@@ -149,6 +149,19 @@ fun TripCreationControls(freePlaces: Int?, taxiService: TaxiService?) {
         )
     }
 
+    var pickedVehicleClass by remember { mutableStateOf("") }
+    IconAndTextField(
+        iconPainter = painterResource(id = R.drawable.ic_wheel),
+        iconDescription = stringResource(id = R.string.free_places),
+    ) {
+        VKUITextField(
+            value = pickedTaxiService?.toString() ?: "",
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            hint = stringResource(id = R.string.free_places),
+            onValueChange = { pickedTaxiService = TaxiService.Yandex },
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
 }
 
 @Composable
@@ -192,7 +205,7 @@ fun SearchTrips(
 
 @Composable
 private fun Loading() {
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         CircularProgressIndicator(color = Blue)
     }
 }
@@ -356,7 +369,7 @@ fun NoTripsFound() {
 
 @Composable
 fun Trips(trips: List<Trip>) {
-    LazyColumn {
+    LazyColumn(Modifier.fillMaxSize()) {
         items(trips) {
             TripItem(it)
         }

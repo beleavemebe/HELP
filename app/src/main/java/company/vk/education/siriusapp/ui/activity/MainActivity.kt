@@ -1,12 +1,10 @@
 package company.vk.education.siriusapp.ui.activity
 
 import android.content.pm.PackageManager
-import android.graphics.PointF
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.toArgb
@@ -15,8 +13,6 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.layers.ObjectEvent
-import com.yandex.mapkit.map.IconStyle
-import com.yandex.mapkit.map.RotationType
 import com.yandex.mapkit.mapview.MapView
 import com.yandex.mapkit.user_location.UserLocationLayer
 import com.yandex.mapkit.user_location.UserLocationObjectListener
@@ -24,17 +20,15 @@ import com.yandex.mapkit.user_location.UserLocationView
 import com.yandex.runtime.image.ImageProvider
 import company.vk.education.siriusapp.R
 import company.vk.education.siriusapp.domain.model.Location
-import company.vk.education.siriusapp.domain.service.AuthService
-import company.vk.education.siriusapp.ui.screens.main.AddressToChoose
-import company.vk.education.siriusapp.ui.screens.main.MainScreen
-import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
-import company.vk.education.siriusapp.ui.screens.main.MainViewModel
+import company.vk.education.siriusapp.ui.screens.main.*
 import company.vk.education.siriusapp.ui.theme.Blue
+import company.vk.education.siriusapp.ui.utils.collectViewEffects
+import company.vk.education.siriusapp.ui.utils.moveToLocation
 import company.vk.education.siriusapp.ui.utils.moveToUser
+import company.vk.education.siriusapp.ui.utils.pickedLocation
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -45,24 +39,13 @@ class MainActivity : AppCompatActivity() {
 
     private val userLocationListener = object : UserLocationObjectListener {
         override fun onObjectAdded(userLocationView: UserLocationView) {
-            userLocationView.pin.setIcon(
-                ImageProvider.fromResource(this@MainActivity, R.drawable.ic_my_location),
-            )
-            userLocationView.accuracyCircle.fillColor = Blue.toArgb()
+            userLocationView.pin.setIcon(ImageProvider.fromResource(this@MainActivity, R.drawable.ic_my_location),)
+            userLocationView.accuracyCircle.fillColor = Blue.copy(alpha = 0.1F).toArgb()
             lifecycleScope.launch {
-                delay(500)
-                mapView.moveToUser(userLocationLayer)
-                userLocationLayer.cameraPosition()?.target?.run {
-                    viewModel.accept(
-                        MainScreenIntent.MapIntent.AddressChosen(
-                            AddressToChoose.START,
-                            Location(
-                                latitude,
-                                longitude
-                            )
-                        )
-                    )
-                }
+                delay(250)
+                val userLocation = userLocationLayer.cameraPosition()
+                    ?.pickedLocation ?: return@launch
+                viewModel.accept(MainScreenIntent.MapIntent.UserLocationAcquired(userLocation))
             }
         }
 
@@ -78,8 +61,17 @@ class MainActivity : AppCompatActivity() {
         mapInit()
         setContent {
             val mainScreenState by viewModel.viewState.collectAsState()
+            viewModel.collectViewEffects(onViewEffect = { handleViewEffect(it) })
             MainScreen(mainScreenState, mapView, userLocationLayer) {
                 viewModel.accept(MainScreenIntent.DismissUserModalSheet)
+            }
+        }
+    }
+
+    private fun handleViewEffect(viewEffect: MainScreenViewEffect) {
+        when (viewEffect) {
+            is MainScreenViewEffect.MoveMapToLocation -> {
+                mapView.moveToLocation(viewEffect.location)
             }
         }
     }

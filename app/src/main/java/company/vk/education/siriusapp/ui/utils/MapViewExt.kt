@@ -8,7 +8,10 @@ import com.yandex.mapkit.user_location.UserLocationLayer
 import company.vk.education.siriusapp.domain.model.Location
 
 val MapView.pickedLocation: Location
-    get() = map.cameraPosition.target.run {
+    get() = map.cameraPosition.pickedLocation
+
+val CameraPosition.pickedLocation: Location
+    get() = target.run {
         Location(latitude, longitude)
     }
 
@@ -20,6 +23,14 @@ fun MapView.moveToUser(layer: UserLocationLayer, zoom: Float = 18.0F) {
             0f,
             0f
         ),
+        Animation(Animation.Type.SMOOTH, 0.5f),
+        null
+    )
+}
+
+fun MapView.moveToLocation(location: Location) {
+    map.move(
+        CameraPosition(Point(location.latitude, location.longitude), 18.0F, 0f, 0f),
         Animation(Animation.Type.SMOOTH, 0.5f),
         null
     )
