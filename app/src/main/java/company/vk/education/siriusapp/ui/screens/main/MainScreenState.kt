@@ -6,5 +6,6 @@ import company.vk.education.siriusapp.ui.screens.main.map.MapViewState
 
 data class MainScreenState(
     val mapState: MapViewState,
+    val isBottomSheetExpanded: Boolean = false,
     val bottomSheetScreenState: BottomSheetScreenState,
 ) : BaseViewState

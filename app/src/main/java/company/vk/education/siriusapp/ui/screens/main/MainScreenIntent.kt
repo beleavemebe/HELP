@@ -2,6 +2,7 @@ package company.vk.education.siriusapp.ui.screens.main
 
 import company.vk.education.siriusapp.domain.model.Location
 import company.vk.education.siriusapp.ui.base.BaseViewIntent
+import kotlinx.coroutines.CoroutineScope
 import java.util.*
 
 sealed class MainScreenIntent : BaseViewIntent {

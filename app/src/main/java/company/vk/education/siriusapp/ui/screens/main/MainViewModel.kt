@@ -16,6 +16,7 @@ import company.vk.education.siriusapp.ui.screens.main.map.MapViewState
 import company.vk.education.siriusapp.ui.utils.log
 import company.vk.education.siriusapp.ui.utils.setHourAndMinute
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -44,9 +45,6 @@ class MainViewModel @Inject constructor(
             )
         }
     }
-
-    @OptIn(ExperimentalMaterialApi::class)
-    lateinit var bottomSheetUIState: BottomSheetState
 
     val cameraListener: CameraListener
         get() = _cameraListener
@@ -145,6 +143,7 @@ class MainViewModel @Inject constructor(
     ) = reduce {
         val address = addressRepository.getAddressOfLocation(addressLocation)
         val state = it.copy(
+            isBottomSheetExpanded = addressToChoose == AddressToChoose.END,
             mapState = it.mapState.copy(isChoosingAddress = false),
             bottomSheetScreenState = it.bottomSheetScreenState.run {
                 when (addressToChoose) {
@@ -162,7 +161,7 @@ class MainViewModel @Inject constructor(
             isChoosingAddress = true,
             addressToChoose = adressToChoose
         )
-        it.copy(mapState = newMapState)
+        it.copy(mapState = newMapState, isBottomSheetExpanded = false)
     }
 
     private fun pickTripStart() = pickTripRoute(AddressToChoose.START)

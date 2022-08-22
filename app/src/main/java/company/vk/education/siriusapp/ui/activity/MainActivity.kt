@@ -4,14 +4,15 @@ import android.content.pm.PackageManager
 import android.graphics.PointF
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.material.*
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.layers.ObjectEvent
 import com.yandex.mapkit.map.IconStyle
@@ -22,10 +23,12 @@ import com.yandex.mapkit.user_location.UserLocationObjectListener
 import com.yandex.mapkit.user_location.UserLocationView
 import com.yandex.runtime.image.ImageProvider
 import company.vk.education.siriusapp.R
+import company.vk.education.siriusapp.domain.model.Location
 import company.vk.education.siriusapp.domain.service.AuthService
+import company.vk.education.siriusapp.ui.screens.main.AddressToChoose
+import company.vk.education.siriusapp.ui.screens.main.MainScreen
+import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
 import company.vk.education.siriusapp.ui.screens.main.MainViewModel
-import company.vk.education.siriusapp.ui.screens.main.bottomsheet.BottomSheetScreen
-import company.vk.education.siriusapp.ui.screens.main.map.MapScreen
 import company.vk.education.siriusapp.ui.theme.Blue
 import company.vk.education.siriusapp.ui.utils.moveToUser
 import dagger.hilt.android.AndroidEntryPoint
@@ -36,6 +39,7 @@ import javax.inject.Inject
 @AndroidEntryPoint
 @OptIn(ExperimentalMaterialApi::class)
 class MainActivity : AppCompatActivity() {
+    private val viewModel: MainViewModel by viewModels()
 
     private lateinit var mapView: MapView
     private lateinit var userLocationLayer: UserLocationLayer
@@ -53,6 +57,17 @@ class MainActivity : AppCompatActivity() {
             lifecycleScope.launch {
                 delay(500)
                 mapView.moveToUser(userLocationLayer)
+                userLocationLayer.cameraPosition()?.target?.run {
+                    viewModel.accept(
+                        MainScreenIntent.MapIntent.AddressChosen(
+                            AddressToChoose.START,
+                            Location(
+                                latitude,
+                                longitude
+                            )
+                        )
+                    )
+                }
             }
         }
 
@@ -70,18 +85,8 @@ class MainActivity : AppCompatActivity() {
         requestLocationPermission()
         mapInit()
         setContent {
-            val state = rememberBottomSheetState(initialValue = BottomSheetValue.Collapsed)
-            val scaffoldState = rememberBottomSheetScaffoldState(bottomSheetState = state)
-            viewModel(MainViewModel::class.java).bottomSheetUIState = state
-            BottomSheetScaffold(
-                sheetContent = {
-                    BottomSheetScreen()
-                },
-                scaffoldState = scaffoldState,
-                sheetPeekHeight = 170.dp
-            ) {
-                MapScreen(mapView, userLocationLayer)
-            }
+            val mainScreenState by viewModel.viewState.collectAsState()
+            MainScreen(mainScreenState, mapView, userLocationLayer)
         }
     }
 

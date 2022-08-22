@@ -8,7 +8,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,11 +38,9 @@ import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
 import company.vk.education.siriusapp.ui.screens.main.MainViewModel
 import company.vk.education.siriusapp.ui.theme.*
 import company.vk.education.siriusapp.ui.utils.formatOrEmpty
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -52,17 +53,6 @@ val MainViewModel.bottomSheetState
             initialState.bottomSheetScreenState
         )
 
-@OptIn(ExperimentalMaterialApi::class)
-fun collapseBottomSheet(
-    scope: CoroutineScope,
-    viewModel: MainViewModel
-) {
-    scope.launch {
-        viewModel.bottomSheetUIState.collapse()
-    }
-}
-
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun BottomSheetScreen(
     viewModel: MainViewModel = viewModel()
@@ -248,8 +238,6 @@ fun TripMainControls(
     onDateClicked: () -> Unit,
     onTimeClicked: () -> Unit
 ) {
-    val scope = rememberCoroutineScope()
-    val vm: MainViewModel = viewModel()
     Column(
         Modifier.padding(Spacing16dp)
     ) {
@@ -263,7 +251,7 @@ fun TripMainControls(
                 onValueChange = { /*tripStartLocation = it*/ },
                 modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
-                    TextFieldMapIcon(onPickEndOnTheMapClicked, scope, vm)
+                    TextFieldMapIcon(onPickStartOnTheMapClicked)
                 }
             )
         }
@@ -280,7 +268,7 @@ fun TripMainControls(
                 onValueChange = { /*tripEndLocation = it*/ },
                 modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
-                    TextFieldMapIcon(onPickEndOnTheMapClicked, scope, vm)
+                    TextFieldMapIcon(onPickEndOnTheMapClicked)
                 }
             )
         }
@@ -323,15 +311,12 @@ fun TripMainControls(
 @Composable
 private fun TextFieldMapIcon(
     onPickEndOnTheMapClicked: () -> Unit,
-    scope: CoroutineScope,
-    vm: MainViewModel
 ) {
     Text(
         text = stringResource(R.string.map),
         color = Blue,
         modifier = Modifier.clickable {
             onPickEndOnTheMapClicked()
-            collapseBottomSheet(scope, vm)
         }
     )
 }
