@@ -109,7 +109,7 @@ class MainViewModel @Inject constructor(
         tripsRepository.joinTrip(trip)
         currentTripService.setCurrentTrip(trip.id)
         it.copy(
-            tripToShow = trip
+            tripState = createTripState(trip)
         )
     }
 
