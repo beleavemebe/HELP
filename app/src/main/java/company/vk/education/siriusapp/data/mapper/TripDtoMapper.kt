@@ -22,11 +22,12 @@ class TripDtoMapper @Inject constructor(
             host = userDtoMapper.mapTo(arg.host),
             passengers = arg.passengers.map(userDtoMapper::mapTo),
             taxiService = arg.taxiService.alias,
-            taxiVehicleClass = arg.taxiVehicleClass,
+            taxiVehicleClass = arg.taxiVehicleClass.alias,
         )
     }
 
     override fun mapFrom(arg: TripDto): Trip {
+        val taxiService = findTaxiService(arg.taxiService!!)
         return Trip(
             id = arg.id!!,
             route = TripRoute(
@@ -37,8 +38,8 @@ class TripDtoMapper @Inject constructor(
             freePlaces = arg.freePlaces!!,
             host = userDtoMapper.mapFrom(arg.host!!),
             passengers = arg.passengers!!.map(userDtoMapper::mapFrom),
-            taxiService = TaxiService.Yandex, // TODO: redesign taxi info and implement properly
-            taxiVehicleClass = arg.taxiVehicleClass!!,
+            taxiService = taxiService,
+            taxiVehicleClass = findVehicleClass(taxiService, arg.taxiVehicleClass!!),
         )
     }
 }

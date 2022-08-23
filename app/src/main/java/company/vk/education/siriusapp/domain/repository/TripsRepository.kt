@@ -7,7 +7,7 @@ interface TripsRepository {
     suspend fun getTrips(route: TripRoute): List<Trip>
     suspend fun getTripDetails(id: String): Trip
     fun joinTrip(trip: Trip)
-    fun publishTrip(trip: Trip)
+    suspend fun publishTrip(trip: Trip)
     fun cancelTrip(trip: Trip)
     fun getTripHistory(): List<Trip>
 }

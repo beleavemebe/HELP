@@ -9,5 +9,5 @@ data class Trip(
     val host: User,
     val passengers: List<User>,
     val taxiService: TaxiService,
-    val taxiVehicleClass: String,
+    val taxiVehicleClass: TaxiVehicleClass,
 )

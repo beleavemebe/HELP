@@ -1,5 +1,6 @@
 package company.vk.education.siriusapp.ui.screens.main.bottomsheet
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -12,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,7 +22,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -31,13 +32,16 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import company.vk.education.siriusapp.R
-import company.vk.education.siriusapp.domain.model.*
+import company.vk.education.siriusapp.domain.model.TaxiService
+import company.vk.education.siriusapp.domain.model.TaxiVehicleClass
+import company.vk.education.siriusapp.domain.model.Trip
 import company.vk.education.siriusapp.ui.screens.main.HourAndMinute
 import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
 import company.vk.education.siriusapp.ui.screens.main.MainViewModel
 import company.vk.education.siriusapp.ui.theme.*
+import company.vk.education.siriusapp.ui.utils.LocalTaxiServiceToStringResMapper
+import company.vk.education.siriusapp.ui.utils.LocalTaxiVehicleClassToStringResMapper
 import company.vk.education.siriusapp.ui.utils.formatOrEmpty
-import company.vk.education.siriusapp.ui.utils.log
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -60,12 +64,45 @@ fun BottomSheetScreen(
     val state by viewModel.bottomSheetState.collectAsState()
     BottomSheet(
         state = state,
-        onPickStartOnTheMapClicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.PickStartOnTheMap) },
-        onPickEndOnTheMapClicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.PickEndOnTheMap) },
-        onDateClicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.PickTripDate) },
-        onTimeClicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.PickTripTime) },
-        onDatePicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.TripDatePicked(it)) },
-        onTimePicked = { viewModel.accept(MainScreenIntent.BottomSheetIntent.TripTimePicked(it)) },
+        onPickStartOnTheMapClicked = {
+            viewModel.accept(MainScreenIntent.BottomSheetIntent.PickStartOnTheMap)
+        },
+        onPickEndOnTheMapClicked = {
+            viewModel.accept(MainScreenIntent.BottomSheetIntent.PickEndOnTheMap)
+        },
+        onDateClicked = {
+            viewModel.accept(MainScreenIntent.BottomSheetIntent.PickTripDate)
+        },
+        onTimeClicked = {
+            viewModel.accept(MainScreenIntent.BottomSheetIntent.PickTripTime)
+        },
+        onDatePicked = {
+            viewModel.accept(MainScreenIntent.BottomSheetIntent.TripDatePicked(it))
+        },
+        onTimePicked = {
+            viewModel.accept(MainScreenIntent.BottomSheetIntent.TripTimePicked(it))
+        },
+        onPickTaxiPreference = {
+            viewModel.accept(MainScreenIntent.BottomSheetIntent.PickTaxiPreference(it))
+        },
+        onTaxiServicePicked = {
+            viewModel.accept(MainScreenIntent.BottomSheetIntent.TaxiServicePicked(it))
+        },
+        onTaxiVehicleClassPicked = {
+            viewModel.accept(MainScreenIntent.BottomSheetIntent.TaxiVehicleClassPicked(it))
+        },
+        onDismissPreferenceMenu = {
+            viewModel.accept(MainScreenIntent.BottomSheetIntent.DismissTaxiPreferenceMenu(it))
+        },
+        onCreateTripClicked = {
+            viewModel.accept(MainScreenIntent.BottomSheetIntent.CreateTrip)
+        },
+        onFreePlacesAmountChanged = {
+            viewModel.accept(MainScreenIntent.BottomSheetIntent.SetFreePlacesAmount(it))
+        },
+        onPublishTripClicked = {
+            viewModel.accept(MainScreenIntent.BottomSheetIntent.PublishTrip)
+        }
     )
 }
 
@@ -78,6 +115,13 @@ fun BottomSheet(
     onTimeClicked: () -> Unit,
     onDatePicked: (Date?) -> Unit,
     onTimePicked: (HourAndMinute) -> Unit,
+    onPickTaxiPreference: (TaxiPreference) -> Unit,
+    onTaxiServicePicked: (TaxiService) -> Unit,
+    onTaxiVehicleClassPicked: (TaxiVehicleClass) -> Unit,
+    onDismissPreferenceMenu: (TaxiPreference) -> Unit,
+    onCreateTripClicked: () -> Unit,
+    onFreePlacesAmountChanged: (Int) -> Unit,
+    onPublishTripClicked: () -> Unit,
 ) {
     Column {
         TripMainControls(
@@ -92,9 +136,17 @@ fun BottomSheet(
         )
 
         if (state.isSearchingTrips) {
-            SearchTrips(state)
+            SearchTrips(state, onCreateTripClicked)
         } else {
-            CreateTrip(state)
+            CreateTrip(
+                state,
+                onPickTaxiPreference,
+                onTaxiServicePicked,
+                onTaxiVehicleClassPicked,
+                onDismissPreferenceMenu,
+                onFreePlacesAmountChanged,
+                onPublishTripClicked,
+            )
         }
 
         if (state.isShowingDatePicker) {
@@ -118,61 +170,227 @@ fun formatTime(date: Date?): String {
 }
 
 @Composable
-fun TripCreationControls(freePlaces: Int?, taxiService: TaxiService?) {
-    var freePlacesAmount by remember { mutableStateOf(freePlaces) }
-    IconAndTextField(
-        iconPainter = painterResource(id = R.drawable.ic_user),
-        iconDescription = stringResource(id = R.string.free_places),
-    ) {
-        VKUITextField(
-            value = freePlacesAmount?.toString() ?: "",
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            hint = stringResource(id = R.string.free_places),
-            onValueChange = { freePlacesAmount = it.toInt() },
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
+fun TripCreationControls(
+    freePlaces: Int?,
+    taxiService: TaxiService?,
+    taxiVehicleClass: TaxiVehicleClass?,
+    onPickTaxiPreference: (TaxiPreference) -> Unit,
+    isShowingPickTaxiServiceMenu: Boolean,
+    isShowingPickTaxiVehicleClassMenu: Boolean,
+    onTaxiServicePicked: (TaxiService) -> Unit,
+    onTaxiVehicleClassPicked: (TaxiVehicleClass) -> Unit,
+    onDismissPreferenceMenu: (TaxiPreference) -> Unit,
+    onFreePlacesAmountChanged: (Int) -> Unit,
+    onPublishTripClicked: () -> Unit,
+) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            Modifier.padding(
+                start = Spacing16dp,
+                end = Spacing16dp,
+            )
+        ) {
+            var freePlacesAmount by rememberSaveable { mutableStateOf(freePlaces) }
+            IconAndTextField(
+                iconPainter = painterResource(id = R.drawable.ic_user),
+                iconDescription = stringResource(id = R.string.free_places),
+            ) {
+                VKUITextField(
+                    value = freePlacesAmount?.toString() ?: "",
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    hint = stringResource(id = R.string.free_places),
+                    onValueChange = {
+                        val amount = runCatching {
+                            it.toInt()
+                        }.getOrDefault(0)
+                        freePlacesAmount = amount
+                        onFreePlacesAmountChanged(amount)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
 
-    var pickedTaxiService by remember { mutableStateOf(taxiService) }
-    IconAndTextField(
-        iconPainter = painterResource(id = R.drawable.ic_car),
-        iconDescription = stringResource(id = R.string.free_places),
-    ) {
-        VKUITextField(
-            value = pickedTaxiService?.toString() ?: "",
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            hint = stringResource(id = R.string.free_places),
-            onValueChange = { pickedTaxiService = TaxiService.Yandex },
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
+            Spacer(modifier = Modifier.height(Spacing16dp))
 
+            val serviceMapper = LocalTaxiServiceToStringResMapper.current
+            val pickedTaxiService = taxiService?.let { stringResource(id = serviceMapper.map(it)) }
+            IconAndTextField(
+                iconPainter = painterResource(id = R.drawable.ic_car),
+                iconDescription = stringResource(R.string.taxi_service),
+            ) {
+                VKUITextField(
+                    value = pickedTaxiService ?: "",
+                    hint = stringResource(R.string.taxi_service),
+                    onValueChange = { },
+                    readOnly = true,
+                    interactionSource = textFieldInteractionSource {
+                        onPickTaxiPreference(
+                            TaxiPreference.TAXI_SERVICE
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            Box(Modifier.padding(start = 48.dp)) {
+                DropdownMenu(
+                    expanded = isShowingPickTaxiServiceMenu,
+                    onDismissRequest = { onDismissPreferenceMenu(TaxiPreference.TAXI_SERVICE) },
+                    modifier = Modifier.background(Color.White)
+                ) {
+                    Column {
+                        TaxiService.SERVICES.forEach { service ->
+                            val text = stringResource(id = serviceMapper.map(service))
+                            DropdownMenuItem(
+                                onClick = { onTaxiServicePicked(service) }
+                            ) {
+                                Text(text, style = AppTypography.text)
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(Spacing16dp))
+
+            val vehicleClassMapper = LocalTaxiVehicleClassToStringResMapper.current
+            val pickedTaxiVehicleClass = taxiVehicleClass?.let {
+                stringResource(id = vehicleClassMapper.map(it))
+            }
+            IconAndTextField(
+                iconPainter = painterResource(id = R.drawable.ic_wheel),
+                iconDescription = stringResource(R.string.vehicle_class),
+            ) {
+                VKUITextField(
+                    value = pickedTaxiVehicleClass ?: "",
+                    hint = stringResource(R.string.vehicle_class),
+                    onValueChange = { },
+                    readOnly = true,
+                    interactionSource = textFieldInteractionSource {
+                        onPickTaxiPreference(
+                            TaxiPreference.TAXI_VEHICLE_CLASS
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            Box(Modifier.padding(start = 48.dp)) {
+                DropdownMenu(
+                    expanded = isShowingPickTaxiVehicleClassMenu,
+                    onDismissRequest = { onDismissPreferenceMenu(TaxiPreference.TAXI_VEHICLE_CLASS) },
+                    modifier = Modifier.background(Color.White)
+                ) {
+                    Column {
+                        taxiService?.classes?.forEach { vehicleClass ->
+                            val text = stringResource(id = vehicleClassMapper.map(vehicleClass))
+                            DropdownMenuItem(
+                                onClick = { onTaxiVehicleClassPicked(vehicleClass) }
+                            ) {
+                                Text(text, style = AppTypography.text)
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.fillMaxHeight())
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = Spacing16dp, vertical = 0.dp),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Column {
+                Button(
+                    onClick = { onPublishTripClicked() },
+                    colors = ButtonDefaults.buttonColors(Blue),
+                    shape = Shapes.medium,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(FabSize)
+                ) {
+                    Text(
+                        stringResource(R.string.create_a_trip),
+                        style = AppTypography.subheadMedium,
+                        color = OnBlue
+                    )
+                }
+                Spacer(modifier = Modifier.height(Spacing16dp))
+            }
+        }
+    }
 }
 
 @Composable
 @Preview
 fun TripCreationControlsPreview() = AppTheme {
-    TripCreationControls(freePlaces = 2, taxiService = TaxiService.Yandex)
+    var service by remember { mutableStateOf<TaxiService?>(null) }
+    var vehicleClass by remember { mutableStateOf<TaxiVehicleClass?>(null) }
+    var isShowingPickTaxiServiceMenu by remember { mutableStateOf(false) }
+    var isShowingPickTaxiVehicleClassMenu by remember { mutableStateOf(false) }
+    TripCreationControls(
+        freePlaces = 2,
+        taxiService = service,
+        taxiVehicleClass = vehicleClass,
+        onPickTaxiPreference = {
+            when (it) {
+                TaxiPreference.TAXI_SERVICE -> isShowingPickTaxiServiceMenu = true
+                TaxiPreference.TAXI_VEHICLE_CLASS -> isShowingPickTaxiVehicleClassMenu = true
+            }
+        },
+        isShowingPickTaxiServiceMenu = isShowingPickTaxiServiceMenu,
+        isShowingPickTaxiVehicleClassMenu = isShowingPickTaxiVehicleClassMenu,
+        onTaxiServicePicked = {
+            service = it
+        },
+        onTaxiVehicleClassPicked = {
+            vehicleClass = it
+        },
+        onDismissPreferenceMenu = {
+            when (it) {
+                TaxiPreference.TAXI_SERVICE -> isShowingPickTaxiServiceMenu = false
+                TaxiPreference.TAXI_VEHICLE_CLASS -> isShowingPickTaxiVehicleClassMenu = false
+            }
+        },
+        onFreePlacesAmountChanged = {},
+        onPublishTripClicked = {}
+    )
 }
 
 @Composable
 fun CreateTrip(
     state: BottomSheetScreenState,
+    onPickTaxiPreference: (TaxiPreference) -> Unit,
+    onTaxiServicePicked: (TaxiService) -> Unit,
+    onTaxiVehicleClassPicked: (TaxiVehicleClass) -> Unit,
+    onDismissPreferenceMenu: (TaxiPreference) -> Unit,
+    onFreePlacesAmountChanged: (Int) -> Unit,
+    onPublishTripClicked: () -> Unit,
 ) {
-    Column(
-        Modifier.padding(Spacing16dp)
-    ) {
-        TripCreationControls(state.freePlaces, state.taxiService)
-    }
+    TripCreationControls(
+        freePlaces = state.freePlaces,
+        taxiService = state.taxiService,
+        taxiVehicleClass = state.taxiVehicleClass,
+        onPickTaxiPreference = onPickTaxiPreference,
+        isShowingPickTaxiServiceMenu = state.isShowingPickTaxiServiceMenu,
+        isShowingPickTaxiVehicleClassMenu = state.isShowingPickTaxiVehicleClassMenu,
+        onTaxiServicePicked = onTaxiServicePicked,
+        onTaxiVehicleClassPicked = onTaxiVehicleClassPicked,
+        onDismissPreferenceMenu = onDismissPreferenceMenu,
+        onFreePlacesAmountChanged = onFreePlacesAmountChanged,
+        onPublishTripClicked = onPublishTripClicked
+    )
 }
 
 
 @Composable
 fun SearchTrips(
     state: BottomSheetScreenState,
+    onCreateTripClicked: () -> Unit,
 ) {
     Column(
-        Modifier.padding(Spacing16dp)
+        Modifier.padding(horizontal = Spacing16dp)
     ) {
         if (state.areTripsLoading) {
             Loading()
@@ -182,6 +400,7 @@ fun SearchTrips(
             if (state.trips.isEmpty()) {
                 NoTripsFound()
             } else {
+                TripsHeader(state.trips.size, onCreateTripClicked)
                 Trips(trips = state.trips)
             }
         }
@@ -189,8 +408,38 @@ fun SearchTrips(
 }
 
 @Composable
+@Preview
+fun TripsHeaderPreview() = AppTheme {
+    TripsHeader(count = 5) {}
+}
+
+@Composable
+fun TripsHeader(count: Int, onCreateTripClicked: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .wrapContentHeight()
+            .fillMaxWidth()
+    ) {
+        Text(
+            text = stringResource(id = R.string.trips_found_placeholder, count),
+            style = AppTypography.subheadMedium,
+        )
+
+        Box(contentAlignment = Alignment.TopEnd) {
+            Spacer(modifier = Modifier.fillMaxWidth())
+            Text(
+                text = stringResource(R.string.create),
+                color = Blue,
+                style = AppTypography.subhead,
+                modifier = Modifier.clickable { onCreateTripClicked() }
+            )
+        }
+    }
+}
+
+@Composable
 private fun Loading() {
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         CircularProgressIndicator(color = Blue)
     }
 }
@@ -212,7 +461,7 @@ fun FillTheForms() {
 @Preview
 fun TripControlsPreview() {
     AppTheme {
-        Box(modifier = Modifier.padding(Spacing16dp)) {
+        Box(modifier = Modifier.padding(horizontal = Spacing16dp)) {
             TripMainControls(
                 startAddress = "",
                 endAddress = "",
@@ -322,15 +571,18 @@ private fun textFieldInteractionSource(onClick: () -> Unit) =
 
 @Composable
 private fun TextFieldMapIcon(
-    onPickEndOnTheMapClicked: () -> Unit,
+    onClick: () -> Unit,
 ) {
-    Text(
-        text = stringResource(R.string.map),
-        color = Blue,
-        modifier = Modifier.clickable {
-            onPickEndOnTheMapClicked()
-        }
-    )
+    Row {
+        Text(
+            text = stringResource(R.string.map),
+            color = Blue,
+            modifier = Modifier.clickable {
+                onClick()
+            }
+        )
+        Spacer(modifier = Modifier.width(Spacing6dp))
+    }
 }
 
 @Preview
@@ -354,81 +606,85 @@ fun NoTripsFound() {
 
 @Composable
 fun Trips(trips: List<Trip>) {
-    LazyColumn {
+    LazyColumn(Modifier.fillMaxSize()) {
         items(trips) {
             TripItem(it)
         }
     }
 }
 
-@Preview
-@Composable
-fun showTrip() {
-    TripItem(
-        trip = Trip(
-            route = TripRoute(),
-            freePlaces = 3,
-            host = User("123", "ivan", "", UserContacts("123")),
-            passengers = listOf(),
-            taxiService = TaxiService.Yandex,
-            taxiVehicleClass = "economy"
-        )
-    )
-}
-
 @Composable
 fun TripItem(trip: Trip) {
-    Row(Modifier.padding(Spacing16dp)) {
-        Surface(shape = RoundedCornerShape(16.dp), elevation = 4.dp, modifier = Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(Spacing16dp)) {
+    Row(Modifier.padding(16.dp)) {
+        Column {
+            Text("Поездка ${trip.id}", style = AppTypography.Typography.h3)
+            Row(
+                Modifier.fillMaxWidth(),
+                Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(verticalArrangement = Arrangement.Bottom) {
+                    Text("от ${trip.route.startLocation}", style = AppTypography.Typography.body1)
+                    Text("до ${trip.route.endLocation}", style = AppTypography.Typography.body1)
+                }
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("старт в", style = AppTypography.Typography.body2)
+                    Text(
+                        SimpleDateFormat("HH:mm").format(trip.route.date),
+                        style = AppTypography.Typography.h2,
+                        color = Blue900
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(modifier = Modifier
+                .fillMaxWidth()
+                .height(32.dp),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(backgroundColor = Blue900),
+                onClick = {
+                    println("Присоединяюсь")
+                }) {
                 Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .height(Spacing32dp),
+                    modifier = Modifier.fillMaxSize(),
                     Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        SimpleDateFormat(
-                            "dd.MM в HH:mm",
-                            Locale.getDefault()
-                        ).format(trip.route.date),
-                        style = AppTypography.Typography.h4,
-                    )
+                    Spacer(Modifier.fillMaxWidth(0.2f))
+                    Text("Присоединиться", fontSize = 12.sp, color = Color.White)
+                    Spacer(modifier = Modifier.width(8.dp))
                     ParticipantsRow {
                         var offset = 0
                         trip.passengers.forEachIndexed { i, url ->
+                            //Spacer(modifier = Modifier.size(4.dp))
                             AsyncImage(
                                 model = url, contentDescription = "userPhoto",
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier
                                     .size(16.dp)
                                     .clip(CircleShape)
-                                    .border(2.dp, OnBlue, CircleShape)
+                                    .border(2.dp, Blue900, CircleShape)
+                                    //.offset(offset.dp, 0.dp)
                                     .zIndex(5 - i.toFloat())
+                                //.rightPhoto(i.toFloat())
                             )
                             println(offset)
                             offset += 26
                         }
                     }
                 }
-                Text(
-                    "${trip.taxiService.alias} · ${trip.taxiVehicleClass} · 200m away",
-                    style = AppTypography.text,
-                    color = Color.LightGray
-                )
-                Spacer(modifier = Modifier.height(Spacing8dp))
-                Button(modifier = Modifier
-                    .fillMaxWidth()
-                    .height(32.dp),
-                    shape = RoundedCornerShape(Spacing8dp),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Blue900),
-                    onClick = {
-                        log("Присоединяюсь")
-                    }) {
-                    Text(stringResource(id = R.string.join), style = AppTypography.caption2Medium, color = OnBlue)
-                }
             }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                "${trip.freePlaces} мест свободно",
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                fontSize = 14.sp,
+                color = Color.LightGray
+            )
         }
     }
 }

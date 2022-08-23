@@ -34,8 +34,8 @@ class TripsRepositoryImpl @Inject constructor(
         println("Not yet implemented")
     }
 
-    override fun publishTrip(trip: Trip) {
-        println("Not yet implemented")
+    override suspend fun publishTrip(trip: Trip) {
+        db.collection(COLLECTION_TRIPS).add(mapper.mapTo(trip)).await()
     }
 
     override fun cancelTrip(trip: Trip) {
