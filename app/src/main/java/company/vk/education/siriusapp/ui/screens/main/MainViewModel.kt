@@ -80,7 +80,25 @@ class MainViewModel @Inject constructor(
             is MainScreenIntent.MapIntent.UserLocationAcquired -> setStartLocationIfNotAlready(intent.location)
             is MainScreenIntent.BottomSheetIntent.TaxiServicePicked -> setTaxiService(intent.taxiService)
             is MainScreenIntent.BottomSheetIntent.TaxiVehicleClassPicked -> setTaxiVehicleClass(intent.taxiVehicleClass)
+            is MainScreenIntent.BottomSheetIntent.CreateTrip -> createTrip()
+            is MainScreenIntent.BottomSheetIntent.SetFreePlacesAmount -> setFreePlacesAmount(intent.freePlaces)
         }
+    }
+
+    private fun setFreePlacesAmount(freePlaces: Int) = reduce {
+        it.copy(
+            bottomSheetScreenState = it.bottomSheetScreenState.copy(
+                freePlaces = freePlaces
+            )
+        )
+    }
+
+    private fun createTrip() = reduce {
+        it.copy(
+            bottomSheetScreenState = it.bottomSheetScreenState.copy(
+                isSearchingTrips = false
+            )
+        )
     }
 
     private fun pickTaxiPreference(preference: TaxiPreference) = reduce {

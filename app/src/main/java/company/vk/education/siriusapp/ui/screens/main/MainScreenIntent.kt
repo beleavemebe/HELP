@@ -25,9 +25,11 @@ sealed class MainScreenIntent : BaseViewIntent {
         object PickTripTime : BottomSheetIntent()
         data class TripDatePicked(val date: Date?) : BottomSheetIntent()
         data class TripTimePicked(val hourAndMinute: HourAndMinute) : BottomSheetIntent()
+        object CreateTrip : MainScreenIntent()
         data class PickTaxiPreference(val preference: TaxiPreference) : BottomSheetIntent()
         data class DismissTaxiPreferenceMenu(val preference: TaxiPreference) : BottomSheetIntent()
         data class TaxiServicePicked(val taxiService: TaxiService) : BottomSheetIntent()
         data class TaxiVehicleClassPicked(val taxiVehicleClass: TaxiVehicleClass) : BottomSheetIntent()
+        data class SetFreePlacesAmount(val freePlaces: Int) : MainScreenIntent()
     }
 }

@@ -2,7 +2,6 @@ package company.vk.education.siriusapp.ui.theme
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.ZeroCornerSize
@@ -22,23 +21,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import company.vk.education.siriusapp.ui.screens.main.bottomsheet.BottomSheetScreenState
-import company.vk.education.siriusapp.ui.screens.main.bottomsheet.SearchTrips
-
-@Composable
-@Preview
-fun AppTextFieldPreview() = AppTheme {
-    Box(Modifier.background(Color.White)) {
-        SearchTrips(
-            BottomSheetScreenState(
-                startAddress = "My location",
-                endAddress = "Sochi park",
-            )
-        )
-    }
-}
 
 @Composable
 fun IconAndTextField(
