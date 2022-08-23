@@ -29,5 +29,11 @@
     <string name="create">Создать</string>
     <string name="join">Присоединиться</string>
     <string name="go_back_to_search">Вернуться к поиску</string>
+    <string name="current_trip">Текущая поездка</string>
+    <string name="back">Назад</string>
+    <string name="host">Хост</string>
+    <string name="trip">Поездка</string>
+    <string name="participants">Участники</string>
+    <string name="free_place">Свободное место</string>
     <integer name="com_vk_sdk_AppId">51403589</integer>
 </resources>
