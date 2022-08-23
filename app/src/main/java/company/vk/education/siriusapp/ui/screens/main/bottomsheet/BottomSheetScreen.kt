@@ -106,7 +106,10 @@ fun BottomSheetScreen(
         },
         onTripClicked = {
             viewModel.accept(MainScreenIntent.ShowTripDetails(it))
-        }
+        },
+        onJoinTripClicked = {
+            viewModel.accept(MainScreenIntent.BottomSheetIntent.JoinTrip(it))
+        },
     )
 }
 
@@ -127,7 +130,8 @@ fun BottomSheet(
     onFreePlacesAmountChanged: (Int) -> Unit,
     onPublishTripClicked: () -> Unit,
     onCancelClicked: () -> Unit,
-    onTripClicked: (Trip) -> Unit
+    onTripClicked: (Trip) -> Unit,
+    onJoinTripClicked: (Trip) -> Unit,
 ) {
     Column {
         Box(Modifier.fillMaxWidth().padding(top = Spacing16dp), contentAlignment = Alignment.Center) {
@@ -145,7 +149,12 @@ fun BottomSheet(
         )
 
         if (state.isSearchingTrips) {
-            SearchTrips(state, onCreateTripClicked, onTripClicked)
+            SearchTrips(
+                state,
+                onCreateTripClicked,
+                onTripClicked,
+                onJoinTripClicked,
+            )
         } else {
             CreateTrip(
                 state,
@@ -421,7 +430,8 @@ fun CreateTrip(
 fun SearchTrips(
     state: BottomSheetScreenState,
     onCreateTripClicked: () -> Unit,
-    onTripClicked: (Trip) -> Unit
+    onTripClicked: (Trip) -> Unit,
+    onJoinTripClicked: (Trip) -> Unit,
 ) {
     Column(
         Modifier.padding(horizontal = Spacing16dp)
@@ -435,7 +445,7 @@ fun SearchTrips(
                 NoTripsFound()
             } else {
                 TripsHeader(state.trips.size, onCreateTripClicked)
-                Trips(trips = state.trips, onTripClicked)
+                Trips(trips = state.trips, onTripClicked, onJoinTripClicked)
             }
         }
     }
@@ -641,18 +651,19 @@ fun NoTripsFound() {
 @Composable
 fun Trips(
     trips: List<Trip>,
-    onTripClicked: (Trip) -> Unit
+    onTripClicked: (Trip) -> Unit,
+    onJoinTripClicked: (Trip) -> Unit,
 ) {
     LazyColumn(Modifier.fillMaxSize().padding(top = Spacing4dp)) {
         items(trips) {
-            TripItem(it, onTripClicked)
+            TripItem(it, onTripClicked, onJoinTripClicked)
         }
     }
 }
 
 @Preview
 @Composable
-fun showTrip() {
+fun TripItemPreview() {
     TripItem(
         trip = Trip(
             route = TripRoute(),
@@ -661,12 +672,18 @@ fun showTrip() {
             passengers = listOf(),
             taxiService = TaxiService.Yandex,
             taxiVehicleClass = TaxiService.Yandex.YandexVehicleClass.Comfort
-        )
-    ) {}
+        ),
+        onTripClicked = {},
+        onJoinTripClicked = {},
+    )
 }
 
 @Composable
-fun TripItem(trip: Trip, onTripClicked: (Trip) -> Unit) {
+fun TripItem(
+    trip: Trip,
+    onTripClicked: (Trip) -> Unit,
+    onJoinTripClicked: (Trip) -> Unit
+) {
     Surface(
         shape = RoundedCornerShape(16.dp),
         elevation = 4.dp,
@@ -715,15 +732,18 @@ fun TripItem(trip: Trip, onTripClicked: (Trip) -> Unit) {
                 color = Color.LightGray
             )
             Spacer(modifier = Modifier.height(Spacing12dp))
-            Button(modifier = Modifier
-                .fillMaxWidth()
-                .height(32.dp),
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(32.dp),
                 shape = RoundedCornerShape(Spacing8dp),
                 colors = ButtonDefaults.buttonColors(backgroundColor = Blue),
                 elevation = null,
                 onClick = {
+                    onJoinTripClicked(trip)
                     log("Присоединяюсь")
-                }) {
+                }
+            ) {
                 Text(
                     stringResource(id = R.string.join),
                     style = AppTypography.caption2Medium,

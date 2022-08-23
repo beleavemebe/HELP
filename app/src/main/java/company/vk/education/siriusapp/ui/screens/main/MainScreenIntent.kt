@@ -37,5 +37,6 @@ sealed class MainScreenIntent : BaseViewIntent {
         data class SetFreePlacesAmount(val freePlaces: Int) : BottomSheetIntent()
         object PublishTrip : BottomSheetIntent()
         object CancelCreatingTrip : BottomSheetIntent()
+        data class JoinTrip(val trip: Trip) : BottomSheetIntent()
     }
 }
