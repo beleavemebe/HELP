@@ -10,6 +10,8 @@ import com.yandex.mapkit.directions.driving.DrivingSession
 import com.yandex.mapkit.directions.driving.VehicleOptions
 import com.yandex.mapkit.map.CameraListener
 import com.yandex.runtime.Error
+import company.vk.education.siriusapp.core.dist
+import company.vk.education.siriusapp.core.meters
 import company.vk.education.siriusapp.domain.model.*
 import company.vk.education.siriusapp.domain.repository.AddressRepository
 import company.vk.education.siriusapp.domain.repository.TripsRepository
@@ -19,6 +21,7 @@ import company.vk.education.siriusapp.ui.base.BaseViewModel
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.BottomSheetScreenState
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.TaxiPreference
 import company.vk.education.siriusapp.ui.screens.main.map.MapViewState
+import company.vk.education.siriusapp.ui.screens.main.trip.TripCard
 import company.vk.education.siriusapp.ui.screens.main.trip.TripState
 import company.vk.education.siriusapp.ui.utils.log
 import company.vk.education.siriusapp.ui.utils.setHourAndMinute
@@ -28,6 +31,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import java.util.*
 import javax.inject.Inject
+import kotlin.math.round
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
@@ -406,13 +410,15 @@ class MainViewModel @Inject constructor(
     private fun loadTrips(startAddress: String, endAddress: String, date: Date) = reduce {
         val startAddressLocation = addressRepository.getLocationOfAnAddress(startAddress)
         val endAddressLocation = addressRepository.getLocationOfAnAddress(endAddress)
-        val trips =
-            tripsRepository.getTrips(TripRoute(startAddressLocation, endAddressLocation, date))
+        val route = TripRoute(startAddressLocation, endAddressLocation, date)
+        val trips = tripsRepository.getTrips(route)
 
         it.copy(
             bottomSheetScreenState = it.bottomSheetScreenState.copy(
                 areTripsLoading = false,
-                trips = trips
+                trips = trips.map { trip ->
+                    TripCard(trip, round((route dist trip.route).meters()).toInt())
+                }
             )
         )
     }
