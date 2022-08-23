@@ -317,6 +317,7 @@ fun TripCreationControls(
                     onClick = { onPublishTripClicked() },
                     colors = ButtonDefaults.buttonColors(Blue),
                     shape = Shapes.medium,
+                    elevation = null,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(FabSize)
@@ -334,6 +335,7 @@ fun TripCreationControls(
                     onClick = { onCancelClicked() },
                     colors = ButtonDefaults.buttonColors(OnBlue),
                     shape = Shapes.medium,
+                    elevation = null,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(FabSize)
@@ -717,7 +719,8 @@ fun TripItem(trip: Trip, onTripClicked: (Trip) -> Unit) {
                 .fillMaxWidth()
                 .height(32.dp),
                 shape = RoundedCornerShape(Spacing8dp),
-                colors = ButtonDefaults.buttonColors(backgroundColor = Blue900),
+                colors = ButtonDefaults.buttonColors(backgroundColor = Blue),
+                elevation = null,
                 onClick = {
                     log("Присоединяюсь")
                 }) {
