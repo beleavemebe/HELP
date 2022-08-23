@@ -1,7 +1,15 @@
 package company.vk.education.siriusapp.ui.screens.main
 
 import androidx.lifecycle.viewModelScope
+import com.yandex.mapkit.RequestPoint
+import com.yandex.mapkit.RequestPointType
+import com.yandex.mapkit.directions.DirectionsFactory
+import com.yandex.mapkit.directions.driving.DrivingOptions
+import com.yandex.mapkit.directions.driving.DrivingRoute
+import com.yandex.mapkit.directions.driving.DrivingSession
+import com.yandex.mapkit.directions.driving.VehicleOptions
 import com.yandex.mapkit.map.CameraListener
+import com.yandex.runtime.Error
 import company.vk.education.siriusapp.domain.model.*
 import company.vk.education.siriusapp.domain.repository.AddressRepository
 import company.vk.education.siriusapp.domain.repository.TripsRepository
@@ -11,8 +19,10 @@ import company.vk.education.siriusapp.ui.base.BaseViewModel
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.BottomSheetScreenState
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.TaxiPreference
 import company.vk.education.siriusapp.ui.screens.main.map.MapViewState
+import company.vk.education.siriusapp.ui.screens.main.trip.TripState
 import company.vk.education.siriusapp.ui.utils.log
 import company.vk.education.siriusapp.ui.utils.setHourAndMinute
+import company.vk.education.siriusapp.ui.utils.toPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -103,15 +113,50 @@ class MainViewModel @Inject constructor(
         )
     }
 
-    private fun openTripModalSheet(trip: Trip) = reduce {
-        it.copy(
-            tripToShow = trip
-        )
+    private val driveRouter = DirectionsFactory.getInstance().createDrivingRouter()
+    private val routeListener = object : DrivingSession.DrivingRouteListener {
+        override fun onDrivingRoutes(p0: MutableList<DrivingRoute>) {
+            if (p0.isEmpty()) return
+            reduce {
+                it.copy(
+                    tripState = it.tripState?.copy(tripRoutePolyline = p0.first().geometry)
+                )
+            }
+        }
+
+        override fun onDrivingRoutesError(p0: Error) {
+            log("error $p0")
+        }
     }
+
+    private fun driveRoute(route: TripRoute) {
+        val list = listOf(
+            RequestPoint(route.startLocation.toPoint(), RequestPointType.WAYPOINT, null),
+            RequestPoint(route.endLocation.toPoint(), RequestPointType.WAYPOINT, null)
+        )
+        driveRouter.requestRoutes(list, DrivingOptions(), VehicleOptions(), routeListener)
+    }
+
+
+    private fun openTripModalSheet(trip: Trip) {
+        reduce {
+            it.copy(
+                tripState = createTripState(trip)
+            )
+        }
+        driveRoute(trip.route)
+    }
+
+    private suspend fun createTripState(trip: Trip) =
+        TripState(
+            trip,
+            addressRepository.getAddressOfLocation(trip.route.startLocation),
+            addressRepository.getAddressOfLocation(trip.route.endLocation)
+        )
 
     private fun dismissTripModalSheet() = reduce {
         it.copy(
-            tripToShow = null
+            tripState = null
         )
     }
 
