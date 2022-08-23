@@ -697,6 +697,7 @@ fun TripItem(
     onTripClicked: (Trip) -> Unit,
     onJoinTripClicked: (Trip) -> Unit
 ) {
+    Spacer(modifier = Modifier.height(Spacing4dp))
     Surface(
         shape = RoundedCornerShape(16.dp),
         elevation = 4.dp,
@@ -766,7 +767,7 @@ fun TripItem(
             }
         }
     }
-    Spacer(modifier = Modifier.height(Spacing16dp))
+    Spacer(modifier = Modifier.height(Spacing12dp))
 }
 
 @Composable
