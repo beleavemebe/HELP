@@ -9,6 +9,7 @@ import com.yandex.mapkit.mapview.MapView
 import com.yandex.mapkit.user_location.UserLocationLayer
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.BottomSheetScreen
 import company.vk.education.siriusapp.ui.screens.main.map.MapScreen
+import company.vk.education.siriusapp.ui.screens.main.trip.TripModalSheet
 import company.vk.education.siriusapp.ui.theme.Spacing32dp
 import kotlinx.coroutines.launch
 
@@ -68,7 +69,7 @@ fun MainScreen(
         }
     }
 
-    if (state.tripToShow != null) {
+    if (state.tripState != null) {
         val tripSheetState = rememberModalBottomSheetState(
             initialValue = ModalBottomSheetValue.Hidden,
             skipHalfExpanded = true,
@@ -80,7 +81,7 @@ fun MainScreen(
             }
         )
 
-        TripModalSheet(state.tripToShow, tripSheetState)
+        TripModalSheet(state.tripState, tripSheetState)
 
         scope.launch {
             tripSheetState.show()
