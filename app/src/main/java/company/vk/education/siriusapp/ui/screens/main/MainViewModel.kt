@@ -2,14 +2,14 @@ package company.vk.education.siriusapp.ui.screens.main
 
 import androidx.lifecycle.viewModelScope
 import com.yandex.mapkit.map.CameraListener
-import company.vk.education.siriusapp.domain.model.AuthState
-import company.vk.education.siriusapp.domain.model.Location
-import company.vk.education.siriusapp.domain.model.TripRoute
+import company.vk.education.siriusapp.domain.model.*
 import company.vk.education.siriusapp.domain.repository.AddressRepository
 import company.vk.education.siriusapp.domain.repository.TripsRepository
 import company.vk.education.siriusapp.domain.service.AuthService
 import company.vk.education.siriusapp.ui.base.BaseViewModel
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.BottomSheetScreenState
+import company.vk.education.siriusapp.ui.screens.main.bottomsheet.TaxiPreference
+import company.vk.education.siriusapp.ui.screens.main.bottomsheet.bottomSheetState
 import company.vk.education.siriusapp.ui.screens.main.map.MapViewState
 import company.vk.education.siriusapp.ui.utils.log
 import company.vk.education.siriusapp.ui.utils.setHourAndMinute
@@ -66,8 +66,8 @@ class MainViewModel @Inject constructor(
             is MainScreenIntent.BottomSheetIntent.PickEndOnTheMap -> pickTripEnd()
             is MainScreenIntent.BottomSheetIntent.PickTripDate -> pickTripDate()
             is MainScreenIntent.BottomSheetIntent.PickTripTime -> pickTripTime()
-            is MainScreenIntent.BottomSheetIntent.PickTaxiService -> TODO()
-            is MainScreenIntent.BottomSheetIntent.PickTaxiVehicleClass -> TODO()
+            is MainScreenIntent.BottomSheetIntent.PickTaxiPreference -> pickTaxiPreference(intent.preference)
+            is MainScreenIntent.BottomSheetIntent.DismissTaxiPreferenceMenu -> dismissTaxiPreferenceMenu(intent.preference)
             is MainScreenIntent.MapIntent.AddressChosen -> {
                 val addressLocation = intent.addressLocation
                 val addressToChoose = intent.addressToChoose
@@ -78,7 +78,57 @@ class MainViewModel @Inject constructor(
             is MainScreenIntent.BottomSheetIntent.TripTimePicked -> setTripTime(intent.hourAndMinute)
             is MainScreenIntent.DismissUserModalSheet -> hideUserSheet()
             is MainScreenIntent.MapIntent.UserLocationAcquired -> setStartLocationIfNotAlready(intent.location)
+            is MainScreenIntent.BottomSheetIntent.TaxiServicePicked -> setTaxiService(intent.taxiService)
+            is MainScreenIntent.BottomSheetIntent.TaxiVehicleClassPicked -> setTaxiVehicleClass(intent.taxiVehicleClass)
         }
+    }
+
+    private fun pickTaxiPreference(preference: TaxiPreference) = reduce {
+        when (preference) {
+            TaxiPreference.TAXI_SERVICE -> it.copy(
+                bottomSheetScreenState = it.bottomSheetScreenState.copy(
+                    isShowingPickTaxiServiceMenu = true
+                )
+            )
+            TaxiPreference.TAXI_VEHICLE_CLASS -> it.copy(
+                bottomSheetScreenState = it.bottomSheetScreenState.copy(
+                    isShowingPickTaxiVehicleClassMenu = true
+    )
+            )
+        }
+    }
+
+    private fun dismissTaxiPreferenceMenu(preference: TaxiPreference) = reduce {
+        when (preference) {
+            TaxiPreference.TAXI_SERVICE -> it.copy(
+                bottomSheetScreenState = it.bottomSheetScreenState.copy(
+                    isShowingPickTaxiServiceMenu = false
+                )
+            )
+            TaxiPreference.TAXI_VEHICLE_CLASS -> it.copy(
+                bottomSheetScreenState = it.bottomSheetScreenState.copy(
+                    isShowingPickTaxiVehicleClassMenu = false
+                )
+            )
+        }
+    }
+
+    private fun setTaxiService(taxiService: TaxiService) = reduce {
+        it.copy(
+            bottomSheetScreenState = it.bottomSheetScreenState.copy(
+                taxiService = taxiService,
+                isShowingPickTaxiServiceMenu = false
+            )
+        )
+    }
+
+    private fun setTaxiVehicleClass(vehicleClass: TaxiVehicleClass) = reduce {
+        it.copy(
+            bottomSheetScreenState = it.bottomSheetScreenState.copy(
+                taxiVehicleClass = vehicleClass,
+                isShowingPickTaxiVehicleClassMenu = false
+            )
+        )
     }
 
     private fun setStartLocationIfNotAlready(location: Location) {

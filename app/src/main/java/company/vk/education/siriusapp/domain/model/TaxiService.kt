@@ -1,6 +1,6 @@
 package company.vk.education.siriusapp.domain.model
 
-interface TaxiVehicleClass {
+sealed interface TaxiVehicleClass {
     val alias: String
 }
 
