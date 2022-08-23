@@ -2,6 +2,7 @@ package company.vk.education.siriusapp.ui.screens.main
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetState
@@ -30,10 +31,11 @@ fun UserModalSheet(
 ) {
     ModalBottomSheetLayout(
         sheetState = modalBottomSheetState,
+        sheetShape = RoundedCornerShape(32.dp, 32.dp, 0.dp, 0.dp),
         sheetContent = {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().padding(24.dp)
             ) {
                 AsyncImage(
                     model = user.imageUrl,

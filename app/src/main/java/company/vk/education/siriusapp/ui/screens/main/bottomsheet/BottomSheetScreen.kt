@@ -124,6 +124,9 @@ fun BottomSheet(
     onPublishTripClicked: () -> Unit,
 ) {
     Column {
+        Box(Modifier.fillMaxWidth().padding(top = Spacing16dp), contentAlignment = Alignment.Center) {
+            Divider(Modifier.fillMaxWidth(0.25f).clip(RoundedCornerShape(Spacing4dp)), color = Color.LightGray, thickness = 3.dp)
+        }
         TripMainControls(
             state.startAddress,
             state.endAddress,
