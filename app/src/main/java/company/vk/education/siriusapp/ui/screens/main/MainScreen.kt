@@ -19,7 +19,8 @@ fun MainScreen(
     state: MainScreenState,
     mapView: MapView,
     userLocationLayer: UserLocationLayer,
-    onDismissSheet: () -> Unit
+    onDismissUserSheet: () -> Unit,
+    onDismissTripSheet: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val bottomSheetState = rememberBottomSheetState(initialValue = BottomSheetValue.Collapsed)
@@ -33,7 +34,6 @@ fun MainScreen(
         }
     }
 
-
     BottomSheetScaffold(
         sheetContent = {
             BottomSheetScreen()
@@ -45,26 +45,45 @@ fun MainScreen(
         MapScreen(mapView, userLocationLayer)
     }
 
-    if (state.profileToShow != null) {
-        val modalBottomSheetState = rememberModalBottomSheetState(
+    if (state.userToShow != null) {
+        val userSheetState = rememberModalBottomSheetState(
             initialValue = ModalBottomSheetValue.Hidden,
             skipHalfExpanded = true,
             confirmStateChange = { pendingState ->
                 if (pendingState == ModalBottomSheetValue.Hidden) {
-                    onDismissSheet()
+                    onDismissUserSheet()
                 }
                 false
             }
         )
 
-        UserModalSheet(state.profileToShow, modalBottomSheetState)
+        UserModalSheet(state.userToShow, userSheetState)
 
         scope.launch {
-            if (state.isShowingProfile) {
-                modalBottomSheetState.show()
+            if (state.isShowingUser) {
+                userSheetState.show()
             } else {
-                modalBottomSheetState.hide()
+                userSheetState.hide()
             }
+        }
+    }
+
+    if (state.tripToShow != null) {
+        val tripSheetState = rememberModalBottomSheetState(
+            initialValue = ModalBottomSheetValue.Hidden,
+            skipHalfExpanded = true,
+            confirmStateChange = { pendingState ->
+                if (pendingState == ModalBottomSheetValue.Hidden) {
+                    onDismissTripSheet()
+                }
+                false
+            }
+        )
+
+        TripModalSheet(state.tripToShow, tripSheetState)
+
+        scope.launch {
+            tripSheetState.show()
         }
     }
 }

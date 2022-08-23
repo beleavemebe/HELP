@@ -71,9 +71,17 @@ class MainActivity : AppCompatActivity() {
                 LocalTaxiServiceToStringResMapper.let { it provides it.current },
                 LocalTaxiVehicleClassToStringResMapper.let { it provides it.current },
             ) {
-                MainScreen(mainScreenState, mapView, userLocationLayer) {
-                    viewModel.accept(MainScreenIntent.DismissUserModalSheet)
-                }
+                MainScreen(
+                    state = mainScreenState,
+                    mapView = mapView,
+                    userLocationLayer = userLocationLayer,
+                    onDismissUserSheet = {
+                        viewModel.accept(MainScreenIntent.DismissUserModalSheet)
+                    },
+                    onDismissTripSheet = {
+                        viewModel.accept(MainScreenIntent.DismissTripModalSheet)
+                    }
+                )
             }
         }
     }

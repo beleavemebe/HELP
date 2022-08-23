@@ -103,6 +103,9 @@ fun BottomSheetScreen(
         },
         onCancelClicked = {
             viewModel.accept(MainScreenIntent.BottomSheetIntent.CancelCreatingTrip)
+        },
+        onTripClicked = {
+            viewModel.accept(MainScreenIntent.ShowTripDetails(it))
         }
     )
 }
@@ -123,7 +126,8 @@ fun BottomSheet(
     onCreateTripClicked: () -> Unit,
     onFreePlacesAmountChanged: (Int) -> Unit,
     onPublishTripClicked: () -> Unit,
-    onCancelClicked: () -> Unit
+    onCancelClicked: () -> Unit,
+    onTripClicked: (Trip) -> Unit
 ) {
     Column {
         Box(Modifier.fillMaxWidth().padding(top = Spacing16dp), contentAlignment = Alignment.Center) {
@@ -141,7 +145,7 @@ fun BottomSheet(
         )
 
         if (state.isSearchingTrips) {
-            SearchTrips(state, onCreateTripClicked)
+            SearchTrips(state, onCreateTripClicked, onTripClicked)
         } else {
             CreateTrip(
                 state,
@@ -242,7 +246,7 @@ fun TripCreationControls(
                 DropdownMenu(
                     expanded = isShowingPickTaxiServiceMenu,
                     onDismissRequest = { onDismissPreferenceMenu(TaxiPreference.TAXI_SERVICE) },
-                    modifier = Modifier.background(Color.White)
+                    modifier = Modifier.background(White)
                 ) {
                     Column {
                         TaxiService.SERVICES.forEach { service ->
@@ -284,7 +288,7 @@ fun TripCreationControls(
                 DropdownMenu(
                     expanded = isShowingPickTaxiVehicleClassMenu,
                     onDismissRequest = { onDismissPreferenceMenu(TaxiPreference.TAXI_VEHICLE_CLASS) },
-                    modifier = Modifier.background(Color.White)
+                    modifier = Modifier.background(White)
                 ) {
                     Column {
                         taxiService?.classes?.forEach { vehicleClass ->
@@ -415,6 +419,7 @@ fun CreateTrip(
 fun SearchTrips(
     state: BottomSheetScreenState,
     onCreateTripClicked: () -> Unit,
+    onTripClicked: (Trip) -> Unit
 ) {
     Column(
         Modifier.padding(horizontal = Spacing16dp)
@@ -428,7 +433,7 @@ fun SearchTrips(
                 NoTripsFound()
             } else {
                 TripsHeader(state.trips.size, onCreateTripClicked)
-                Trips(trips = state.trips)
+                Trips(trips = state.trips, onTripClicked)
             }
         }
     }
@@ -632,10 +637,13 @@ fun NoTripsFound() {
 }
 
 @Composable
-fun Trips(trips: List<Trip>) {
+fun Trips(
+    trips: List<Trip>,
+    onTripClicked: (Trip) -> Unit
+) {
     LazyColumn(Modifier.fillMaxSize().padding(top = Spacing4dp)) {
         items(trips) {
-            TripItem(it)
+            TripItem(it, onTripClicked)
         }
     }
 }
@@ -652,15 +660,15 @@ fun showTrip() {
             taxiService = TaxiService.Yandex,
             taxiVehicleClass = TaxiService.Yandex.YandexVehicleClass.Comfort
         )
-    )
+    ) {}
 }
 
 @Composable
-fun TripItem(trip: Trip) {
+fun TripItem(trip: Trip, onTripClicked: (Trip) -> Unit) {
     Surface(
         shape = RoundedCornerShape(16.dp),
         elevation = 4.dp,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth().clickable { onTripClicked(trip) }
     ) {
         Column(Modifier.padding(Spacing16dp)) {
             Row(

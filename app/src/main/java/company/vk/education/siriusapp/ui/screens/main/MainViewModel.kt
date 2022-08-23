@@ -9,7 +9,6 @@ import company.vk.education.siriusapp.domain.service.AuthService
 import company.vk.education.siriusapp.ui.base.BaseViewModel
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.BottomSheetScreenState
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.TaxiPreference
-import company.vk.education.siriusapp.ui.screens.main.bottomsheet.bottomSheetState
 import company.vk.education.siriusapp.ui.screens.main.map.MapViewState
 import company.vk.education.siriusapp.ui.utils.log
 import company.vk.education.siriusapp.ui.utils.setHourAndMinute
@@ -84,7 +83,21 @@ class MainViewModel @Inject constructor(
             is MainScreenIntent.BottomSheetIntent.SetFreePlacesAmount -> setFreePlacesAmount(intent.freePlaces)
             is MainScreenIntent.BottomSheetIntent.PublishTrip -> publishTrip()
             is MainScreenIntent.BottomSheetIntent.CancelCreatingTrip -> cancelCreatingTrip()
+            is MainScreenIntent.ShowTripDetails -> openTripModalSheet(intent.trip)
+            is MainScreenIntent.DismissTripModalSheet -> dismissTripModalSheet()
         }
+    }
+
+    private fun openTripModalSheet(trip: Trip) = reduce {
+        it.copy(
+            tripToShow = trip
+        )
+    }
+
+    private fun dismissTripModalSheet() = reduce {
+        it.copy(
+            tripToShow = null
+        )
     }
 
     private fun cancelCreatingTrip() = reduce {
@@ -192,7 +205,7 @@ class MainViewModel @Inject constructor(
     }
 
     private fun hideUserSheet() = reduce {
-        it.copy(isShowingProfile = false, profileToShow = null)
+        it.copy(isShowingUser = false, userToShow = null)
     }
 
     private fun authOrViewMyProfile() {
@@ -200,7 +213,7 @@ class MainViewModel @Inject constructor(
         if (authState.isUnknown.not() && authState.user == null) {
             authService.auth()
         } else reduce {
-            it.copy(isShowingProfile = true, profileToShow = authState.user)
+            it.copy(isShowingUser = true, userToShow = authState.user)
         }
     }
 
