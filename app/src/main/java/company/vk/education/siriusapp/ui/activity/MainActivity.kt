@@ -66,7 +66,7 @@ class MainActivity : AppCompatActivity() {
         mapInit()
         setContent {
             val mainScreenState by viewModel.viewState.collectAsState()
-            viewModel.collectViewEffects(onViewEffect = { handleViewEffect(it) })
+            viewModel.collectViewEffects(::handleViewEffect)
             CompositionLocalProvider(
                 LocalTaxiServiceToStringResMapper.let { it provides it.current },
                 LocalTaxiVehicleClassToStringResMapper.let { it provides it.current },
