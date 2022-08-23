@@ -1,12 +1,15 @@
 package company.vk.education.siriusapp.ui.screens.main
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.unit.dp
 import com.yandex.mapkit.mapview.MapView
 import com.yandex.mapkit.user_location.UserLocationLayer
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.BottomSheetScreen
 import company.vk.education.siriusapp.ui.screens.main.map.MapScreen
+import company.vk.education.siriusapp.ui.theme.Spacing32dp
 import kotlinx.coroutines.launch
 
 
@@ -21,7 +24,7 @@ fun MainScreen(
     val scope = rememberCoroutineScope()
     val bottomSheetState = rememberBottomSheetState(initialValue = BottomSheetValue.Collapsed)
     val scaffoldState = rememberBottomSheetScaffoldState(bottomSheetState = bottomSheetState)
-    val sheetPeekHeight = if (state.mapState.isChoosingAddress) 0.dp else 170.dp
+    val sheetPeekHeight = if (state.mapState.isChoosingAddress) 0.dp else 186.dp
     scope.launch {
         if (state.isBottomSheetExpanded) {
             if (bottomSheetState.isExpanded.not()) bottomSheetState.expand()
@@ -36,7 +39,8 @@ fun MainScreen(
             BottomSheetScreen()
         },
         scaffoldState = scaffoldState,
-        sheetPeekHeight = sheetPeekHeight
+        sheetPeekHeight = sheetPeekHeight,
+        sheetShape = RoundedCornerShape(Spacing32dp)
     ) {
         MapScreen(mapView, userLocationLayer)
     }

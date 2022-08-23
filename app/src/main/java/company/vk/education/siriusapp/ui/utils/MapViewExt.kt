@@ -15,11 +15,11 @@ val CameraPosition.pickedLocation: Location
         Location(latitude, longitude)
     }
 
-fun MapView.moveToUser(layer: UserLocationLayer, zoom: Float = 18.0F) {
+fun MapView.moveToUser(layer: UserLocationLayer) {
     map.move(
         CameraPosition(
             layer.cameraPosition()?.target ?: Point(0.0, 0.0),
-            zoom,
+            minOf(layer.cameraPosition()?.zoom ?: 16.5f, 16.5f),
             0f,
             0f
         ),
