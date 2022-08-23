@@ -165,18 +165,3 @@ fun ShowPassenger(user: User? = null, showContacts: Boolean = false) {
         }
     }
 }
-
-//@Preview
-//@Composable
-//fun showTrip() {
-//    TripScreen(
-//        Trip(
-//            route = TripRoute(),
-//            freePlaces = 3,
-//            host = User("123", "ivan", "", UserContacts("123")),
-//            passengers = listOf(),
-//            taxiService = TaxiService.Yandex,
-//            taxiVehicleClass = TaxiService.Yandex.YandexVehicleClass.Comfort
-//        )
-//    )
-//}
