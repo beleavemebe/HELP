@@ -1,5 +1,6 @@
 package company.vk.education.siriusapp.ui.utils
 
+import android.text.format.DateUtils
 import company.vk.education.siriusapp.ui.screens.main.HourAndMinute
 import java.util.*
 
@@ -21,3 +22,13 @@ fun Date.setHourAndMinute(
 fun Date.getHourAndMinute(): HourAndMinute = calendar().run {
     HourAndMinute(get(Calendar.HOUR_OF_DAY) to get(Calendar.MINUTE))
 }
+
+const val MINUTE_MS = 60 * 1000L
+const val HOUR_MS = 60 * MINUTE_MS
+const val DAY_MS = 24 * HOUR_MS
+
+val Date?.isToday get() =
+    this?.let { DateUtils.isToday(it.time) } ?: false
+
+val Date?.isTomorrow get() =
+    this?.let { Date(it.time - DAY_MS).isToday } ?: false

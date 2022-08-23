@@ -36,10 +36,7 @@ import company.vk.education.siriusapp.ui.screens.main.HourAndMinute
 import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
 import company.vk.education.siriusapp.ui.screens.main.MainViewModel
 import company.vk.education.siriusapp.ui.theme.*
-import company.vk.education.siriusapp.ui.utils.LocalTaxiServiceToStringResMapper
-import company.vk.education.siriusapp.ui.utils.LocalTaxiVehicleClassToStringResMapper
-import company.vk.education.siriusapp.ui.utils.formatOrEmpty
-import company.vk.education.siriusapp.ui.utils.log
+import company.vk.education.siriusapp.ui.utils.*
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -134,8 +131,14 @@ fun BottomSheet(
     onJoinTripClicked: (Trip) -> Unit,
 ) {
     Column {
-        Box(Modifier.fillMaxWidth().padding(top = Spacing16dp), contentAlignment = Alignment.Center) {
-            Divider(Modifier.fillMaxWidth(0.25f).clip(RoundedCornerShape(Spacing4dp)), color = Color.LightGray, thickness = 3.dp)
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .padding(top = Spacing16dp), contentAlignment = Alignment.Center) {
+            Divider(
+                Modifier
+                    .fillMaxWidth(0.25f)
+                    .clip(RoundedCornerShape(Spacing4dp)), color = Color.LightGray, thickness = 3.dp)
         }
         TripMainControls(
             state.startAddress,
@@ -180,12 +183,19 @@ fun BottomSheet(
     }
 }
 
+@Composable
 fun formatDate(date: Date?): String {
-    return date.formatOrEmpty("d MMM")
+    return if (date?.isToday == true) {
+        stringResource(R.string.today)
+    } else if (date?.isTomorrow == true) {
+        stringResource(R.string.tomorrow)
+    } else {
+        date.formatOrEmpty("d MMM")
+    }
 }
 
 fun formatTime(date: Date?): String {
-    return date.formatOrEmpty("HH:mm")
+    return date.formatOrEmpty("H:mm")
 }
 
 @Composable
@@ -654,7 +664,10 @@ fun Trips(
     onTripClicked: (Trip) -> Unit,
     onJoinTripClicked: (Trip) -> Unit,
 ) {
-    LazyColumn(Modifier.fillMaxSize().padding(top = Spacing4dp)) {
+    LazyColumn(
+        Modifier
+            .fillMaxSize()
+            .padding(top = Spacing4dp)) {
         items(trips) {
             TripItem(it, onTripClicked, onJoinTripClicked)
         }
@@ -687,7 +700,9 @@ fun TripItem(
     Surface(
         shape = RoundedCornerShape(16.dp),
         elevation = 4.dp,
-        modifier = Modifier.fillMaxWidth().clickable { onTripClicked(trip) }
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onTripClicked(trip) }
     ) {
         Column(Modifier.padding(Spacing16dp)) {
             Row(
@@ -697,11 +712,10 @@ fun TripItem(
                 Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val date = formatDate(trip.route.date)
+                val time = formatTime(trip.route.date)
                 Text(
-                    SimpleDateFormat(
-                        "dd.MM в HH:mm",
-                        Locale.getDefault()
-                    ).format(trip.route.date),
+                    stringResource(R.string.in_placeholder, date, time),
                     style = AppTypography.headline,
                 )
                 ParticipantsRow {
