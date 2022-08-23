@@ -30,9 +30,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import company.vk.education.siriusapp.R
-import company.vk.education.siriusapp.domain.model.TaxiService
-import company.vk.education.siriusapp.domain.model.TaxiVehicleClass
-import company.vk.education.siriusapp.domain.model.Trip
 import company.vk.education.siriusapp.domain.model.*
 import company.vk.education.siriusapp.ui.screens.main.HourAndMinute
 import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
@@ -606,7 +603,7 @@ fun NoTripsFound() {
 
 @Composable
 fun Trips(trips: List<Trip>) {
-    LazyColumn(Modifier.fillMaxSize()) {
+    LazyColumn(Modifier.fillMaxSize().padding(top = Spacing4dp)) {
         items(trips) {
             TripItem(it)
         }
@@ -630,64 +627,71 @@ fun showTrip() {
 
 @Composable
 fun TripItem(trip: Trip) {
-    Row(Modifier.padding(Spacing16dp)) {
-        Surface(shape = RoundedCornerShape(16.dp), elevation = 4.dp, modifier = Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(Spacing16dp)) {
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .height(Spacing32dp),
-                    Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        SimpleDateFormat(
-                            "dd.MM в HH:mm",
-                            Locale.getDefault()
-                        ).format(trip.route.date),
-                        style = AppTypography.headline,
-                    )
-                    ParticipantsRow {
-                        var offset = 0
-                        trip.passengers.forEachIndexed { i, url ->
-                            AsyncImage(
-                                model = url, contentDescription = "userPhoto",
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .size(16.dp)
-                                    .clip(CircleShape)
-                                    .border(2.dp, OnBlue, CircleShape)
-                                    .zIndex(5 - i.toFloat())
-                            )
-                            println(offset)
-                            offset += 26
-                        }
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        elevation = 4.dp,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(Modifier.padding(Spacing16dp)) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .height(Spacing32dp),
+                Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    SimpleDateFormat(
+                        "dd.MM в HH:mm",
+                        Locale.getDefault()
+                    ).format(trip.route.date),
+                    style = AppTypography.headline,
+                )
+                ParticipantsRow {
+                    var offset = 0
+                    trip.passengers.forEachIndexed { i, url ->
+                        AsyncImage(
+                            model = url, contentDescription = "userPhoto",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(16.dp)
+                                .clip(CircleShape)
+                                .border(2.dp, OnBlue, CircleShape)
+                                .zIndex(5 - i.toFloat())
+                        )
+                        println(offset)
+                        offset += 26
                     }
                 }
+            }
 
-                val serviceMapper = LocalTaxiServiceToStringResMapper.current
-                val vehicleClassMapper = LocalTaxiVehicleClassToStringResMapper.current
-                val taxiService = stringResource(id = serviceMapper.map(trip.taxiService))
-                val vehicleClass = stringResource(id = vehicleClassMapper.map(trip.taxiVehicleClass))
+            val serviceMapper = LocalTaxiServiceToStringResMapper.current
+            val vehicleClassMapper = LocalTaxiVehicleClassToStringResMapper.current
+            val taxiService = stringResource(id = serviceMapper.map(trip.taxiService))
+            val vehicleClass = stringResource(id = vehicleClassMapper.map(trip.taxiVehicleClass))
+            Text(
+                "$taxiService · $vehicleClass · 200m away",
+                style = AppTypography.caption1,
+                color = Color.LightGray
+            )
+            Spacer(modifier = Modifier.height(Spacing12dp))
+            Button(modifier = Modifier
+                .fillMaxWidth()
+                .height(32.dp),
+                shape = RoundedCornerShape(Spacing8dp),
+                colors = ButtonDefaults.buttonColors(backgroundColor = Blue900),
+                onClick = {
+                    log("Присоединяюсь")
+                }) {
                 Text(
-                    "$taxiService · $vehicleClass · 200m away",
-                    style = AppTypography.caption1,
-                    color = Color.LightGray
+                    stringResource(id = R.string.join),
+                    style = AppTypography.caption2Medium,
+                    color = OnBlue
                 )
-                Spacer(modifier = Modifier.height(Spacing12dp))
-                Button(modifier = Modifier
-                    .fillMaxWidth()
-                    .height(32.dp),
-                    shape = RoundedCornerShape(Spacing8dp),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Blue900),
-                    onClick = {
-                        log("Присоединяюсь")
-                    }) {
-                    Text(stringResource(id = R.string.join), style = AppTypography.caption2Medium, color = OnBlue)
-                }
             }
         }
     }
+    Spacer(modifier = Modifier.height(Spacing16dp))
 }
 
 @Composable
