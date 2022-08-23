@@ -3,6 +3,7 @@ package company.vk.education.siriusapp.ui.screens.main
 import company.vk.education.siriusapp.domain.model.Location
 import company.vk.education.siriusapp.domain.model.TaxiService
 import company.vk.education.siriusapp.domain.model.TaxiVehicleClass
+import company.vk.education.siriusapp.domain.model.Trip
 import company.vk.education.siriusapp.ui.base.BaseViewIntent
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.TaxiPreference
 import kotlinx.coroutines.CoroutineScope
@@ -10,6 +11,9 @@ import java.util.*
 
 sealed class MainScreenIntent : BaseViewIntent {
     object DismissUserModalSheet : MainScreenIntent()
+
+    data class ShowTripDetails(val trip: Trip) : MainScreenIntent()
+    object DismissTripModalSheet : MainScreenIntent()
 
     sealed class MapIntent : MainScreenIntent() {
         data class UpdatePickedLocation(val location: Location) : MapIntent()
@@ -25,12 +29,13 @@ sealed class MainScreenIntent : BaseViewIntent {
         object PickTripTime : BottomSheetIntent()
         data class TripDatePicked(val date: Date?) : BottomSheetIntent()
         data class TripTimePicked(val hourAndMinute: HourAndMinute) : BottomSheetIntent()
-        object CreateTrip : MainScreenIntent()
+        object CreateTrip : BottomSheetIntent()
         data class PickTaxiPreference(val preference: TaxiPreference) : BottomSheetIntent()
         data class DismissTaxiPreferenceMenu(val preference: TaxiPreference) : BottomSheetIntent()
         data class TaxiServicePicked(val taxiService: TaxiService) : BottomSheetIntent()
         data class TaxiVehicleClassPicked(val taxiVehicleClass: TaxiVehicleClass) : BottomSheetIntent()
-        data class SetFreePlacesAmount(val freePlaces: Int) : MainScreenIntent()
-        object PublishTrip : MainScreenIntent()
+        data class SetFreePlacesAmount(val freePlaces: Int) : BottomSheetIntent()
+        object PublishTrip : BottomSheetIntent()
+        object CancelCreatingTrip : BottomSheetIntent()
     }
 }

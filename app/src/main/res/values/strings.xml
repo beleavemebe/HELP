@@ -28,5 +28,6 @@
     <string name="trips_found_placeholder">Результаты — %1$d поездок</string>
     <string name="create">Создать</string>
     <string name="join">Присоединиться</string>
+    <string name="go_back_to_search">Вернуться к поиску</string>
     <integer name="com_vk_sdk_AppId">51403589</integer>
 </resources>

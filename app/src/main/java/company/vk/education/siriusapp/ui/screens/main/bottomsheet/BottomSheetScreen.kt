@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.res.painterResource
@@ -30,9 +31,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import company.vk.education.siriusapp.R
-import company.vk.education.siriusapp.domain.model.TaxiService
-import company.vk.education.siriusapp.domain.model.TaxiVehicleClass
-import company.vk.education.siriusapp.domain.model.Trip
 import company.vk.education.siriusapp.domain.model.*
 import company.vk.education.siriusapp.ui.screens.main.HourAndMinute
 import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
@@ -102,6 +100,12 @@ fun BottomSheetScreen(
         },
         onPublishTripClicked = {
             viewModel.accept(MainScreenIntent.BottomSheetIntent.PublishTrip)
+        },
+        onCancelClicked = {
+            viewModel.accept(MainScreenIntent.BottomSheetIntent.CancelCreatingTrip)
+        },
+        onTripClicked = {
+            viewModel.accept(MainScreenIntent.ShowTripDetails(it))
         }
     )
 }
@@ -122,6 +126,8 @@ fun BottomSheet(
     onCreateTripClicked: () -> Unit,
     onFreePlacesAmountChanged: (Int) -> Unit,
     onPublishTripClicked: () -> Unit,
+    onCancelClicked: () -> Unit,
+    onTripClicked: (Trip) -> Unit
 ) {
     Column {
         Box(Modifier.fillMaxWidth().padding(top = Spacing16dp), contentAlignment = Alignment.Center) {
@@ -139,7 +145,7 @@ fun BottomSheet(
         )
 
         if (state.isSearchingTrips) {
-            SearchTrips(state, onCreateTripClicked)
+            SearchTrips(state, onCreateTripClicked, onTripClicked)
         } else {
             CreateTrip(
                 state,
@@ -149,6 +155,7 @@ fun BottomSheet(
                 onDismissPreferenceMenu,
                 onFreePlacesAmountChanged,
                 onPublishTripClicked,
+                onCancelClicked
             )
         }
 
@@ -185,6 +192,7 @@ fun TripCreationControls(
     onDismissPreferenceMenu: (TaxiPreference) -> Unit,
     onFreePlacesAmountChanged: (Int) -> Unit,
     onPublishTripClicked: () -> Unit,
+    onCancelClicked: () -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -238,7 +246,7 @@ fun TripCreationControls(
                 DropdownMenu(
                     expanded = isShowingPickTaxiServiceMenu,
                     onDismissRequest = { onDismissPreferenceMenu(TaxiPreference.TAXI_SERVICE) },
-                    modifier = Modifier.background(Color.White)
+                    modifier = Modifier.background(White)
                 ) {
                     Column {
                         TaxiService.SERVICES.forEach { service ->
@@ -280,7 +288,7 @@ fun TripCreationControls(
                 DropdownMenu(
                     expanded = isShowingPickTaxiVehicleClassMenu,
                     onDismissRequest = { onDismissPreferenceMenu(TaxiPreference.TAXI_VEHICLE_CLASS) },
-                    modifier = Modifier.background(Color.White)
+                    modifier = Modifier.background(White)
                 ) {
                     Column {
                         taxiService?.classes?.forEach { vehicleClass ->
@@ -309,6 +317,7 @@ fun TripCreationControls(
                     onClick = { onPublishTripClicked() },
                     colors = ButtonDefaults.buttonColors(Blue),
                     shape = Shapes.medium,
+                    elevation = null,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(FabSize)
@@ -317,6 +326,24 @@ fun TripCreationControls(
                         stringResource(R.string.create_a_trip),
                         style = AppTypography.subheadMedium,
                         color = OnBlue
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(Spacing16dp))
+
+                Button(
+                    onClick = { onCancelClicked() },
+                    colors = ButtonDefaults.buttonColors(OnBlue),
+                    shape = Shapes.medium,
+                    elevation = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(FabSize)
+                ) {
+                    Text(
+                        stringResource(R.string.go_back_to_search),
+                        style = AppTypography.subheadMedium,
+                        color = Blue
                     )
                 }
                 Spacer(modifier = Modifier.height(Spacing16dp))
@@ -357,7 +384,8 @@ fun TripCreationControlsPreview() = AppTheme {
             }
         },
         onFreePlacesAmountChanged = {},
-        onPublishTripClicked = {}
+        onPublishTripClicked = {},
+        onCancelClicked = {},
     )
 }
 
@@ -370,6 +398,7 @@ fun CreateTrip(
     onDismissPreferenceMenu: (TaxiPreference) -> Unit,
     onFreePlacesAmountChanged: (Int) -> Unit,
     onPublishTripClicked: () -> Unit,
+    onCancelClicked: () -> Unit,
 ) {
     TripCreationControls(
         freePlaces = state.freePlaces,
@@ -382,7 +411,8 @@ fun CreateTrip(
         onTaxiVehicleClassPicked = onTaxiVehicleClassPicked,
         onDismissPreferenceMenu = onDismissPreferenceMenu,
         onFreePlacesAmountChanged = onFreePlacesAmountChanged,
-        onPublishTripClicked = onPublishTripClicked
+        onPublishTripClicked = onPublishTripClicked,
+        onCancelClicked = onCancelClicked,
     )
 }
 
@@ -391,6 +421,7 @@ fun CreateTrip(
 fun SearchTrips(
     state: BottomSheetScreenState,
     onCreateTripClicked: () -> Unit,
+    onTripClicked: (Trip) -> Unit
 ) {
     Column(
         Modifier.padding(horizontal = Spacing16dp)
@@ -404,7 +435,7 @@ fun SearchTrips(
                 NoTripsFound()
             } else {
                 TripsHeader(state.trips.size, onCreateTripClicked)
-                Trips(trips = state.trips)
+                Trips(trips = state.trips, onTripClicked)
             }
         }
     }
@@ -608,10 +639,13 @@ fun NoTripsFound() {
 }
 
 @Composable
-fun Trips(trips: List<Trip>) {
-    LazyColumn(Modifier.fillMaxSize()) {
+fun Trips(
+    trips: List<Trip>,
+    onTripClicked: (Trip) -> Unit
+) {
+    LazyColumn(Modifier.fillMaxSize().padding(top = Spacing4dp)) {
         items(trips) {
-            TripItem(it)
+            TripItem(it, onTripClicked)
         }
     }
 }
@@ -628,69 +662,77 @@ fun showTrip() {
             taxiService = TaxiService.Yandex,
             taxiVehicleClass = TaxiService.Yandex.YandexVehicleClass.Comfort
         )
-    )
+    ) {}
 }
 
 @Composable
-fun TripItem(trip: Trip) {
-    Row(Modifier.padding(Spacing16dp)) {
-        Surface(shape = RoundedCornerShape(16.dp), elevation = 4.dp, modifier = Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(Spacing16dp)) {
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .height(Spacing32dp),
-                    Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        SimpleDateFormat(
-                            "dd.MM в HH:mm",
-                            Locale.getDefault()
-                        ).format(trip.route.date),
-                        style = AppTypography.headline,
-                    )
-                    ParticipantsRow {
-                        var offset = 0
-                        trip.passengers.forEachIndexed { i, url ->
-                            AsyncImage(
-                                model = url, contentDescription = "userPhoto",
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .size(16.dp)
-                                    .clip(CircleShape)
-                                    .border(2.dp, OnBlue, CircleShape)
-                                    .zIndex(5 - i.toFloat())
-                            )
-                            println(offset)
-                            offset += 26
-                        }
+fun TripItem(trip: Trip, onTripClicked: (Trip) -> Unit) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        elevation = 4.dp,
+        modifier = Modifier.fillMaxWidth().clickable { onTripClicked(trip) }
+    ) {
+        Column(Modifier.padding(Spacing16dp)) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .height(Spacing32dp),
+                Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    SimpleDateFormat(
+                        "dd.MM в HH:mm",
+                        Locale.getDefault()
+                    ).format(trip.route.date),
+                    style = AppTypography.headline,
+                )
+                ParticipantsRow {
+                    var offset = 0
+                    trip.passengers.forEachIndexed { i, url ->
+                        AsyncImage(
+                            model = url, contentDescription = "userPhoto",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(16.dp)
+                                .clip(CircleShape)
+                                .border(2.dp, OnBlue, CircleShape)
+                                .zIndex(5 - i.toFloat())
+                        )
+                        println(offset)
+                        offset += 26
                     }
                 }
+            }
 
-                val serviceMapper = LocalTaxiServiceToStringResMapper.current
-                val vehicleClassMapper = LocalTaxiVehicleClassToStringResMapper.current
-                val taxiService = stringResource(id = serviceMapper.map(trip.taxiService))
-                val vehicleClass = stringResource(id = vehicleClassMapper.map(trip.taxiVehicleClass))
+            val serviceMapper = LocalTaxiServiceToStringResMapper.current
+            val vehicleClassMapper = LocalTaxiVehicleClassToStringResMapper.current
+            val taxiService = stringResource(id = serviceMapper.map(trip.taxiService))
+            val vehicleClass = stringResource(id = vehicleClassMapper.map(trip.taxiVehicleClass))
+            Text(
+                "$taxiService · $vehicleClass · 200m away",
+                style = AppTypography.caption1,
+                color = Color.LightGray
+            )
+            Spacer(modifier = Modifier.height(Spacing12dp))
+            Button(modifier = Modifier
+                .fillMaxWidth()
+                .height(32.dp),
+                shape = RoundedCornerShape(Spacing8dp),
+                colors = ButtonDefaults.buttonColors(backgroundColor = Blue),
+                elevation = null,
+                onClick = {
+                    log("Присоединяюсь")
+                }) {
                 Text(
-                    "$taxiService · $vehicleClass · 200m away",
-                    style = AppTypography.caption1,
-                    color = Color.LightGray
+                    stringResource(id = R.string.join),
+                    style = AppTypography.caption2Medium,
+                    color = OnBlue
                 )
-                Spacer(modifier = Modifier.height(Spacing12dp))
-                Button(modifier = Modifier
-                    .fillMaxWidth()
-                    .height(32.dp),
-                    shape = RoundedCornerShape(Spacing8dp),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Blue900),
-                    onClick = {
-                        log("Присоединяюсь")
-                    }) {
-                    Text(stringResource(id = R.string.join), style = AppTypography.caption2Medium, color = OnBlue)
-                }
             }
         }
     }
+    Spacer(modifier = Modifier.height(Spacing16dp))
 }
 
 @Composable

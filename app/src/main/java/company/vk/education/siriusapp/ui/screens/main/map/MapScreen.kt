@@ -162,6 +162,7 @@ fun ChooseLocation(state: MapViewState, map: MapView, onClick: (AddressToChoose)
                     onClick = { onClick(state.addressToChoose) },
                     colors = ButtonDefaults.buttonColors(Blue),
                     shape = Shapes.medium,
+                    elevation = null,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(FabSize)
