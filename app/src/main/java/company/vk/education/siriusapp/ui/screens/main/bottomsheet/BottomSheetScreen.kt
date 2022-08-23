@@ -744,7 +744,7 @@ fun TripItem(
             Text(
                 "$taxiService · $vehicleClass · 200m away",
                 style = AppTypography.caption1,
-                color = Color.LightGray
+                color = Grey
             )
             Spacer(modifier = Modifier.height(Spacing12dp))
             Button(
