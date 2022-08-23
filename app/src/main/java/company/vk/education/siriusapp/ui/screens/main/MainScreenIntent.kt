@@ -31,5 +31,6 @@ sealed class MainScreenIntent : BaseViewIntent {
         data class TaxiServicePicked(val taxiService: TaxiService) : BottomSheetIntent()
         data class TaxiVehicleClassPicked(val taxiVehicleClass: TaxiVehicleClass) : BottomSheetIntent()
         data class SetFreePlacesAmount(val freePlaces: Int) : MainScreenIntent()
+        object PublishTrip : MainScreenIntent()
     }
 }

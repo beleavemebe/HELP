@@ -143,7 +143,7 @@ fun ChooseLocation(state: MapViewState, map: MapView, onClick: (AddressToChoose)
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(Spacing16dp)
         ) {
             val pickAddress = when (state.addressToChoose) {
                 AddressToChoose.START -> stringResource(id = R.string.pick_start_address)

@@ -82,7 +82,24 @@ class MainViewModel @Inject constructor(
             is MainScreenIntent.BottomSheetIntent.TaxiVehicleClassPicked -> setTaxiVehicleClass(intent.taxiVehicleClass)
             is MainScreenIntent.BottomSheetIntent.CreateTrip -> createTrip()
             is MainScreenIntent.BottomSheetIntent.SetFreePlacesAmount -> setFreePlacesAmount(intent.freePlaces)
+            is MainScreenIntent.BottomSheetIntent.PublishTrip -> publishTrip()
         }
+    }
+
+    private fun publishTrip() = reduce {
+        val bss = it.bottomSheetScreenState
+        val trip = Trip(
+            route = TripRoute(startLocation = bss.startLocation, endLocation = bss.endLocation, date = bss.date!!),
+            freePlaces = bss.freePlaces!!,
+            host = authService.authState.value.user!!,
+            passengers = emptyList(),
+            taxiService = bss.taxiService!!,
+            taxiVehicleClass = bss.taxiVehicleClass!!
+        )
+
+        tripsRepository.publishTrip(trip)
+
+        it.copy(bottomSheetScreenState = bss.copy(isSearchingTrips = true), isBottomSheetExpanded = false)
     }
 
     private fun setFreePlacesAmount(freePlaces: Int) = reduce {

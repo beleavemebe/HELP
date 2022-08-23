@@ -99,6 +99,9 @@ fun BottomSheetScreen(
         },
         onFreePlacesAmountChanged = {
             viewModel.accept(MainScreenIntent.BottomSheetIntent.SetFreePlacesAmount(it))
+        },
+        onPublishTripClicked = {
+            viewModel.accept(MainScreenIntent.BottomSheetIntent.PublishTrip)
         }
     )
 }
@@ -118,6 +121,7 @@ fun BottomSheet(
     onDismissPreferenceMenu: (TaxiPreference) -> Unit,
     onCreateTripClicked: () -> Unit,
     onFreePlacesAmountChanged: (Int) -> Unit,
+    onPublishTripClicked: () -> Unit,
 ) {
     Column {
         TripMainControls(
@@ -140,7 +144,8 @@ fun BottomSheet(
                 onTaxiServicePicked,
                 onTaxiVehicleClassPicked,
                 onDismissPreferenceMenu,
-                onFreePlacesAmountChanged
+                onFreePlacesAmountChanged,
+                onPublishTripClicked,
             )
         }
 
@@ -176,6 +181,7 @@ fun TripCreationControls(
     onTaxiVehicleClassPicked: (TaxiVehicleClass) -> Unit,
     onDismissPreferenceMenu: (TaxiPreference) -> Unit,
     onFreePlacesAmountChanged: (Int) -> Unit,
+    onPublishTripClicked: () -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -297,7 +303,7 @@ fun TripCreationControls(
         ) {
             Column {
                 Button(
-                    onClick = { },
+                    onClick = { onPublishTripClicked() },
                     colors = ButtonDefaults.buttonColors(Blue),
                     shape = Shapes.medium,
                     modifier = Modifier
@@ -347,7 +353,8 @@ fun TripCreationControlsPreview() = AppTheme {
                 TaxiPreference.TAXI_VEHICLE_CLASS -> isShowingPickTaxiVehicleClassMenu = false
             }
         },
-        onFreePlacesAmountChanged = {}
+        onFreePlacesAmountChanged = {},
+        onPublishTripClicked = {}
     )
 }
 
@@ -359,6 +366,7 @@ fun CreateTrip(
     onTaxiVehicleClassPicked: (TaxiVehicleClass) -> Unit,
     onDismissPreferenceMenu: (TaxiPreference) -> Unit,
     onFreePlacesAmountChanged: (Int) -> Unit,
+    onPublishTripClicked: () -> Unit,
 ) {
     TripCreationControls(
         freePlaces = state.freePlaces,
@@ -370,7 +378,8 @@ fun CreateTrip(
         onTaxiServicePicked = onTaxiServicePicked,
         onTaxiVehicleClassPicked = onTaxiVehicleClassPicked,
         onDismissPreferenceMenu = onDismissPreferenceMenu,
-        onFreePlacesAmountChanged = onFreePlacesAmountChanged
+        onFreePlacesAmountChanged = onFreePlacesAmountChanged,
+        onPublishTripClicked = onPublishTripClicked
     )
 }
 
