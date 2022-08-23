@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.res.painterResource
@@ -99,6 +100,9 @@ fun BottomSheetScreen(
         },
         onPublishTripClicked = {
             viewModel.accept(MainScreenIntent.BottomSheetIntent.PublishTrip)
+        },
+        onCancelClicked = {
+            viewModel.accept(MainScreenIntent.BottomSheetIntent.CancelCreatingTrip)
         }
     )
 }
@@ -119,6 +123,7 @@ fun BottomSheet(
     onCreateTripClicked: () -> Unit,
     onFreePlacesAmountChanged: (Int) -> Unit,
     onPublishTripClicked: () -> Unit,
+    onCancelClicked: () -> Unit
 ) {
     Column {
         Box(Modifier.fillMaxWidth().padding(top = Spacing16dp), contentAlignment = Alignment.Center) {
@@ -146,6 +151,7 @@ fun BottomSheet(
                 onDismissPreferenceMenu,
                 onFreePlacesAmountChanged,
                 onPublishTripClicked,
+                onCancelClicked
             )
         }
 
@@ -182,6 +188,7 @@ fun TripCreationControls(
     onDismissPreferenceMenu: (TaxiPreference) -> Unit,
     onFreePlacesAmountChanged: (Int) -> Unit,
     onPublishTripClicked: () -> Unit,
+    onCancelClicked: () -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -316,6 +323,23 @@ fun TripCreationControls(
                         color = OnBlue
                     )
                 }
+
+                Spacer(modifier = Modifier.height(Spacing16dp))
+
+                Button(
+                    onClick = { onCancelClicked() },
+                    colors = ButtonDefaults.buttonColors(OnBlue),
+                    shape = Shapes.medium,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(FabSize)
+                ) {
+                    Text(
+                        stringResource(R.string.go_back_to_search),
+                        style = AppTypography.subheadMedium,
+                        color = Blue
+                    )
+                }
                 Spacer(modifier = Modifier.height(Spacing16dp))
             }
         }
@@ -354,7 +378,8 @@ fun TripCreationControlsPreview() = AppTheme {
             }
         },
         onFreePlacesAmountChanged = {},
-        onPublishTripClicked = {}
+        onPublishTripClicked = {},
+        onCancelClicked = {},
     )
 }
 
@@ -367,6 +392,7 @@ fun CreateTrip(
     onDismissPreferenceMenu: (TaxiPreference) -> Unit,
     onFreePlacesAmountChanged: (Int) -> Unit,
     onPublishTripClicked: () -> Unit,
+    onCancelClicked: () -> Unit,
 ) {
     TripCreationControls(
         freePlaces = state.freePlaces,
@@ -379,7 +405,8 @@ fun CreateTrip(
         onTaxiVehicleClassPicked = onTaxiVehicleClassPicked,
         onDismissPreferenceMenu = onDismissPreferenceMenu,
         onFreePlacesAmountChanged = onFreePlacesAmountChanged,
-        onPublishTripClicked = onPublishTripClicked
+        onPublishTripClicked = onPublishTripClicked,
+        onCancelClicked = onCancelClicked,
     )
 }
 

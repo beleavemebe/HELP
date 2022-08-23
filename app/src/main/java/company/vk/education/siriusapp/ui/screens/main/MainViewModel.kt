@@ -83,7 +83,19 @@ class MainViewModel @Inject constructor(
             is MainScreenIntent.BottomSheetIntent.CreateTrip -> createTrip()
             is MainScreenIntent.BottomSheetIntent.SetFreePlacesAmount -> setFreePlacesAmount(intent.freePlaces)
             is MainScreenIntent.BottomSheetIntent.PublishTrip -> publishTrip()
+            is MainScreenIntent.BottomSheetIntent.CancelCreatingTrip -> cancelCreatingTrip()
         }
+    }
+
+    private fun cancelCreatingTrip() = reduce {
+        it.copy(
+            bottomSheetScreenState = it.bottomSheetScreenState.copy(
+                isSearchingTrips = true,
+                freePlaces = null,
+                taxiService = null,
+                taxiVehicleClass = null,
+            )
+        )
     }
 
     private fun publishTrip() = reduce {
