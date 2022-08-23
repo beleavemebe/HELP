@@ -98,7 +98,7 @@ fun TripScreen(tripState: TripState) {
             }
 
             Card(stringResource(id = R.string.host)) {
-                ShowPassenger(tripState.trip.host, true)
+                ShowPassenger(tripState.trip.host, showContacts = true, showRating = true)
             }
 
             Card(stringResource(id = R.string.participants)) {
@@ -161,11 +161,15 @@ fun ShowParticipants(passengers: List<User>, freePlaces: Int) {
 }
 
 @Composable
-fun ShowPassenger(user: User? = null, showContacts: Boolean = false) {
+fun ShowPassenger(
+    user: User? = null,
+    showContacts: Boolean = false,
+    showRating: Boolean = false,
+) {
     val contentAlpha = if (user != null) 1.0F else 0.4F
     Row(
         Modifier.padding(vertical = Spacing8dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         AsyncImage(
             model = user?.imageUrl ?: "",
@@ -179,11 +183,27 @@ fun ShowPassenger(user: User? = null, showContacts: Boolean = false) {
                 .alpha(contentAlpha)
         )
         Spacer(Modifier.width(Spacing12dp))
-        Text(
-            text = user?.name ?: stringResource(R.string.free_place),
-            style = AppTypography.text,
-            modifier = Modifier.alpha(contentAlpha)
-        )
+        Column(horizontalAlignment = Alignment.Start) {
+            Text(
+                text = user?.name ?: stringResource(R.string.free_place),
+                style = AppTypography.text,
+                modifier = Modifier.alpha(contentAlpha)
+            )
+            if (showRating) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_rating),
+                        contentDescription = stringResource(R.string.rating)
+                    )
+                    Spacer(modifier = Modifier.width(Spacing4dp))
+                    Text(
+                        text = user?.rating.toString() + "%",
+                        style = AppTypography.caption2.copy(color = TextHint)
+                    )
+                }
+            }
+        }
+        Spacer(modifier = Modifier.width(Spacing16dp))
         if (showContacts) {
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
                 Text(VK_USER_URL + (user?.id ?: "124124"), color = Blue)

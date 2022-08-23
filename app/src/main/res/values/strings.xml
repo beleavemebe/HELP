@@ -39,5 +39,6 @@
     <string name="today">Сегодня</string>
     <string name="tomorrow">Завтра</string>
     <string name="in_placeholder">%1$s в %2$s</string>
+    <string name="rating">Рейтинг</string>
     <integer name="com_vk_sdk_AppId">51403589</integer>
 </resources>
