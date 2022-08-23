@@ -80,7 +80,7 @@ fun TripScreen(tripState: TripState) {
                                             BoundingBoxHelper.getBounds(it)
                                         )
                                         move(
-                                            CameraPosition(camera.target, camera.zoom - 1f, 0f, 0f)
+                                            CameraPosition(camera.target, camera.zoom - 2f, 0f, 0f)
                                         )
                                     }
                                 }

@@ -35,5 +35,6 @@
     <string name="trip">Поездка</string>
     <string name="participants">Участники</string>
     <string name="free_place">Свободное место</string>
+    <string name="trip_info">%1$s · %2$s · %3$dм пешком</string>
     <integer name="com_vk_sdk_AppId">51403589</integer>
 </resources>
