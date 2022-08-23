@@ -2,21 +2,20 @@ package company.vk.education.siriusapp.ui.screens.main
 
 import androidx.lifecycle.viewModelScope
 import com.yandex.mapkit.map.CameraListener
-import company.vk.education.siriusapp.domain.model.AuthState
-import company.vk.education.siriusapp.domain.model.Location
-import company.vk.education.siriusapp.domain.model.TripRoute
+import company.vk.education.siriusapp.domain.model.*
 import company.vk.education.siriusapp.domain.repository.AddressRepository
 import company.vk.education.siriusapp.domain.repository.TripsRepository
 import company.vk.education.siriusapp.domain.service.AuthService
 import company.vk.education.siriusapp.ui.base.BaseViewModel
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.BottomSheetScreenState
+import company.vk.education.siriusapp.ui.screens.main.bottomsheet.TaxiPreference
+import company.vk.education.siriusapp.ui.screens.main.bottomsheet.bottomSheetState
 import company.vk.education.siriusapp.ui.screens.main.map.MapViewState
 import company.vk.education.siriusapp.ui.utils.log
 import company.vk.education.siriusapp.ui.utils.setHourAndMinute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
 
@@ -25,7 +24,7 @@ class MainViewModel @Inject constructor(
     private val authService: AuthService,
     private val addressRepository: AddressRepository,
     private val tripsRepository: TripsRepository,
-) : BaseViewModel<MainScreenState, MainScreenIntent, Nothing>() {
+) : BaseViewModel<MainScreenState, MainScreenIntent, Nothing, MainScreenViewEffect>() {
     override val initialState =
         MainScreenState(
             mapState = MapViewState(),
@@ -67,8 +66,8 @@ class MainViewModel @Inject constructor(
             is MainScreenIntent.BottomSheetIntent.PickEndOnTheMap -> pickTripEnd()
             is MainScreenIntent.BottomSheetIntent.PickTripDate -> pickTripDate()
             is MainScreenIntent.BottomSheetIntent.PickTripTime -> pickTripTime()
-            is MainScreenIntent.BottomSheetIntent.PickTaxiService -> TODO()
-            is MainScreenIntent.BottomSheetIntent.PickTaxiVehicleClass -> TODO()
+            is MainScreenIntent.BottomSheetIntent.PickTaxiPreference -> pickTaxiPreference(intent.preference)
+            is MainScreenIntent.BottomSheetIntent.DismissTaxiPreferenceMenu -> dismissTaxiPreferenceMenu(intent.preference)
             is MainScreenIntent.MapIntent.AddressChosen -> {
                 val addressLocation = intent.addressLocation
                 val addressToChoose = intent.addressToChoose
@@ -78,6 +77,105 @@ class MainViewModel @Inject constructor(
             is MainScreenIntent.BottomSheetIntent.TripDatePicked -> setTripDate(intent.date)
             is MainScreenIntent.BottomSheetIntent.TripTimePicked -> setTripTime(intent.hourAndMinute)
             is MainScreenIntent.DismissUserModalSheet -> hideUserSheet()
+            is MainScreenIntent.MapIntent.UserLocationAcquired -> setStartLocationIfNotAlready(intent.location)
+            is MainScreenIntent.BottomSheetIntent.TaxiServicePicked -> setTaxiService(intent.taxiService)
+            is MainScreenIntent.BottomSheetIntent.TaxiVehicleClassPicked -> setTaxiVehicleClass(intent.taxiVehicleClass)
+            is MainScreenIntent.BottomSheetIntent.CreateTrip -> createTrip()
+            is MainScreenIntent.BottomSheetIntent.SetFreePlacesAmount -> setFreePlacesAmount(intent.freePlaces)
+            is MainScreenIntent.BottomSheetIntent.PublishTrip -> publishTrip()
+        }
+    }
+
+    private fun publishTrip() = reduce {
+        val bss = it.bottomSheetScreenState
+        val trip = Trip(
+            route = TripRoute(startLocation = bss.startLocation, endLocation = bss.endLocation, date = bss.date!!),
+            freePlaces = bss.freePlaces!!,
+            host = authService.authState.value.user!!,
+            passengers = emptyList(),
+            taxiService = bss.taxiService!!,
+            taxiVehicleClass = bss.taxiVehicleClass!!
+        )
+
+        tripsRepository.publishTrip(trip)
+
+        it.copy(bottomSheetScreenState = bss.copy(isSearchingTrips = true), isBottomSheetExpanded = false)
+    }
+
+    private fun setFreePlacesAmount(freePlaces: Int) = reduce {
+        it.copy(
+            bottomSheetScreenState = it.bottomSheetScreenState.copy(
+                freePlaces = freePlaces
+            )
+        )
+    }
+
+    private fun createTrip() = reduce {
+        it.copy(
+            bottomSheetScreenState = it.bottomSheetScreenState.copy(
+                isSearchingTrips = false
+            )
+        )
+    }
+
+    private fun pickTaxiPreference(preference: TaxiPreference) = reduce {
+        when (preference) {
+            TaxiPreference.TAXI_SERVICE -> it.copy(
+                bottomSheetScreenState = it.bottomSheetScreenState.copy(
+                    isShowingPickTaxiServiceMenu = true
+                )
+            )
+            TaxiPreference.TAXI_VEHICLE_CLASS -> it.copy(
+                bottomSheetScreenState = it.bottomSheetScreenState.copy(
+                    isShowingPickTaxiVehicleClassMenu = true
+    )
+            )
+        }
+    }
+
+    private fun dismissTaxiPreferenceMenu(preference: TaxiPreference) = reduce {
+        when (preference) {
+            TaxiPreference.TAXI_SERVICE -> it.copy(
+                bottomSheetScreenState = it.bottomSheetScreenState.copy(
+                    isShowingPickTaxiServiceMenu = false
+                )
+            )
+            TaxiPreference.TAXI_VEHICLE_CLASS -> it.copy(
+                bottomSheetScreenState = it.bottomSheetScreenState.copy(
+                    isShowingPickTaxiVehicleClassMenu = false
+                )
+            )
+        }
+    }
+
+    private fun setTaxiService(taxiService: TaxiService) = reduce {
+        it.copy(
+            bottomSheetScreenState = it.bottomSheetScreenState.copy(
+                taxiService = taxiService,
+                isShowingPickTaxiServiceMenu = false
+            )
+        )
+    }
+
+    private fun setTaxiVehicleClass(vehicleClass: TaxiVehicleClass) = reduce {
+        it.copy(
+            bottomSheetScreenState = it.bottomSheetScreenState.copy(
+                taxiVehicleClass = vehicleClass,
+                isShowingPickTaxiVehicleClassMenu = false
+            )
+        )
+    }
+
+    private fun setStartLocationIfNotAlready(location: Location) {
+        val alreadyPickedStartLocation = viewState.value.bottomSheetScreenState.startAddress.isBlank().not()
+        if (alreadyPickedStartLocation) return
+
+        execute {
+            chooseAddress(location, AddressToChoose.START)
+        }
+
+        viewEffect {
+            MainScreenViewEffect.MoveMapToLocation(location)
         }
     }
 
@@ -155,12 +253,11 @@ class MainViewModel @Inject constructor(
     ) = reduce {
         val address = addressRepository.getAddressOfLocation(addressLocation)
         val state = it.copy(
-            isBottomSheetExpanded = addressToChoose == AddressToChoose.END,
             mapState = it.mapState.copy(isChoosingAddress = false),
             bottomSheetScreenState = it.bottomSheetScreenState.run {
                 when (addressToChoose) {
-                    AddressToChoose.START -> copy(startAddress = address)
-                    AddressToChoose.END -> copy(endAddress = address)
+                    AddressToChoose.START -> copy(startAddress = address, startLocation = addressLocation)
+                    AddressToChoose.END -> copy(endAddress = address, endLocation = addressLocation)
                 }
             }
         )
@@ -168,12 +265,27 @@ class MainViewModel @Inject constructor(
     }
 
 
-    private fun pickTripRoute(adressToChoose: AddressToChoose) = reduce {
-        val newMapState = it.mapState.copy(
-            isChoosingAddress = true,
-            addressToChoose = adressToChoose
-        )
-        it.copy(mapState = newMapState, isBottomSheetExpanded = false)
+    private fun pickTripRoute(addressToChoose: AddressToChoose) {
+        reduce {
+            val newMapState = it.mapState.copy(
+                isChoosingAddress = true,
+                addressToChoose = addressToChoose
+            )
+            it.copy(mapState = newMapState, isBottomSheetExpanded = false)
+        }
+
+        viewEffect {
+            val sheetState = viewState.value.bottomSheetScreenState
+            when {
+                addressToChoose == AddressToChoose.START && sheetState.startAddress.isNotBlank() -> {
+                    MainScreenViewEffect.MoveMapToLocation(sheetState.startLocation)
+                }
+                addressToChoose == AddressToChoose.END && sheetState.endAddress.isNotBlank() ->  {
+                    MainScreenViewEffect.MoveMapToLocation(sheetState.endLocation)
+                }
+                else -> null
+            }
+        }
     }
 
     private fun pickTripStart() = pickTripRoute(AddressToChoose.START)
@@ -190,7 +302,7 @@ class MainViewModel @Inject constructor(
         return if (state.allFormsAreFilled().not()) {
             state
         } else {
-            viewModelScope.launch {
+            execute {
                 loadTrips(
                     state.bottomSheetScreenState.startAddress,
                     state.bottomSheetScreenState.endAddress,
@@ -199,7 +311,10 @@ class MainViewModel @Inject constructor(
                 )
             }
 
-            state.copy(bottomSheetScreenState = state.bottomSheetScreenState.copy(areTripsLoading = true))
+            state.copy(
+                isBottomSheetExpanded = true,
+                bottomSheetScreenState = state.bottomSheetScreenState.copy(areTripsLoading = true)
+            )
         }
     }
 
