@@ -4,6 +4,6 @@ import company.vk.education.siriusapp.domain.model.Trip
 import java.util.*
 
 interface ScheduledTripsService {
-    fun scheduleTripAt(date: Date, trip: Trip)
-    fun isTripScheduledAt(date: Date): Boolean
+    suspend fun scheduleTripAt(date: Date, trip: Trip)
+    suspend fun isTripScheduledAt(date: Date): Boolean
 }

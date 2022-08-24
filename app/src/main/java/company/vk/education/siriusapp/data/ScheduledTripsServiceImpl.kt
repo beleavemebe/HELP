@@ -1,13 +1,16 @@
-package company.vk.education.siriusapp.domain.service
+package company.vk.education.siriusapp.data
 
 import android.app.AlarmManager
 import android.content.Context
 import androidx.work.*
+import company.vk.education.siriusapp.data.db.ScheduledTripsDao
+import company.vk.education.siriusapp.data.model.ScheduledTrip
 import company.vk.education.siriusapp.data.worker.ClearCurrentTripWorker
 import company.vk.education.siriusapp.data.worker.HandleCurrentTripWorker
 import company.vk.education.siriusapp.data.worker.KEY_TRIP_ID
 import company.vk.education.siriusapp.data.worker.SetCurrentTripWorker
 import company.vk.education.siriusapp.domain.model.Trip
+import company.vk.education.siriusapp.domain.service.ScheduledTripsService
 import company.vk.education.siriusapp.ui.utils.MINUTE_MS
 import company.vk.education.siriusapp.ui.utils.log
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -17,18 +20,24 @@ import javax.inject.Inject
 private const val SET_TO_CLEAR_DELAY = 30 * MINUTE_MS
 
 class ScheduledTripsServiceImpl @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val dao: ScheduledTripsDao,
 ) : ScheduledTripsService {
-    override fun scheduleTripAt(date: Date, trip: Trip) {
-        scheduleSetCurrentTripWorker(trip, date)
-        scheduleClearCurrentTripWorker(trip, date)
+    override suspend fun scheduleTripAt(date: Date, trip: Trip) {
+        val tripStartsAt = date.time
+        val tripEndsAt = tripStartsAt + SET_TO_CLEAR_DELAY
+
+        scheduleWorker<SetCurrentTripWorker>(trip, tripStartsAt)
+        scheduleWorker<ClearCurrentTripWorker>(trip, tripEndsAt)
+
+        dao.insertScheduledTrip(
+            ScheduledTrip(
+                tripId = trip.id,
+                startsAt = tripStartsAt,
+                endsAt = tripEndsAt
+            )
+        )
     }
-
-    private fun scheduleSetCurrentTripWorker(trip: Trip, date: Date) =
-        scheduleWorker<SetCurrentTripWorker>(trip, date.time)
-
-    private fun scheduleClearCurrentTripWorker(trip: Trip, date: Date) =
-        scheduleWorker<ClearCurrentTripWorker>(trip, date.time + SET_TO_CLEAR_DELAY)
 
     private inline fun <reified Worker : HandleCurrentTripWorker> scheduleWorker(
         trip: Trip,
@@ -52,7 +61,7 @@ class ScheduledTripsServiceImpl @Inject constructor(
         log("Worker ${Worker::class.java.simpleName} scheduled at $time = ${Date(time)}")
     }
 
-    override fun isTripScheduledAt(date: Date): Boolean {
-        return false
+    override suspend fun isTripScheduledAt(date: Date): Boolean {
+        return dao.getScheduledTrips(date.time).isNotEmpty()
     }
 }
