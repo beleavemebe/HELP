@@ -2,6 +2,7 @@ package company.vk.education.siriusapp.data
 
 import com.google.firebase.firestore.FirebaseFirestore
 import company.vk.education.siriusapp.core.BiMapper
+import company.vk.education.siriusapp.core.dist
 import company.vk.education.siriusapp.data.model.TripDto
 import company.vk.education.siriusapp.domain.model.Trip
 import company.vk.education.siriusapp.domain.model.TripRoute
@@ -20,7 +21,9 @@ class TripsRepositoryImpl @Inject constructor(
 
     override suspend fun getTrips(route: TripRoute): List<Trip> {
         val trips = db.collection(COLLECTION_TRIPS).get().await()
-        return trips.toObjects(TripDto::class.java).map(mapper::mapFrom)
+        return trips.toObjects(TripDto::class.java)
+            .map(mapper::mapFrom)
+            .sortedBy { it.route dist route }
     }
 
     override suspend fun getTripDetails(id: String): Trip {

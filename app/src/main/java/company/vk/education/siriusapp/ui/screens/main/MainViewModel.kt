@@ -150,7 +150,7 @@ class MainViewModel @Inject constructor(
         }
         driveRoute(trip.route)
     }
-
+    
     private suspend fun createTripState(trip: Trip) =
         TripState(
             trip,

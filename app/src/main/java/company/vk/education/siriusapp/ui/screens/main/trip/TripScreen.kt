@@ -25,7 +25,7 @@ import com.yandex.mapkit.map.CameraPosition
 import com.yandex.mapkit.mapview.MapView
 import company.vk.education.siriusapp.R
 import company.vk.education.siriusapp.data.VK_USER_URL
-import company.vk.education.siriusapp.domain.model.User
+import company.vk.education.siriusapp.domain.model.*
 import company.vk.education.siriusapp.ui.theme.*
 
 @Composable
