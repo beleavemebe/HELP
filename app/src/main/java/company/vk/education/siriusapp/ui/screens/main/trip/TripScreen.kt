@@ -137,6 +137,7 @@ fun TripControls(
 ) {
     Card(title = stringResource(R.string.actions)) {
         Column {
+            Spacer(modifier = Modifier.height(Spacing8dp))
             TripAction(stringResource(R.string.edit),  painterResource(id = R.drawable.ic_edit), Blue, onEditTripClicked)
             Spacer(modifier = Modifier.height(Spacing16dp))
             TripAction(stringResource(R.string.cancel_trip), painterResource(id = R.drawable.ic_trashcan), Red, onCancelTripClicked)
