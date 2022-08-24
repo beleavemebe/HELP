@@ -674,23 +674,6 @@ fun Trips(
     }
 }
 
-@Preview
-@Composable
-fun TripItemPreview() {
-    TripItem(
-        trip = Trip(
-            route = TripRoute(),
-            freePlaces = 3,
-            host = User("123", "ivan", "", UserContacts("123")),
-            passengers = listOf(),
-            taxiService = TaxiService.Yandex,
-            taxiVehicleClass = TaxiService.Yandex.YandexVehicleClass.Comfort
-        ),
-        onTripClicked = {},
-        onJoinTripClicked = {},
-    )
-}
-
 @Composable
 fun TripItem(
     trip: Trip,
