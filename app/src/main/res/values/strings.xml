@@ -41,5 +41,8 @@
     <string name="tomorrow">Завтра</string>
     <string name="in_placeholder">%1$s в %2$s</string>
     <string name="rating">Рейтинг</string>
+    <string name="show">Показать</string>
+    <string name="your_trip">Ваша поездка</string>
+    <string name="reserved">Место забронировано</string>
     <integer name="com_vk_sdk_AppId">51403589</integer>
 </resources>

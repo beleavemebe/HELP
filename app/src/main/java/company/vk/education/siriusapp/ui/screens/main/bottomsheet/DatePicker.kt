@@ -4,6 +4,7 @@ import android.app.DatePickerDialog
 import android.widget.DatePicker
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import company.vk.education.siriusapp.R
 import company.vk.education.siriusapp.ui.utils.calendar
 import java.util.*
 
