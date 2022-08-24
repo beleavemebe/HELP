@@ -174,7 +174,7 @@ class MainViewModel @Inject constructor(
         }
         driveRoute(trip.route)
     }
-    
+
     private suspend fun createTripState(trip: Trip) =
         TripState(
             trip,
@@ -258,7 +258,7 @@ class MainViewModel @Inject constructor(
             TaxiPreference.TAXI_VEHICLE_CLASS -> it.copy(
                 bottomSheetScreenState = it.bottomSheetScreenState.copy(
                     isShowingPickTaxiVehicleClassMenu = true
-    )
+                )
             )
         }
     }
@@ -297,7 +297,8 @@ class MainViewModel @Inject constructor(
     }
 
     private fun setStartLocationIfNotAlready(location: Location) {
-        val alreadyPickedStartLocation = viewState.value.bottomSheetScreenState.startAddress.isBlank().not()
+        val alreadyPickedStartLocation =
+            viewState.value.bottomSheetScreenState.startAddress.isBlank().not()
         if (alreadyPickedStartLocation) return
 
         execute {
@@ -386,7 +387,10 @@ class MainViewModel @Inject constructor(
             mapState = it.mapState.copy(isChoosingAddress = false),
             bottomSheetScreenState = it.bottomSheetScreenState.run {
                 when (addressToChoose) {
-                    AddressToChoose.START -> copy(startAddress = address, startLocation = addressLocation)
+                    AddressToChoose.START -> copy(
+                        startAddress = address,
+                        startLocation = addressLocation
+                    )
                     AddressToChoose.END -> copy(endAddress = address, endLocation = addressLocation)
                 }
             }
@@ -410,7 +414,7 @@ class MainViewModel @Inject constructor(
                 addressToChoose == AddressToChoose.START && sheetState.startAddress.isNotBlank() -> {
                     MainScreenViewEffect.MoveMapToLocation(sheetState.startLocation)
                 }
-                addressToChoose == AddressToChoose.END && sheetState.endAddress.isNotBlank() ->  {
+                addressToChoose == AddressToChoose.END && sheetState.endAddress.isNotBlank() -> {
                     MainScreenViewEffect.MoveMapToLocation(sheetState.endLocation)
                 }
                 else -> null
@@ -450,13 +454,23 @@ class MainViewModel @Inject constructor(
 
     private fun loadTrips(startLocation: Location, endLocation: Location, date: Date) = reduce {
         val route = TripRoute(startLocation, endLocation, date)
-        val trips = tripsRepository.getTrips(route)
 
+        fun date(dayShift: Int) = Calendar.getInstance().apply {
+            time = date
+            add(Calendar.DATE, dayShift)
+        }.time
+
+        val before = date(-1)
+        val after = date(1)
+
+        val distance = route.startLocation dist route.endLocation
+        val trips = tripsRepository.getTrips(route)
+        val user = authService.authState.value.user
         it.copy(
             bottomSheetScreenState = it.bottomSheetScreenState.copy(
                 areTripsLoading = false,
                 trips = trips.map { trip ->
-                    TripCard(trip, round((route dist trip.route).meters()).toInt())
+                    TripCard(trip, round((route dist trip.route).meters()).toInt(), user in trip.passengers, trip.host == user)
                 }
             )
         )

@@ -15,5 +15,7 @@ val Black = Color(0xFF000000)
 val Grey = Color(0xFF818C99)
 val LightGrey = Color(0xFFF2F3F5)
 
+val Green = Color(0xFF4BB34B)
+
 val TextPrimary = Black
 val TextHint = Grey

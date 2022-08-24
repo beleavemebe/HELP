@@ -50,5 +50,8 @@
     <string name="cancel_trip">Отменить поездку</string>
     <string name="general_notifications">Общие уведомления</string>
     <string name="updating_current_trip">Обновляем текущую поездку…</string>
+    <string name="show">Показать</string>
+    <string name="your_trip">Ваша поездка</string>
+    <string name="reserved">Место забронировано</string>
     <integer name="com_vk_sdk_AppId">51403589</integer>
 </resources>

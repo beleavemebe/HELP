@@ -25,9 +25,14 @@ class TripsRepositoryImpl @Inject constructor(
 ) : TripsRepository {
     override suspend fun getTrips(route: TripRoute): List<Trip> {
         val trips = db.collection(COLLECTION_TRIPS).get().await()
+        val selectDist: (Trip) -> Double = { it.route dist route }
         return trips.toObjects(TripDto::class.java)
             .map(mapper::mapFrom)
-            .sortedBy { it.route dist route }
+            .sortedWith(
+                Comparator<Trip> { lhs, rhs ->
+                    selectDist(lhs).compareTo(selectDist(rhs))
+                }.thenBy { it.route.date }
+            )
     }
 
     override suspend fun getTripDetails(id: String): Trip {

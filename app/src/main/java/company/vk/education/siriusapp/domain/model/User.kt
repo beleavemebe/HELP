@@ -6,4 +6,8 @@ data class User(
     val imageUrl: String?,
     val contact: UserContacts,
     val rating: Double = 100.0,
-)
+) {
+    override fun equals(other: Any?) = other is User && id == other.id
+
+    override fun hashCode() = id.hashCode()
+}
