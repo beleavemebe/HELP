@@ -17,11 +17,13 @@ import company.vk.education.siriusapp.domain.repository.AddressRepository
 import company.vk.education.siriusapp.domain.repository.TripsRepository
 import company.vk.education.siriusapp.domain.service.AuthService
 import company.vk.education.siriusapp.domain.service.CurrentTripService
+import company.vk.education.siriusapp.domain.service.ScheduledTripsService
 import company.vk.education.siriusapp.ui.base.BaseViewModel
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.BottomSheetScreenState
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.TaxiPreference
 import company.vk.education.siriusapp.ui.screens.main.map.MapViewState
 import company.vk.education.siriusapp.ui.screens.main.trip.TripCard
+import company.vk.education.siriusapp.ui.screens.main.trip.TripScreenTitle
 import company.vk.education.siriusapp.ui.screens.main.trip.TripState
 import company.vk.education.siriusapp.ui.utils.log
 import company.vk.education.siriusapp.ui.utils.setHourAndMinute
@@ -38,7 +40,8 @@ class MainViewModel @Inject constructor(
     private val authService: AuthService,
     private val addressRepository: AddressRepository,
     private val tripsRepository: TripsRepository,
-    private val currentTripService: CurrentTripService,
+    private val scheduledTripsService: ScheduledTripsService,
+    currentTripService: CurrentTripService,
 ) : BaseViewModel<MainScreenState, MainScreenIntent, Nothing, MainScreenViewEffect>() {
     override val initialState =
         MainScreenState(
@@ -68,13 +71,31 @@ class MainViewModel @Inject constructor(
         authService.auth()
 
         currentTripService.currentTripState
-            .onEach { log("currentTrip " + it.toString()) }
+            .onEach(::updateState)
             .launchIn(viewModelScope)
     }
 
     private fun updateState(authState: AuthState) = reduce {
         val newMapState = it.mapState.copy(profilePicUrl = authState.user?.imageUrl)
         it.copy(mapState = newMapState)
+    }
+
+    private fun updateState(currentTripState: CurrentTripState) {
+        if (currentTripState.isUnknown.not()) {
+            currentTripState.currentTripId
+                ?.takeUnless { it.isBlank() }
+                ?.let(::jumpToCurrentTrip)
+        }
+    }
+
+    private fun jumpToCurrentTrip(currentTripId: String) = reduce {
+        val trip = tripsRepository.getTripDetails(currentTripId)
+        it.copy(
+            tripState = createTripState(trip).copy(
+                title = TripScreenTitle.CURRENT_TRIP,
+                showControls = trip.host == authService.authState.value.user
+            )
+        )
     }
 
     override fun accept(intent: MainScreenIntent): Any {
@@ -111,8 +132,8 @@ class MainViewModel @Inject constructor(
 
     private fun joinTrip(trip: Trip) = reduce {
         tripsRepository.joinTrip(trip)
-        currentTripService.setCurrentTrip(trip.id)
         val updatedTrip = tripsRepository.getTripDetails(trip.id)
+        scheduleTrip(updatedTrip)
         it.copy(
             tripState = createTripState(updatedTrip)
         )
@@ -146,7 +167,9 @@ class MainViewModel @Inject constructor(
     private fun openTripModalSheet(trip: Trip) {
         reduce {
             it.copy(
-                tripState = createTripState(trip)
+                tripState = createTripState(trip).copy(
+                    showControls = trip.host == authService.authState.value.user
+                )
             )
         }
         driveRoute(trip.route)
@@ -176,23 +199,36 @@ class MainViewModel @Inject constructor(
         )
     }
 
-    private fun publishTrip() = reduce {
-        val bss = it.bottomSheetScreenState
-        val trip = Trip(
-            route = TripRoute(startLocation = bss.startLocation, endLocation = bss.endLocation, date = bss.date!!),
-            freePlaces = bss.freePlaces!!,
-            host = authService.authState.value.user!!,
-            passengers = emptyList(),
-            taxiService = bss.taxiService!!,
-            taxiVehicleClass = bss.taxiVehicleClass!!
-        )
+    private fun publishTrip() {
+        reduce {
+            val bss = it.bottomSheetScreenState
+            val trip = Trip(
+                route = TripRoute(startLocation = bss.startLocation, endLocation = bss.endLocation, date = bss.date!!),
+                freePlaces = bss.freePlaces!!,
+                host = authService.authState.value.user!!,
+                passengers = emptyList(),
+                taxiService = bss.taxiService!!,
+                taxiVehicleClass = bss.taxiVehicleClass!!
+            )
 
-        tripsRepository.publishTrip(trip)
+            tripsRepository.publishTrip(trip)
+            scheduleTrip(trip)
 
-        it.copy(
-            bottomSheetScreenState = BottomSheetScreenState(),
-            isBottomSheetExpanded = false,
-            tripState = createTripState(trip)
+            it.copy(
+                bottomSheetScreenState = BottomSheetScreenState(),
+                isBottomSheetExpanded = false,
+                tripState = createTripState(trip).copy(
+                    title = TripScreenTitle.TRIP_CREATED,
+                    showControls = true
+                )
+            )
+        }
+    }
+
+    private fun scheduleTrip(trip: Trip) = execute {
+        scheduledTripsService.scheduleTripAt(
+            trip.route.date,
+            tripsRepository.getTripDetails(trip.id)
         )
     }
 

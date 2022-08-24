@@ -18,11 +18,11 @@ class NetworkModule {
     @Provides
     fun provideOkHttp() : OkHttpClient {
         return OkHttpClient.Builder()
-            .addInterceptor(
-                HttpLoggingInterceptor(::log).apply {
-                    level = HttpLoggingInterceptor.Level.BODY
-                }
-            )
+//            .addInterceptor(
+//                HttpLoggingInterceptor(::log).apply {
+//                    level = HttpLoggingInterceptor.Level.BODY
+//                }
+//            )
             .build()
     }
 

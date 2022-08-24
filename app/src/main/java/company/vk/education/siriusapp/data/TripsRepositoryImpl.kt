@@ -23,21 +23,6 @@ class TripsRepositoryImpl @Inject constructor(
     private val mapper: BiMapper<Trip, TripDto>,
     private val authService: AuthService,
 ) : TripsRepository {
-//
-//    val tripsFlow: Flow<List<Trip>> = callbackFlow {
-//        db.collection(COLLECTION_TRIPS).addSnapshotListener { value, error ->
-//            trySendBlocking(
-//                value?.mapToTrips().orEmpty()
-//            )
-//        }
-//    }
-//
-//    private var currentRoute = TripRoute()
-//
-//    fun setCurrentRoute() {
-//        currentRoute =
-//    }
-
     override suspend fun getTrips(route: TripRoute): List<Trip> {
         val trips = db.collection(COLLECTION_TRIPS).get().await()
         return trips.toObjects(TripDto::class.java)
@@ -68,7 +53,7 @@ class TripsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun publishTrip(trip: Trip) {
-        db.collection(COLLECTION_TRIPS).add(mapper.mapTo(trip)).await()
+        db.collection(COLLECTION_TRIPS).document(trip.id).set(mapper.mapTo(trip)).await()
     }
 
     override fun cancelTrip(trip: Trip) {
@@ -79,10 +64,4 @@ class TripsRepositoryImpl @Inject constructor(
         println("Not yet implemented")
         return emptyList()
     }
-//
-//    private fun QuerySnapshot.mapToTrips(): List<Trip> {
-//        return toObjects(TripDto::class.java)
-//            .map(mapper::mapFrom)
-//            .sortedBy { it.route dist currentRoute }
-//    }
 }

@@ -39,6 +39,12 @@ android {
 }
 
 dependencies {
+    def work_version = "2.7.1"
+    implementation "androidx.work:work-runtime:$work_version"
+    implementation "androidx.work:work-runtime-ktx:$work_version"
+    implementation 'androidx.hilt:hilt-work:1.0.0'
+    kapt 'androidx.hilt:hilt-compiler:1.0.0'
+
     implementation  "androidx.datastore:datastore-core:1.0.0"
     implementation  "com.google.protobuf:protobuf-javalite:3.21.5"
 

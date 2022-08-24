@@ -7,5 +7,7 @@ data class TripState(
     val trip: Trip,
     val startAddress: String,
     val endAddress: String,
-    val tripRoutePolyline: Polyline? = null
+    val tripRoutePolyline: Polyline? = null,
+    val title: TripScreenTitle = TripScreenTitle.TRIP_DETAILS,
+    val showControls: Boolean = false,
 )

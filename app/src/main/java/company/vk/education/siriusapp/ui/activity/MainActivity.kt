@@ -21,18 +21,25 @@ import com.yandex.mapkit.user_location.UserLocationObjectListener
 import com.yandex.mapkit.user_location.UserLocationView
 import com.yandex.runtime.image.ImageProvider
 import company.vk.education.siriusapp.R
+import company.vk.education.siriusapp.core.Mapper
+import company.vk.education.siriusapp.domain.model.TaxiService
+import company.vk.education.siriusapp.domain.model.TaxiVehicleClass
+import company.vk.education.siriusapp.ui.LocalMappers
+import company.vk.education.siriusapp.ui.LocalMappersProvider
 import company.vk.education.siriusapp.ui.screens.main.MainScreen
 import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
 import company.vk.education.siriusapp.ui.screens.main.MainScreenViewEffect
 import company.vk.education.siriusapp.ui.screens.main.MainViewModel
+import company.vk.education.siriusapp.ui.screens.main.trip.TripScreenTitle
 import company.vk.education.siriusapp.ui.theme.Blue
 import company.vk.education.siriusapp.ui.utils.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), LocalMappersProvider {
     private val viewModel: MainViewModel by viewModels()
 
     private lateinit var mapView: MapView
@@ -60,6 +67,10 @@ class MainActivity : AppCompatActivity() {
         override fun onObjectUpdated(p0: UserLocationView, p1: ObjectEvent) {}
     }
 
+    @Inject override lateinit var taxiServiceMapper: Mapper<TaxiService, Int>
+    @Inject override lateinit var taxiVehicleClassMapper: Mapper<TaxiVehicleClass, Int>
+    @Inject override lateinit var tripScreenTitleMapper: Mapper<TripScreenTitle, Int>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         MapKitFactory.initialize(this)
         DirectionsFactory.initialize(this)
@@ -70,8 +81,7 @@ class MainActivity : AppCompatActivity() {
             val mainScreenState by viewModel.viewState.collectAsState()
             viewModel.collectViewEffects(::handleViewEffect)
             CompositionLocalProvider(
-                LocalTaxiServiceToStringResMapper.let { it provides it.current },
-                LocalTaxiVehicleClassToStringResMapper.let { it provides it.current },
+                LocalMappers provides this
             ) {
                 MainScreen(
                     state = mainScreenState,

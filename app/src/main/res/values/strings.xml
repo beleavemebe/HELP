@@ -41,5 +41,14 @@
     <string name="tomorrow">Завтра</string>
     <string name="in_placeholder">%1$s в %2$s</string>
     <string name="rating">Рейтинг</string>
+    <string name="trip_details">Детали поездки</string>
+    <string name="trip_created">Поездка создана</string>
+    <string name="trip_craeted">Текущая поездка</string>
+    <string name="trip_finished">Поездка завершена</string>
+    <string name="actions">Действия</string>
+    <string name="edit">Редактировать</string>
+    <string name="cancel_trip">Отменить поездку</string>
+    <string name="general_notifications">Общие уведомления</string>
+    <string name="updating_current_trip">Обновляем текущую поездку…</string>
     <integer name="com_vk_sdk_AppId">51403589</integer>
 </resources>

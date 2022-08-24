@@ -1,7 +1,7 @@
 package company.vk.education.siriusapp.ui.screens.main
 
-const val MINUTE_MS = 60 * 1000L
-const val HOUR_MS = 60 * MINUTE_MS
+import company.vk.education.siriusapp.ui.utils.HOUR_MS
+import company.vk.education.siriusapp.ui.utils.MINUTE_MS
 
 const val DEFAULT_HOUR = 12
 const val DEFAULT_MINUTE = 0

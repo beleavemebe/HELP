@@ -12,9 +12,15 @@ import company.vk.education.siriusapp.data.mapper.TripDtoMapper
 import company.vk.education.siriusapp.data.mapper.UserDtoMapper
 import company.vk.education.siriusapp.data.model.TripDto
 import company.vk.education.siriusapp.data.model.UserDto
+import company.vk.education.siriusapp.domain.model.TaxiService
+import company.vk.education.siriusapp.domain.model.TaxiVehicleClass
 import company.vk.education.siriusapp.domain.model.Trip
 import company.vk.education.siriusapp.domain.model.User
 import company.vk.education.siriusapp.domain.service.CurrentTripService
+import company.vk.education.siriusapp.ui.screens.main.bottomsheet.TaxiServiceToStringResMapper
+import company.vk.education.siriusapp.ui.screens.main.bottomsheet.TaxiVehicleClassToStringResMapper
+import company.vk.education.siriusapp.ui.screens.main.trip.TripScreenTitle
+import company.vk.education.siriusapp.ui.screens.main.trip.TripScreenTitleToStringResMapper
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -43,6 +49,24 @@ interface MapperBindingsModule {
     fun bindUserDtoMapper(
         impl: UserDtoMapper,
     ): BiMapper<User, UserDto>
+
+    @Binds
+    @Singleton
+    fun bindTaxiServiceMapper(
+        impl: TaxiServiceToStringResMapper,
+    ): Mapper<TaxiService, Int>
+
+    @Binds
+    @Singleton
+    fun bindTaxiVehicleClassMapper(
+        impl: TaxiVehicleClassToStringResMapper,
+    ): Mapper<TaxiVehicleClass, Int>
+
+    @Binds
+    @Singleton
+    fun bindTripScreenTitleMapper(
+        impl: TripScreenTitleToStringResMapper,
+    ): Mapper<TripScreenTitle, Int>
 
     companion object {
         @Provides

@@ -13,10 +13,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import coil.compose.AsyncImage
@@ -24,9 +27,13 @@ import com.yandex.mapkit.geometry.BoundingBoxHelper
 import com.yandex.mapkit.map.CameraPosition
 import com.yandex.mapkit.mapview.MapView
 import company.vk.education.siriusapp.R
+import company.vk.education.siriusapp.core.dist
+import company.vk.education.siriusapp.core.meters
 import company.vk.education.siriusapp.data.VK_USER_URL
 import company.vk.education.siriusapp.domain.model.*
+import company.vk.education.siriusapp.ui.LocalMappers
 import company.vk.education.siriusapp.ui.theme.*
+import company.vk.education.siriusapp.ui.utils.log
 
 @Composable
 fun TripScreen(tripState: TripState) {
@@ -56,9 +63,10 @@ fun TripScreen(tripState: TripState) {
                             )
                         }
                         Spacer(modifier = Modifier.height(Spacing8dp))
+                        val titleMapper = LocalMappers.current.tripScreenTitleMapper
                         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                             Text(
-                                text = stringResource(id = R.string.trip),
+                                text = stringResource(id = titleMapper.map(tripState.title)),
                                 textAlign = TextAlign.Center
                             )
                         }
@@ -104,7 +112,45 @@ fun TripScreen(tripState: TripState) {
             Card(stringResource(id = R.string.participants)) {
                 ShowParticipants(tripState.trip.passengers, tripState.trip.freePlaces)
             }
+
+            if (tripState.showControls) {
+                TripControls(
+                    onEditTripClicked = {},
+                    onCancelTripClicked = {}
+                )
+            }
         }
+    }
+}
+
+@Composable
+@Preview
+fun TripControlsPreview() = TripControls(
+    onEditTripClicked = {},
+    onCancelTripClicked = {}
+)
+
+@Composable
+fun TripControls(
+    onEditTripClicked: () -> Unit,
+    onCancelTripClicked: () -> Unit,
+) {
+    Card(title = stringResource(R.string.actions)) {
+        Column {
+            TripAction(stringResource(R.string.edit),  painterResource(id = R.drawable.ic_edit), Blue, onEditTripClicked)
+            Spacer(modifier = Modifier.height(Spacing16dp))
+            TripAction(stringResource(R.string.cancel_trip), painterResource(id = R.drawable.ic_trashcan), Red, onCancelTripClicked)
+        }
+    }
+}
+
+@Composable
+fun TripAction(action: String, iconPainter: Painter, color: Color, onClick: () -> Unit) {
+    Spacer(modifier = Modifier.width(Spacing8dp))
+    Row {
+        Image(painter = iconPainter, contentDescription = action, colorFilter = ColorFilter.tint(color))
+        Spacer(modifier = Modifier.width(Spacing16dp))
+        Text(text = action, style = AppTypography.text, color = color)
     }
 }
 

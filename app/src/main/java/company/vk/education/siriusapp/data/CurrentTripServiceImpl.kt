@@ -7,6 +7,7 @@ import company.vk.education.siriusapp.CurrentTripStateMsg
 import company.vk.education.siriusapp.core.Mapper
 import company.vk.education.siriusapp.domain.model.CurrentTripState
 import company.vk.education.siriusapp.domain.service.CurrentTripService
+import company.vk.education.siriusapp.ui.utils.log
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -22,6 +23,7 @@ class CurrentTripServiceImpl @Inject constructor(
     )
 
     override suspend fun setCurrentTrip(id: String) {
+        log("setCurrentTrip $id")
         context.currentTripStore.updateData { currentTripState ->
             currentTripState.toBuilder().apply {
                 tripId = id
@@ -30,6 +32,7 @@ class CurrentTripServiceImpl @Inject constructor(
     }
 
     override suspend fun clearCurrentTrip() {
+        log("clearCurrentTrip")
         context.currentTripStore.updateData { currentTripState ->
             currentTripState.toBuilder().clearTripId().build()
         }

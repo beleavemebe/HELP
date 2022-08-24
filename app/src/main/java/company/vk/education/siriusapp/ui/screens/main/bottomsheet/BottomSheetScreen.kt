@@ -35,6 +35,7 @@ import company.vk.education.siriusapp.R
 import company.vk.education.siriusapp.core.dist
 import company.vk.education.siriusapp.core.meters
 import company.vk.education.siriusapp.domain.model.*
+import company.vk.education.siriusapp.ui.LocalMappers
 import company.vk.education.siriusapp.ui.screens.main.HourAndMinute
 import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
 import company.vk.education.siriusapp.ui.screens.main.MainViewModel
@@ -249,7 +250,7 @@ fun TripCreationControls(
 
             Spacer(modifier = Modifier.height(Spacing16dp))
 
-            val serviceMapper = LocalTaxiServiceToStringResMapper.current
+            val serviceMapper = LocalMappers.current.taxiServiceMapper
             val pickedTaxiService = taxiService?.let { stringResource(id = serviceMapper.map(it)) }
             IconAndTextField(
                 iconPainter = painterResource(id = R.drawable.ic_car),
@@ -289,7 +290,7 @@ fun TripCreationControls(
 
             Spacer(modifier = Modifier.height(Spacing16dp))
 
-            val vehicleClassMapper = LocalTaxiVehicleClassToStringResMapper.current
+            val vehicleClassMapper = LocalMappers.current.taxiVehicleClassMapper
             val pickedTaxiVehicleClass = taxiVehicleClass?.let {
                 stringResource(id = vehicleClassMapper.map(it))
             }
@@ -732,8 +733,8 @@ fun TripItem(
                 }
             }
 
-            val serviceMapper = LocalTaxiServiceToStringResMapper.current
-            val vehicleClassMapper = LocalTaxiVehicleClassToStringResMapper.current
+            val serviceMapper = LocalMappers.current.taxiServiceMapper
+            val vehicleClassMapper = LocalMappers.current.taxiVehicleClassMapper
             val taxiService = stringResource(id = serviceMapper.map(trip.taxiService))
             val vehicleClass = stringResource(id = vehicleClassMapper.map(trip.taxiVehicleClass))
             Text(
