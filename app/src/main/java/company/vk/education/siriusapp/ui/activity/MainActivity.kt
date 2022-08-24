@@ -110,6 +110,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun mapInit() {
         mapView = MapView(this)
+        mapView.map.isRotateGesturesEnabled = false
         val mapKit = MapKitFactory.getInstance()
         mapKit.resetLocationManagerToDefault()
         userLocationLayer = mapKit.createUserLocationLayer(mapView.mapWindow)

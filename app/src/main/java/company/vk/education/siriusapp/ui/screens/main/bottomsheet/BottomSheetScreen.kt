@@ -7,7 +7,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,7 +20,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -32,9 +30,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import company.vk.education.siriusapp.R
-import company.vk.education.siriusapp.core.dist
-import company.vk.education.siriusapp.core.meters
-import company.vk.education.siriusapp.domain.model.*
+import company.vk.education.siriusapp.domain.model.TaxiService
+import company.vk.education.siriusapp.domain.model.TaxiVehicleClass
+import company.vk.education.siriusapp.domain.model.Trip
 import company.vk.education.siriusapp.ui.screens.main.HourAndMinute
 import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
 import company.vk.education.siriusapp.ui.screens.main.MainViewModel
@@ -44,9 +42,7 @@ import company.vk.education.siriusapp.ui.utils.*
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.math.round
 
 val MainViewModel.bottomSheetState
     get() = viewState
@@ -702,6 +698,13 @@ fun TripItem(
             .clickable { onTripClicked(trip) }
     ) {
         Column(Modifier.padding(Spacing16dp)) {
+            if (tripCard.host) {
+                Text(
+                    stringResource(id = R.string.your_trip),
+                    style = AppTypography.caption1,
+                    color = Grey
+                )
+            }
             Row(
                 Modifier
                     .fillMaxWidth()
@@ -715,8 +718,8 @@ fun TripItem(
                     stringResource(R.string.in_placeholder, date, time),
                     style = AppTypography.headline,
                 )
-                Row(/*horizontalArrangement = Arrangement.spacedBy((-8).dp)*/) {
-                    (listOf(trip.host) + trip.passengers).forEach { user ->
+                Row(horizontalArrangement = Arrangement.spacedBy((-8).dp)) {
+                    (listOf(trip.host) + trip.passengers).forEachIndexed { i, user ->
                         AsyncImage(
                             model = user.imageUrl, contentDescription = "userPhoto",
                             placeholder = painterResource(id = R.drawable.profile_avatar_placeholder),
@@ -725,8 +728,8 @@ fun TripItem(
                             modifier = Modifier
                                 .size(32.dp)
                                 .clip(CircleShape)
-                                .border(2.dp, OnBlue, CircleShape)
-                                //.zIndex(5 - i.toFloat())
+                                .border(1.dp, OnBlue, CircleShape)
+                                .zIndex(5 - i.toFloat())
                         )
                     }
                 }
@@ -752,15 +755,25 @@ fun TripItem(
                     .fillMaxWidth()
                     .height(32.dp),
                 shape = RoundedCornerShape(Spacing8dp),
-                colors = ButtonDefaults.buttonColors(backgroundColor = Blue),
+                colors = ButtonDefaults.buttonColors(backgroundColor = if (tripCard.disabled) Green else Blue),
                 elevation = null,
                 onClick = {
-                    onJoinTripClicked(trip)
-                    log("Присоединяюсь")
+                    if (tripCard.disabled || tripCard.host) {
+                        onTripClicked(trip)
+                    } else {
+                        onJoinTripClicked(trip)
+                        log("Присоединяюсь")
+                    }
                 }
             ) {
                 Text(
-                    stringResource(id = R.string.join),
+                    stringResource(
+                        id = when {
+                            tripCard.host -> R.string.show
+                            tripCard.disabled -> R.string.reserved
+                            else -> R.string.join
+                        }
+                    ),
                     style = AppTypography.caption2Medium,
                     color = OnBlue
                 )
