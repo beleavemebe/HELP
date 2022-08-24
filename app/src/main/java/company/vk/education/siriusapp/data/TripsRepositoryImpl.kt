@@ -34,7 +34,14 @@ class TripsRepositoryImpl @Inject constructor(
             "Joining trips without authentication is not implemented"
         }
 
-        val newTrip = trip.copy(passengers = trip.passengers + user)
+        val isUserAlreadyInTheTrip = trip.passengers.any { it.id == user.id }
+        if (isUserAlreadyInTheTrip) return
+
+        val newTrip = trip.copy(
+            passengers = trip.passengers + user,
+            freePlaces = trip.freePlaces - 1
+        )
+
         db.collection(COLLECTION_TRIPS).document(trip.id).set(mapper.mapTo(newTrip)).await()
     }
 
