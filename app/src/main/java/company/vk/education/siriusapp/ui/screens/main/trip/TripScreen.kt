@@ -1,14 +1,16 @@
 package company.vk.education.siriusapp.ui.screens.main.trip
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -28,9 +30,16 @@ import company.vk.education.siriusapp.ui.theme.*
 
 @Composable
 fun TripScreen(tripState: TripState) {
-    Scaffold(
-        topBar = {
+    Box(
+        Modifier
+            .fillMaxSize()
+            .padding(horizontal = Spacing16dp)
+            .verticalScroll(rememberScrollState())
+    ) {
+        Column {
             TopAppBar(
+                elevation = 0.dp,
+                backgroundColor = Color.White,
                 title = {
                     Column {
                         Box(
@@ -49,56 +58,54 @@ fun TripScreen(tripState: TripState) {
                         Spacer(modifier = Modifier.height(Spacing8dp))
                         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                             Text(
-                                text = stringResource(id = R.string.current_trip),
+                                text = stringResource(id = R.string.trip),
                                 textAlign = TextAlign.Center
                             )
                         }
                     }
                 },
-                backgroundColor = Color.White,
-                elevation = 0.dp
             )
-        }, content = {
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .padding(Spacing16dp)
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
-                    AndroidView(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(250.dp)
-                            .clip(RoundedCornerShape(16.dp)),
-                        factory = { context ->
-                            MapView(context).also { mapView ->
-                                tripState.tripRoutePolyline?.let {
-                                    val mapObj = mapView.map.mapObjects.addCollection()
-                                    mapObj.addPolyline(it)
-                                    mapView.map.run {
-                                        val camera = cameraPosition(
-                                            BoundingBoxHelper.getBounds(it)
-                                        )
-                                        move(
-                                            CameraPosition(camera.target, camera.zoom - 2f, 0f, 0f)
-                                        )
-                                    }
-                                }
+
+            Spacer(modifier = Modifier.height(Spacing8dp))
+
+            AndroidView(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(250.dp)
+                    .clip(RoundedCornerShape(16.dp)),
+                factory = { context ->
+                    MapView(context).also { mapView ->
+                        tripState.tripRoutePolyline?.let {
+                            val mapObj = mapView.map.mapObjects.addCollection()
+                            mapObj.addPolyline(it)
+                            mapView.map.run {
+                                val camera = cameraPosition(
+                                    BoundingBoxHelper.getBounds(it)
+                                )
+                                move(
+                                    CameraPosition(camera.target, camera.zoom - 1f, 0f, 0f)
+                                )
                             }
                         }
-                    )
-                    Card(stringResource(id = R.string.trip)) {
-                        ShowRoute(tripState.startAddress, tripState.endAddress)
-                    }
-                    Card(stringResource(id = R.string.host)) {
-                        ShowPassenger(tripState.trip.host, true)
-                    }
-                    Card(stringResource(id = R.string.participants)) {
-                        ShowParticipants(tripState.trip.passengers, tripState.trip.freePlaces)
                     }
                 }
+            )
+
+            Spacer(modifier = Modifier.height(Spacing8dp))
+
+            Card(stringResource(id = R.string.route)) {
+                ShowRoute(tripState.startAddress, tripState.endAddress)
             }
-        })
+
+            Card(stringResource(id = R.string.host)) {
+                ShowPassenger(tripState.trip.host, showContacts = true, showRating = true)
+            }
+
+            Card(stringResource(id = R.string.participants)) {
+                ShowParticipants(tripState.trip.passengers, tripState.trip.freePlaces)
+            }
+        }
+    }
 }
 
 @Composable
@@ -108,7 +115,7 @@ fun Card(title: String, content: @Composable () -> Unit) {
         elevation = 0.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(Modifier.padding(Spacing16dp)) {
+        Column(Modifier.padding(Spacing8dp)) {
             Text(title, style = AppTypography.headline)
             Spacer(Modifier.height(Spacing8dp))
             content()
@@ -121,31 +128,49 @@ fun ShowRoute(
     startAddress: String,
     endAddress: String
 ) {
-    Text(
-        startAddress,
-        style = AppTypography.text,
-        color = Color.LightGray
-    )
-    Text(
-        endAddress,
-        style = AppTypography.text,
-        color = Color.LightGray
-    )
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Image(
+            painter = painterResource(id = R.drawable.ic_circle),
+            contentDescription = ""
+        )
+        Spacer(modifier = Modifier.width(Spacing8dp))
+        Text(
+            startAddress,
+            style = AppTypography.text,
+            color = Color.LightGray,
+        )
+    }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Image(
+            painter = painterResource(id = R.drawable.ic_circle),
+            contentDescription = ""
+        )
+        Spacer(modifier = Modifier.width(Spacing8dp))
+        Text(
+            endAddress,
+            style = AppTypography.text,
+            color = Color.LightGray
+        )
+    }
 }
 
 @Composable
 fun ShowParticipants(passengers: List<User>, freePlaces: Int) {
     val passengersWithFree = passengers + List(freePlaces) { null }
-    LazyColumn {
-        items(passengersWithFree) {
-            ShowPassenger(it)
-        }
-    }
+    passengersWithFree.forEach { ShowPassenger(it) }
 }
 
 @Composable
-fun ShowPassenger(user: User? = null, showContacts: Boolean = false) {
-    Row(Modifier.padding(vertical = Spacing8dp), verticalAlignment = Alignment.CenterVertically) {
+fun ShowPassenger(
+    user: User? = null,
+    showContacts: Boolean = false,
+    showRating: Boolean = false,
+) {
+    val contentAlpha = if (user != null) 1.0F else 0.4F
+    Row(
+        Modifier.padding(vertical = Spacing8dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         AsyncImage(
             model = user?.imageUrl ?: "",
             contentDescription = stringResource(id = R.string.profile_pic),
@@ -155,9 +180,30 @@ fun ShowPassenger(user: User? = null, showContacts: Boolean = false) {
             modifier = Modifier
                 .size(Spacing32dp)
                 .clip(CircleShape)
+                .alpha(contentAlpha)
         )
         Spacer(Modifier.width(Spacing12dp))
-        Text(text = user?.name ?: stringResource(R.string.free_place), style = AppTypography.text)
+        Column(horizontalAlignment = Alignment.Start) {
+            Text(
+                text = user?.name ?: stringResource(R.string.free_place),
+                style = AppTypography.text,
+                modifier = Modifier.alpha(contentAlpha)
+            )
+            if (showRating) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_rating),
+                        contentDescription = stringResource(R.string.rating)
+                    )
+                    Spacer(modifier = Modifier.width(Spacing4dp))
+                    Text(
+                        text = user?.rating.toString() + "%",
+                        style = AppTypography.caption2.copy(color = TextHint)
+                    )
+                }
+            }
+        }
+        Spacer(modifier = Modifier.width(Spacing16dp))
         if (showContacts) {
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
                 Text(VK_USER_URL + (user?.id ?: "124124"), color = Blue)

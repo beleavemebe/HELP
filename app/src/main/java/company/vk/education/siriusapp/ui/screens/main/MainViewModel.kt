@@ -16,6 +16,7 @@ import company.vk.education.siriusapp.domain.model.*
 import company.vk.education.siriusapp.domain.repository.AddressRepository
 import company.vk.education.siriusapp.domain.repository.TripsRepository
 import company.vk.education.siriusapp.domain.service.AuthService
+import company.vk.education.siriusapp.domain.service.CurrentTripService
 import company.vk.education.siriusapp.ui.base.BaseViewModel
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.BottomSheetScreenState
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.TaxiPreference
@@ -37,6 +38,7 @@ class MainViewModel @Inject constructor(
     private val authService: AuthService,
     private val addressRepository: AddressRepository,
     private val tripsRepository: TripsRepository,
+    private val currentTripService: CurrentTripService,
 ) : BaseViewModel<MainScreenState, MainScreenIntent, Nothing, MainScreenViewEffect>() {
     override val initialState =
         MainScreenState(
@@ -64,6 +66,10 @@ class MainViewModel @Inject constructor(
             .launchIn(viewModelScope)
 
         authService.auth()
+
+        currentTripService.currentTripState
+            .onEach { log("currentTrip " + it.toString()) }
+            .launchIn(viewModelScope)
     }
 
     private fun updateState(authState: AuthState) = reduce {
@@ -99,9 +105,17 @@ class MainViewModel @Inject constructor(
             is MainScreenIntent.BottomSheetIntent.CancelCreatingTrip -> cancelCreatingTrip()
             is MainScreenIntent.ShowTripDetails -> openTripModalSheet(intent.trip)
             is MainScreenIntent.DismissTripModalSheet -> dismissTripModalSheet()
+            is MainScreenIntent.BottomSheetIntent.JoinTrip -> joinTrip(intent.trip)
         }
     }
 
+    private fun joinTrip(trip: Trip) = reduce {
+        tripsRepository.joinTrip(trip)
+        currentTripService.setCurrentTrip(trip.id)
+        it.copy(
+            tripState = createTripState(trip)
+        )
+    }
 
     private val driveRouter = DirectionsFactory.getInstance().createDrivingRouter()
     private val routeListener = object : DrivingSession.DrivingRouteListener {
@@ -136,7 +150,7 @@ class MainViewModel @Inject constructor(
         }
         driveRoute(trip.route)
     }
-
+    
     private suspend fun createTripState(trip: Trip) =
         TripState(
             trip,

@@ -7,6 +7,7 @@ import company.vk.education.siriusapp.data.model.TripDto
 import company.vk.education.siriusapp.domain.model.Trip
 import company.vk.education.siriusapp.domain.model.TripRoute
 import company.vk.education.siriusapp.domain.repository.TripsRepository
+import company.vk.education.siriusapp.domain.service.AuthService
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -14,7 +15,8 @@ private const val COLLECTION_TRIPS = "trips"
 
 class TripsRepositoryImpl @Inject constructor(
     private val db: FirebaseFirestore,
-    private val mapper: BiMapper<Trip, TripDto>
+    private val mapper: BiMapper<Trip, TripDto>,
+    private val authService: AuthService,
 ) : TripsRepository {
 
     override suspend fun getTrips(route: TripRoute): List<Trip> {
@@ -29,8 +31,21 @@ class TripsRepositoryImpl @Inject constructor(
         return trip.toObject(TripDto::class.java)!!.let { mapper.mapFrom(it) }
     }
 
-    override fun joinTrip(trip: Trip) {
-        println("Not yet implemented")
+    override suspend fun joinTrip(trip: Trip) {
+        val user = authService.authState.value.user
+        require(user != null) {
+            "Joining trips without authentication is not implemented"
+        }
+
+        val isUserAlreadyInTheTrip = trip.passengers.any { it.id == user.id }
+        if (isUserAlreadyInTheTrip) return
+
+        val newTrip = trip.copy(
+            passengers = trip.passengers + user,
+            freePlaces = trip.freePlaces - 1
+        )
+
+        db.collection(COLLECTION_TRIPS).document(trip.id).set(mapper.mapTo(newTrip)).await()
     }
 
     override suspend fun publishTrip(trip: Trip) {

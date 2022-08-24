@@ -40,10 +40,7 @@ import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
 import company.vk.education.siriusapp.ui.screens.main.MainViewModel
 import company.vk.education.siriusapp.ui.screens.main.trip.TripCard
 import company.vk.education.siriusapp.ui.theme.*
-import company.vk.education.siriusapp.ui.utils.LocalTaxiServiceToStringResMapper
-import company.vk.education.siriusapp.ui.utils.LocalTaxiVehicleClassToStringResMapper
-import company.vk.education.siriusapp.ui.utils.formatOrEmpty
-import company.vk.education.siriusapp.ui.utils.log
+import company.vk.education.siriusapp.ui.utils.*
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -111,7 +108,10 @@ fun BottomSheetScreen(
         },
         onTripClicked = {
             viewModel.accept(MainScreenIntent.ShowTripDetails(it))
-        }
+        },
+        onJoinTripClicked = {
+            viewModel.accept(MainScreenIntent.BottomSheetIntent.JoinTrip(it))
+        },
     )
 }
 
@@ -132,7 +132,8 @@ fun BottomSheet(
     onFreePlacesAmountChanged: (Int) -> Unit,
     onPublishTripClicked: () -> Unit,
     onCancelClicked: () -> Unit,
-    onTripClicked: (Trip) -> Unit
+    onTripClicked: (Trip) -> Unit,
+    onJoinTripClicked: (Trip) -> Unit,
 ) {
     Column {
         Box(
@@ -158,7 +159,12 @@ fun BottomSheet(
         )
 
         if (state.isSearchingTrips) {
-            SearchTrips(state, onCreateTripClicked, onTripClicked)
+            SearchTrips(
+                state,
+                onCreateTripClicked,
+                onTripClicked,
+                onJoinTripClicked,
+            )
         } else {
             CreateTrip(
                 state,
@@ -184,12 +190,19 @@ fun BottomSheet(
     }
 }
 
+@Composable
 fun formatDate(date: Date?): String {
-    return date.formatOrEmpty("d MMM")
+    return if (date?.isToday == true) {
+        stringResource(R.string.today)
+    } else if (date?.isTomorrow == true) {
+        stringResource(R.string.tomorrow)
+    } else {
+        date.formatOrEmpty("d MMM")
+    }
 }
 
 fun formatTime(date: Date?): String {
-    return date.formatOrEmpty("HH:mm")
+    return date.formatOrEmpty("H:mm")
 }
 
 @Composable
@@ -434,7 +447,8 @@ fun CreateTrip(
 fun SearchTrips(
     state: BottomSheetScreenState,
     onCreateTripClicked: () -> Unit,
-    onTripClicked: (Trip) -> Unit
+    onTripClicked: (Trip) -> Unit,
+    onJoinTripClicked: (Trip) -> Unit,
 ) {
     Column(
         Modifier.padding(horizontal = Spacing16dp)
@@ -448,7 +462,7 @@ fun SearchTrips(
                 NoTripsFound()
             } else {
                 TripsHeader(state.trips.size, onCreateTripClicked)
-                Trips(trips = state.trips, onTripClicked)
+                Trips(trips = state.trips, onTripClicked, onJoinTripClicked)
             }
         }
     }
@@ -654,7 +668,8 @@ fun NoTripsFound() {
 @Composable
 fun Trips(
     trips: List<TripCard>,
-    onTripClicked: (Trip) -> Unit
+    onTripClicked: (Trip) -> Unit,
+    onJoinTripClicked: (Trip) -> Unit,
 ) {
     LazyColumn(
         Modifier
@@ -662,14 +677,19 @@ fun Trips(
             .padding(top = Spacing4dp)
     ) {
         items(trips) {
-            TripItem(it, onTripClicked)
+            TripItem(it, onTripClicked, onJoinTripClicked)
         }
     }
 }
 
 @Composable
-fun TripItem(tripCard: TripCard, onTripClicked: (Trip) -> Unit) {
+fun TripItem(
+    tripCard: TripCard,
+    onTripClicked: (Trip) -> Unit,
+    onJoinTripClicked: (Trip) -> Unit
+) {
     val trip = tripCard.trip
+    Spacer(modifier = Modifier.height(Spacing4dp))
     Surface(
         shape = RoundedCornerShape(16.dp),
         elevation = 4.dp,
@@ -685,11 +705,10 @@ fun TripItem(tripCard: TripCard, onTripClicked: (Trip) -> Unit) {
                 Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val date = formatDate(trip.route.date)
+                val time = formatTime(trip.route.date)
                 Text(
-                    SimpleDateFormat(
-                        "dd.MM в HH:mm",
-                        Locale.getDefault()
-                    ).format(trip.route.date),
+                    stringResource(R.string.in_placeholder, date, time),
                     style = AppTypography.headline,
                 )
                 Row(/*horizontalArrangement = Arrangement.spacedBy((-8).dp)*/) {
@@ -721,18 +740,21 @@ fun TripItem(tripCard: TripCard, onTripClicked: (Trip) -> Unit) {
                     tripCard.dist
                 ),
                 style = AppTypography.caption1,
-                color = Color.LightGray
+                color = Grey
             )
             Spacer(modifier = Modifier.height(Spacing12dp))
-            Button(modifier = Modifier
-                .fillMaxWidth()
-                .height(32.dp),
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(32.dp),
                 shape = RoundedCornerShape(Spacing8dp),
                 colors = ButtonDefaults.buttonColors(backgroundColor = Blue),
                 elevation = null,
                 onClick = {
+                    onJoinTripClicked(trip)
                     log("Присоединяюсь")
-                }) {
+                }
+            ) {
                 Text(
                     stringResource(id = R.string.join),
                     style = AppTypography.caption2Medium,
@@ -741,5 +763,5 @@ fun TripItem(tripCard: TripCard, onTripClicked: (Trip) -> Unit) {
             }
         }
     }
-    Spacer(modifier = Modifier.height(Spacing16dp))
+    Spacer(modifier = Modifier.height(Spacing12dp))
 }
