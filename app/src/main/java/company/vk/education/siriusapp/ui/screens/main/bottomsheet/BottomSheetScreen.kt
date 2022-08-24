@@ -648,7 +648,9 @@ private fun TextFieldMapIcon(
 
 @Preview
 @Composable
-fun NoTripsFound() {
+fun NoTripsFound(
+    vm: MainViewModel = viewModel()
+) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxSize()
@@ -659,7 +661,9 @@ fun NoTripsFound() {
 
         Spacer(modifier = Modifier.fillMaxHeight(0.2f))
 
-        Text(text = stringResource(R.string.create_a_trip) + " (todo)")
+        Text(text = stringResource(R.string.create_a_trip) + " (todo)", Modifier.clickable {
+            vm.accept(MainScreenIntent.BottomSheetIntent.CreateTrip)
+        })
 
         Spacer(modifier = Modifier.fillMaxHeight(0.3f))
     }

@@ -1,7 +1,9 @@
 package company.vk.education.siriusapp.data.model
 
+import com.google.firebase.firestore.DocumentId
+
 data class TripDto(
-    val id: String? = null,
+    @DocumentId val id: String? = null,
     val startLatitude: Double? = null,
     val startLongitude: Double? = null,
     val endLatitude: Double? = null,

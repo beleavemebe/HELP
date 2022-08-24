@@ -112,8 +112,9 @@ class MainViewModel @Inject constructor(
     private fun joinTrip(trip: Trip) = reduce {
         tripsRepository.joinTrip(trip)
         currentTripService.setCurrentTrip(trip.id)
+        val updatedTrip = tripsRepository.getTripDetails(trip.id)
         it.copy(
-            tripState = createTripState(trip)
+            tripState = createTripState(updatedTrip)
         )
     }
 
@@ -393,8 +394,8 @@ class MainViewModel @Inject constructor(
         } else {
             execute {
                 loadTrips(
-                    state.bottomSheetScreenState.startAddress,
-                    state.bottomSheetScreenState.endAddress,
+                    state.bottomSheetScreenState.startLocation,
+                    state.bottomSheetScreenState.endLocation,
                     state.bottomSheetScreenState.date
                         ?: error("allFormsAreFilled returned true but date was null")
                 )
@@ -407,10 +408,8 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private fun loadTrips(startAddress: String, endAddress: String, date: Date) = reduce {
-        val startAddressLocation = addressRepository.getLocationOfAnAddress(startAddress)
-        val endAddressLocation = addressRepository.getLocationOfAnAddress(endAddress)
-        val route = TripRoute(startAddressLocation, endAddressLocation, date)
+    private fun loadTrips(startLocation: Location, endLocation: Location, date: Date) = reduce {
+        val route = TripRoute(startLocation, endLocation, date)
         val trips = tripsRepository.getTrips(route)
 
         it.copy(
