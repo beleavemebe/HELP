@@ -7,6 +7,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,10 +32,13 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import company.vk.education.siriusapp.R
+import company.vk.education.siriusapp.core.dist
+import company.vk.education.siriusapp.core.meters
 import company.vk.education.siriusapp.domain.model.*
 import company.vk.education.siriusapp.ui.screens.main.HourAndMinute
 import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
 import company.vk.education.siriusapp.ui.screens.main.MainViewModel
+import company.vk.education.siriusapp.ui.screens.main.trip.TripCard
 import company.vk.education.siriusapp.ui.theme.*
 import company.vk.education.siriusapp.ui.utils.*
 import kotlinx.coroutines.flow.SharingStarted
@@ -42,6 +46,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.math.round
 
 val MainViewModel.bottomSheetState
     get() = viewState
@@ -134,11 +139,13 @@ fun BottomSheet(
         Box(
             Modifier
                 .fillMaxWidth()
-                .padding(top = Spacing16dp), contentAlignment = Alignment.Center) {
+                .padding(top = Spacing16dp), contentAlignment = Alignment.Center
+        ) {
             Divider(
                 Modifier
                     .fillMaxWidth(0.25f)
-                    .clip(RoundedCornerShape(Spacing4dp)), color = Color.LightGray, thickness = 3.dp)
+                    .clip(RoundedCornerShape(Spacing4dp)), color = Color.LightGray, thickness = 3.dp
+            )
         }
         TripMainControls(
             state.startAddress,
@@ -660,43 +667,28 @@ fun NoTripsFound() {
 
 @Composable
 fun Trips(
-    trips: List<Trip>,
+    trips: List<TripCard>,
     onTripClicked: (Trip) -> Unit,
     onJoinTripClicked: (Trip) -> Unit,
 ) {
     LazyColumn(
         Modifier
             .fillMaxSize()
-            .padding(top = Spacing4dp)) {
+            .padding(top = Spacing4dp)
+    ) {
         items(trips) {
             TripItem(it, onTripClicked, onJoinTripClicked)
         }
     }
 }
 
-@Preview
-@Composable
-fun TripItemPreview() {
-    TripItem(
-        trip = Trip(
-            route = TripRoute(),
-            freePlaces = 3,
-            host = User("123", "ivan", "", UserContacts("123")),
-            passengers = listOf(),
-            taxiService = TaxiService.Yandex,
-            taxiVehicleClass = TaxiService.Yandex.YandexVehicleClass.Comfort
-        ),
-        onTripClicked = {},
-        onJoinTripClicked = {},
-    )
-}
-
 @Composable
 fun TripItem(
-    trip: Trip,
+    tripCard: TripCard,
     onTripClicked: (Trip) -> Unit,
     onJoinTripClicked: (Trip) -> Unit
 ) {
+    val trip = tripCard.trip
     Spacer(modifier = Modifier.height(Spacing4dp))
     Surface(
         shape = RoundedCornerShape(16.dp),
@@ -719,20 +711,19 @@ fun TripItem(
                     stringResource(R.string.in_placeholder, date, time),
                     style = AppTypography.headline,
                 )
-                ParticipantsRow {
-                    var offset = 0
-                    trip.passengers.forEachIndexed { i, url ->
+                Row(/*horizontalArrangement = Arrangement.spacedBy((-8).dp)*/) {
+                    (listOf(trip.host) + trip.passengers).forEach { user ->
                         AsyncImage(
-                            model = url, contentDescription = "userPhoto",
+                            model = user.imageUrl, contentDescription = "userPhoto",
+                            placeholder = painterResource(id = R.drawable.profile_avatar_placeholder),
+                            error = painterResource(id = R.drawable.profile_avatar_placeholder),
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
-                                .size(16.dp)
+                                .size(32.dp)
                                 .clip(CircleShape)
                                 .border(2.dp, OnBlue, CircleShape)
-                                .zIndex(5 - i.toFloat())
+                                //.zIndex(5 - i.toFloat())
                         )
-                        println(offset)
-                        offset += 26
                     }
                 }
             }
@@ -742,7 +733,12 @@ fun TripItem(
             val taxiService = stringResource(id = serviceMapper.map(trip.taxiService))
             val vehicleClass = stringResource(id = vehicleClassMapper.map(trip.taxiVehicleClass))
             Text(
-                "$taxiService · $vehicleClass · 200m away",
+                stringResource(
+                    id = R.string.trip_info,
+                    taxiService,
+                    vehicleClass,
+                    tripCard.dist
+                ),
                 style = AppTypography.caption1,
                 color = Grey
             )
@@ -769,37 +765,3 @@ fun TripItem(
     }
     Spacer(modifier = Modifier.height(Spacing12dp))
 }
-
-@Composable
-fun ParticipantsRow(
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
-) {
-    Layout(
-        modifier = modifier,
-        content = content
-    ) { measurables, constraints ->
-        // Don't constrain child views further, measure them with given constraints
-        // List of measured children
-        val placeables = measurables.map { measurable ->
-            // Measure each children
-            measurable.measure(constraints)
-        }
-
-        // Set the size of the layout as big as it can
-        layout(constraints.maxWidth, constraints.maxHeight) {
-            // Track the y co-ord we have placed children up to
-            var xPosition = 0
-
-            // Place children in the parent layout
-            placeables.forEach { placeable ->
-                // Position item on the screen
-                placeable.placeRelative(x = xPosition, y = 0)
-
-                // Record the y co-ord placed up to
-                xPosition += placeable.width / 3 * 2
-            }
-        }
-    }
-}
-

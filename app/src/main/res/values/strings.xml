@@ -35,6 +35,7 @@
     <string name="trip">Поездка</string>
     <string name="participants">Участники</string>
     <string name="free_place">Свободное место</string>
+    <string name="trip_info">%1$s · %2$s · %3$dм пешком</string>
     <string name="route">Маршрут</string>
     <string name="today">Сегодня</string>
     <string name="tomorrow">Завтра</string>

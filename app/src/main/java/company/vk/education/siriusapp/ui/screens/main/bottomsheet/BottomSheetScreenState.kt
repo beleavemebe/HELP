@@ -4,6 +4,7 @@ import company.vk.education.siriusapp.domain.model.Location
 import company.vk.education.siriusapp.domain.model.TaxiService
 import company.vk.education.siriusapp.domain.model.TaxiVehicleClass
 import company.vk.education.siriusapp.domain.model.Trip
+import company.vk.education.siriusapp.ui.screens.main.trip.TripCard
 import java.util.*
 
 data class BottomSheetScreenState(
@@ -22,5 +23,5 @@ data class BottomSheetScreenState(
     val taxiService: TaxiService? = null,
     val taxiVehicleClass: TaxiVehicleClass? = null,
     val verifyInstantly: Boolean = false,
-    val trips: List<Trip>? = null
+    val trips: List<TripCard>? = null
 )
