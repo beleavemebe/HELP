@@ -715,8 +715,8 @@ fun TripItem(
                     stringResource(R.string.in_placeholder, date, time),
                     style = AppTypography.headline,
                 )
-                Row(/*horizontalArrangement = Arrangement.spacedBy((-8).dp)*/) {
-                    (listOf(trip.host) + trip.passengers).forEach { user ->
+                Row(horizontalArrangement = Arrangement.spacedBy((-8).dp)) {
+                    (listOf(trip.host) + trip.passengers).forEachIndexed { i, user ->
                         AsyncImage(
                             model = user.imageUrl, contentDescription = "userPhoto",
                             placeholder = painterResource(id = R.drawable.profile_avatar_placeholder),
@@ -725,8 +725,8 @@ fun TripItem(
                             modifier = Modifier
                                 .size(32.dp)
                                 .clip(CircleShape)
-                                .border(2.dp, OnBlue, CircleShape)
-                                //.zIndex(5 - i.toFloat())
+                                .border(1.dp, OnBlue, CircleShape)
+                                .zIndex(5 - i.toFloat())
                         )
                     }
                 }

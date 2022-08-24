@@ -1,6 +1,8 @@
 package company.vk.education.siriusapp.data
 
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.QuerySnapshot
+import com.google.firebase.firestore.ktx.toObjects
 import company.vk.education.siriusapp.core.BiMapper
 import company.vk.education.siriusapp.core.dist
 import company.vk.education.siriusapp.data.model.TripDto
@@ -8,6 +10,9 @@ import company.vk.education.siriusapp.domain.model.Trip
 import company.vk.education.siriusapp.domain.model.TripRoute
 import company.vk.education.siriusapp.domain.repository.TripsRepository
 import company.vk.education.siriusapp.domain.service.AuthService
+import kotlinx.coroutines.channels.trySendBlocking
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -18,6 +23,20 @@ class TripsRepositoryImpl @Inject constructor(
     private val mapper: BiMapper<Trip, TripDto>,
     private val authService: AuthService,
 ) : TripsRepository {
+//
+//    val tripsFlow: Flow<List<Trip>> = callbackFlow {
+//        db.collection(COLLECTION_TRIPS).addSnapshotListener { value, error ->
+//            trySendBlocking(
+//                value?.mapToTrips().orEmpty()
+//            )
+//        }
+//    }
+//
+//    private var currentRoute = TripRoute()
+//
+//    fun setCurrentRoute() {
+//        currentRoute =
+//    }
 
     override suspend fun getTrips(route: TripRoute): List<Trip> {
         val trips = db.collection(COLLECTION_TRIPS).get().await()
@@ -60,4 +79,10 @@ class TripsRepositoryImpl @Inject constructor(
         println("Not yet implemented")
         return emptyList()
     }
+//
+//    private fun QuerySnapshot.mapToTrips(): List<Trip> {
+//        return toObjects(TripDto::class.java)
+//            .map(mapper::mapFrom)
+//            .sortedBy { it.route dist currentRoute }
+//    }
 }

@@ -189,7 +189,11 @@ class MainViewModel @Inject constructor(
 
         tripsRepository.publishTrip(trip)
 
-        it.copy(bottomSheetScreenState = bss.copy(isSearchingTrips = true), isBottomSheetExpanded = false)
+        it.copy(
+            bottomSheetScreenState = BottomSheetScreenState(),
+            isBottomSheetExpanded = false,
+            tripState = createTripState(trip)
+        )
     }
 
     private fun setFreePlacesAmount(freePlaces: Int) = reduce {
