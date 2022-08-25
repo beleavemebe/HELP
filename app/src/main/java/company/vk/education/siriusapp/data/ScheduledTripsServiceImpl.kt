@@ -3,13 +3,13 @@ package company.vk.education.siriusapp.data
 import android.app.AlarmManager
 import android.content.Context
 import androidx.work.*
-import company.vk.education.siriusapp.data.db.ScheduledTripsDao
-import company.vk.education.siriusapp.data.model.ScheduledTrip
 import company.vk.education.siriusapp.data.worker.ClearCurrentTripWorker
 import company.vk.education.siriusapp.data.worker.HandleCurrentTripWorker
 import company.vk.education.siriusapp.data.worker.KEY_TRIP_ID
 import company.vk.education.siriusapp.data.worker.SetCurrentTripWorker
 import company.vk.education.siriusapp.domain.model.Trip
+import company.vk.education.siriusapp.domain.repository.TripsRepository
+import company.vk.education.siriusapp.domain.service.AuthService
 import company.vk.education.siriusapp.domain.service.ScheduledTripsService
 import company.vk.education.siriusapp.ui.utils.MINUTE_MS
 import company.vk.education.siriusapp.ui.utils.log
@@ -21,7 +21,8 @@ private const val SET_TO_CLEAR_DELAY = 30 * MINUTE_MS
 
 class ScheduledTripsServiceImpl @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val dao: ScheduledTripsDao,
+    private val authService: AuthService,
+    private val tripsRepository: TripsRepository,
 ) : ScheduledTripsService {
     override suspend fun scheduleTripAt(date: Date, trip: Trip) {
         val tripStartsAt = date.time
@@ -30,12 +31,9 @@ class ScheduledTripsServiceImpl @Inject constructor(
         scheduleWorker<SetCurrentTripWorker>(trip, tripStartsAt)
         scheduleWorker<ClearCurrentTripWorker>(trip, tripEndsAt)
 
-        dao.insertScheduledTrip(
-            ScheduledTrip(
-                tripId = trip.id,
-                startsAt = tripStartsAt,
-                endsAt = tripEndsAt
-            )
+        tripsRepository.appendToTripHistory(
+            userId = authService.authState.value.user!!.id,
+            trip = trip
         )
     }
 
@@ -62,6 +60,7 @@ class ScheduledTripsServiceImpl @Inject constructor(
     }
 
     override suspend fun isTripScheduledAt(date: Date): Boolean {
-        return dao.getScheduledTrips(date.time).isNotEmpty()
+        return tripsRepository.getTripHistory(authService.authState.value.user!!.id)
+            .any { date.time in it.route.date.time..(it.route.date.time + SET_TO_CLEAR_DELAY) }
     }
 }

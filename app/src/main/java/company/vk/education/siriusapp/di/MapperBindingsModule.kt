@@ -1,6 +1,7 @@
 package company.vk.education.siriusapp.di
 
 import android.content.Context
+import androidx.compose.ui.graphics.Color
 import company.vk.education.siriusapp.core.BiMapper
 import company.vk.education.siriusapp.core.Mapper
 import company.vk.education.siriusapp.data.CurrentTripServiceImpl
@@ -19,8 +20,7 @@ import company.vk.education.siriusapp.domain.model.User
 import company.vk.education.siriusapp.domain.service.CurrentTripService
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.TaxiServiceToStringResMapper
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.TaxiVehicleClassToStringResMapper
-import company.vk.education.siriusapp.ui.screens.main.trip.TripScreenTitle
-import company.vk.education.siriusapp.ui.screens.main.trip.TripScreenTitleToStringResMapper
+import company.vk.education.siriusapp.ui.screens.main.trip.*
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -68,11 +68,15 @@ interface MapperBindingsModule {
         impl: TripScreenTitleToStringResMapper,
     ): Mapper<TripScreenTitle, Int>
 
-    companion object {
-        @Provides
-        @Singleton
-        fun provideCurrentTripStateService(
-            @ApplicationContext context: Context,
-        ): CurrentTripService = CurrentTripServiceImpl(context, CurrentTripStateMapper())
-    }
+    @Binds
+    @Singleton
+    fun bindTripCardButtonStateTextMapper(
+        impl: TripCardButtonStateToStringResMapper,
+    ): Mapper<TripCardButtonState, Int>
+
+    @Binds
+    @Singleton
+    fun bindTripCardButtonStateColorMapper(
+        impl: TripCardButtonStateToColorMapper,
+    ): Mapper<TripCardButtonState, Color>
 }

@@ -38,6 +38,7 @@ import company.vk.education.siriusapp.ui.screens.main.HourAndMinute
 import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
 import company.vk.education.siriusapp.ui.screens.main.MainViewModel
 import company.vk.education.siriusapp.ui.screens.main.trip.TripCard
+import company.vk.education.siriusapp.ui.screens.main.trip.TripCardButtonState
 import company.vk.education.siriusapp.ui.theme.*
 import company.vk.education.siriusapp.ui.utils.*
 import kotlinx.coroutines.flow.SharingStarted
@@ -456,9 +457,10 @@ fun SearchTrips(
             FillTheForms()
         } else {
             if (state.trips.isEmpty()) {
-                NoTripsFound()
+                NoTripsFound(onCreateTripClicked)
             } else {
                 TripsHeader(state.trips.size, onCreateTripClicked)
+                Spacer(modifier = Modifier.height(Spacing4dp))
                 Trips(trips = state.trips, onTripClicked, onJoinTripClicked)
             }
         }
@@ -557,6 +559,7 @@ fun TripMainControls(
                 hint = stringResource(id = R.string.my_location),
                 onValueChange = { /*tripStartLocation = it*/ },
                 modifier = Modifier.fillMaxWidth(),
+                readOnly = true,
                 trailingIcon = {
                     TextFieldMapIcon(onPickStartOnTheMapClicked)
                 }
@@ -574,6 +577,7 @@ fun TripMainControls(
                 hint = stringResource(id = R.string.location),
                 onValueChange = { /*tripEndLocation = it*/ },
                 modifier = Modifier.fillMaxWidth(),
+                readOnly = true,
                 trailingIcon = {
                     TextFieldMapIcon(onPickEndOnTheMapClicked)
                 }
@@ -643,10 +647,9 @@ private fun TextFieldMapIcon(
     }
 }
 
-@Preview
 @Composable
 fun NoTripsFound(
-    vm: MainViewModel = viewModel()
+    onCreateTripClicked: () -> Unit
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -654,13 +657,25 @@ fun NoTripsFound(
     ) {
         Spacer(modifier = Modifier.fillMaxHeight(0.3f))
 
-        Text(text = stringResource(R.string.no_trips_found))
+        Text(text = stringResource(R.string.no_trips_found), color = TextHint)
 
         Spacer(modifier = Modifier.fillMaxHeight(0.2f))
 
-        Text(text = stringResource(R.string.create_a_trip) + " (todo)", Modifier.clickable {
-            vm.accept(MainScreenIntent.BottomSheetIntent.CreateTrip)
-        })
+        Button(
+            onClick = { onCreateTripClicked() },
+            colors = ButtonDefaults.buttonColors(Blue),
+            shape = Shapes.medium,
+            elevation = null,
+            modifier = Modifier
+                .wrapContentWidth()
+                .height(TextFieldHeight)
+        ) {
+            Text(
+                stringResource(R.string.create_a_trip),
+                style = AppTypography.subheadMedium,
+                color = OnBlue
+            )
+        }
 
         Spacer(modifier = Modifier.fillMaxHeight(0.3f))
     }
@@ -690,20 +705,24 @@ fun TripItem(
     onJoinTripClicked: (Trip) -> Unit
 ) {
     val trip = tripCard.trip
+    val cardColor = if (tripCard.isCurrentTrip) Blue.copy(alpha = 0.9F) else White
+    val textColor = if (tripCard.isCurrentTrip) OnBlue else Black
+    val textSecondaryColor = if (tripCard.isCurrentTrip) HintOnBlue else Grey
     Spacer(modifier = Modifier.height(Spacing4dp))
     Surface(
         shape = RoundedCornerShape(16.dp),
         elevation = 4.dp,
+        color = cardColor,
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onTripClicked(trip) }
     ) {
         Column(Modifier.padding(Spacing16dp)) {
-            if (tripCard.host) {
+            if (tripCard.tripCardButtonState == TripCardButtonState.HOST) {
                 Text(
                     stringResource(id = R.string.your_trip),
                     style = AppTypography.caption1,
-                    color = Grey
+                    color = textSecondaryColor
                 )
             }
             Row(
@@ -718,6 +737,7 @@ fun TripItem(
                 Text(
                     stringResource(R.string.in_placeholder, date, time),
                     style = AppTypography.headline,
+                    color = textColor
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy((-8).dp)) {
                     (listOf(trip.host) + trip.passengers).forEachIndexed { i, user ->
@@ -738,46 +758,49 @@ fun TripItem(
 
             val serviceMapper = LocalMappers.current.taxiServiceMapper
             val vehicleClassMapper = LocalMappers.current.taxiVehicleClassMapper
+            val buttonColorMapper = LocalMappers.current.tripCardButtonColorMapper
+            val buttonTextMapper = LocalMappers.current.tripCardButtonTextMapper
             val taxiService = stringResource(id = serviceMapper.map(trip.taxiService))
             val vehicleClass = stringResource(id = vehicleClassMapper.map(trip.taxiVehicleClass))
             Text(
                 stringResource(
-                    id = R.string.trip_info,
+                    id = if (tripCard.dist != 0) R.string.trip_info else R.string.trip_info_no_distance,
                     taxiService,
                     vehicleClass,
                     tripCard.dist
                 ),
                 style = AppTypography.caption1,
-                color = Grey
+                color = textSecondaryColor
             )
-            Spacer(modifier = Modifier.height(Spacing12dp))
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(32.dp),
-                shape = RoundedCornerShape(Spacing8dp),
-                colors = ButtonDefaults.buttonColors(backgroundColor = if (tripCard.disabled) Green else Blue),
-                elevation = null,
-                onClick = {
-                    if (tripCard.disabled || tripCard.host) {
-                        onTripClicked(trip)
-                    } else {
-                        onJoinTripClicked(trip)
-                        log("Присоединяюсь")
-                    }
-                }
-            ) {
-                Text(
-                    stringResource(
-                        id = when {
-                            tripCard.host -> R.string.show
-                            tripCard.disabled -> R.string.reserved
-                            else -> R.string.join
-                        }
+            if (tripCard.tripCardButtonState != TripCardButtonState.INVISIBLE) {
+                Spacer(modifier = Modifier.height(Spacing12dp))
+                Button(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(32.dp),
+                    shape = RoundedCornerShape(Spacing8dp),
+                    colors = ButtonDefaults.buttonColors(
+                        backgroundColor = buttonColorMapper.map(tripCard.tripCardButtonState)
                     ),
-                    style = AppTypography.caption2Medium,
-                    color = OnBlue
-                )
+                    elevation = null,
+                    onClick = {
+                        when (tripCard.tripCardButtonState) {
+                            TripCardButtonState.HOST -> onTripClicked(tripCard.trip)
+                            TripCardButtonState.BOOKED -> onTripClicked(tripCard.trip)
+                            TripCardButtonState.CONFLICT -> Unit
+                            TripCardButtonState.JOIN -> onJoinTripClicked(tripCard.trip)
+                            TripCardButtonState.INVISIBLE -> Unit
+                        }
+                    }
+                ) {
+                    Text(
+                        stringResource(
+                            id = buttonTextMapper.map(tripCard.tripCardButtonState)
+                        ),
+                        style = AppTypography.caption2Medium,
+                        color = OnBlue
+                    )
+                }
             }
         }
     }

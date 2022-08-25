@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -101,18 +102,19 @@ private fun ToUserLocationFAB(
         Column {
             Button(
                 onClick = { mapView.moveToUser(userLocationLayer) },
+                colors = ButtonDefaults.buttonColors(backgroundColor = OnBlue),
+                contentPadding = PaddingValues(Spacing8dp),
                 modifier = Modifier
                     .clip(CircleShape)
                     .size(FabSize)
-                    .border(2.dp, Blue, CircleShape),
-                colors = ButtonDefaults.buttonColors(backgroundColor = OnBlue),
-                contentPadding = PaddingValues(Spacing8dp)
+//                    .border(2.dp, Blue, CircleShape)
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.ic_location),
+                    painter = painterResource(id = R.drawable.ic_place),
                     contentDescription = stringResource(id = R.string.my_location),
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.FillHeight
+                    contentScale = ContentScale.FillHeight,
+                    colorFilter = ColorFilter.tint(Blue)
                 )
             }
             Spacer(Modifier.height(175.dp + Spacing32dp + Spacing8dp))

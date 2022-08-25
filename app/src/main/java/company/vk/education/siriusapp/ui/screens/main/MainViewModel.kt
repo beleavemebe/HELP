@@ -23,8 +23,10 @@ import company.vk.education.siriusapp.ui.screens.main.bottomsheet.BottomSheetScr
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.TaxiPreference
 import company.vk.education.siriusapp.ui.screens.main.map.MapViewState
 import company.vk.education.siriusapp.ui.screens.main.trip.TripCard
+import company.vk.education.siriusapp.ui.screens.main.trip.TripCardButtonState
 import company.vk.education.siriusapp.ui.screens.main.trip.TripScreenTitle
 import company.vk.education.siriusapp.ui.screens.main.trip.TripState
+import company.vk.education.siriusapp.ui.screens.main.user.UserState
 import company.vk.education.siriusapp.ui.utils.log
 import company.vk.education.siriusapp.ui.utils.setHourAndMinute
 import company.vk.education.siriusapp.ui.utils.toPoint
@@ -41,7 +43,7 @@ class MainViewModel @Inject constructor(
     private val addressRepository: AddressRepository,
     private val tripsRepository: TripsRepository,
     private val scheduledTripsService: ScheduledTripsService,
-    currentTripService: CurrentTripService,
+    private val currentTripService: CurrentTripService,
 ) : BaseViewModel<MainScreenState, MainScreenIntent, Nothing, MainScreenViewEffect>() {
     override val initialState =
         MainScreenState(
@@ -166,9 +168,10 @@ class MainViewModel @Inject constructor(
 
     private fun openTripModalSheet(trip: Trip) {
         reduce {
+            val updatedTrip = tripsRepository.getTripDetails(trip.id)
             it.copy(
-                tripState = createTripState(trip).copy(
-                    showControls = trip.host == authService.authState.value.user
+                tripState = createTripState(updatedTrip).copy(
+                    showControls = updatedTrip.host == authService.authState.value.user
                 )
             )
         }
@@ -214,14 +217,21 @@ class MainViewModel @Inject constructor(
             tripsRepository.publishTrip(trip)
             scheduleTrip(trip)
 
-            it.copy(
-                bottomSheetScreenState = BottomSheetScreenState(),
+            val updatedTrips = tripsRepository.getTrips(trip.route)
+            val newState = it.copy(
+                bottomSheetScreenState = bss.copy(
+                    trips = updatedTrips.toTripCards(trip.route),
+                    isSearchingTrips = true,
+                ),
                 isBottomSheetExpanded = false,
                 tripState = createTripState(trip).copy(
                     title = TripScreenTitle.TRIP_CREATED,
                     showControls = true
                 )
             )
+
+
+            newState
         }
     }
 
@@ -311,16 +321,34 @@ class MainViewModel @Inject constructor(
     }
 
     private fun hideUserSheet() = reduce {
-        it.copy(isShowingUser = false, userToShow = null)
+        it.copy(isShowingUser = false, userState = null)
     }
 
     private fun authOrViewMyProfile() {
         val authState = authService.authState.value
-        if (authState.isUnknown.not() && authState.user == null) {
+        if (authState.isUnknown) return
+        if (authState.user == null) {
             authService.auth()
-        } else reduce {
-            it.copy(isShowingUser = true, userToShow = authState.user)
+        } else {
+            showUser(authState.user)
         }
+    }
+
+    fun showUser(
+        user: User,
+    ) = reduce {
+        val tripHistory = tripsRepository.getTripHistory(user.id)
+        it.copy(
+            isShowingUser = true,
+            userState = UserState(
+                user = user,
+                currentTrip = currentTripService.currentTripState.value.currentTripId
+                    ?.takeUnless { it == "" }
+                    ?.let { tripsRepository.getTripDetails(it) },
+                scheduledTrips = tripHistory.filter { it.route.date >= Date() },
+                previousTrips = tripHistory.filter { it.route.date < Date() }
+            )
+        )
     }
 
     private fun pickTripDate() = reduce {
@@ -455,24 +483,32 @@ class MainViewModel @Inject constructor(
     private fun loadTrips(startLocation: Location, endLocation: Location, date: Date) = reduce {
         val route = TripRoute(startLocation, endLocation, date)
 
-        fun date(dayShift: Int) = Calendar.getInstance().apply {
-            time = date
-            add(Calendar.DATE, dayShift)
-        }.time
-
-        val before = date(-1)
-        val after = date(1)
-
-        val distance = route.startLocation dist route.endLocation
         val trips = tripsRepository.getTrips(route)
-        val user = authService.authState.value.user
         it.copy(
             bottomSheetScreenState = it.bottomSheetScreenState.copy(
                 areTripsLoading = false,
-                trips = trips.map { trip ->
-                    TripCard(trip, round((route dist trip.route).meters()).toInt(), user in trip.passengers, trip.host == user)
-                }
+                trips = trips.toTripCards(route)
             )
         )
+    }
+
+    private suspend fun List<Trip>.toTripCards(
+        route: TripRoute,
+    ): List<TripCard> {
+        val currentUser = authService.authState.value.user
+        val currentTripId = currentTripService.currentTripState.value.currentTripId
+        return map { trip ->
+            TripCard(
+                trip = trip,
+                dist = round((route dist trip.route).meters()).toInt(),
+                isCurrentTrip = trip.id == currentTripId,
+                tripCardButtonState = when {
+                    trip.host == currentUser -> TripCardButtonState.HOST
+                    currentUser in trip.passengers -> TripCardButtonState.BOOKED
+                    scheduledTripsService.isTripScheduledAt(trip.route.date) -> TripCardButtonState.CONFLICT
+                    else -> TripCardButtonState.JOIN
+                }
+            )
+        }
     }
 }

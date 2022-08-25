@@ -1,22 +1,21 @@
 package company.vk.education.siriusapp.data
 
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.QuerySnapshot
-import com.google.firebase.firestore.ktx.toObjects
+import com.google.firebase.firestore.ktx.toObject
 import company.vk.education.siriusapp.core.BiMapper
 import company.vk.education.siriusapp.core.dist
 import company.vk.education.siriusapp.data.model.TripDto
+import company.vk.education.siriusapp.data.model.TripHistory
 import company.vk.education.siriusapp.domain.model.Trip
 import company.vk.education.siriusapp.domain.model.TripRoute
 import company.vk.education.siriusapp.domain.repository.TripsRepository
 import company.vk.education.siriusapp.domain.service.AuthService
-import kotlinx.coroutines.channels.trySendBlocking
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
+import company.vk.education.siriusapp.ui.utils.log
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 private const val COLLECTION_TRIPS = "trips"
+private const val COLLECTION_TRIP_HISTORY = "trip_history"
 
 class TripsRepositoryImpl @Inject constructor(
     private val db: FirebaseFirestore,
@@ -28,10 +27,13 @@ class TripsRepositoryImpl @Inject constructor(
         val selectDist: (Trip) -> Double = { it.route dist route }
         return trips.toObjects(TripDto::class.java)
             .map(mapper::mapFrom)
+            .filter { it.route.date >= route.date }
             .sortedWith(
-                Comparator<Trip> { lhs, rhs ->
+                Comparator<Trip> { first, second ->
+                    first.route.date.compareTo(second.route.date)
+                }.thenComparing { lhs, rhs ->
                     selectDist(lhs).compareTo(selectDist(rhs))
-                }.thenBy { it.route.date }
+                }
             )
     }
 
@@ -45,6 +47,9 @@ class TripsRepositoryImpl @Inject constructor(
         require(user != null) {
             "Joining trips without authentication is not implemented"
         }
+
+        val isUserTheHost = trip.host == user
+        if (isUserTheHost) return
 
         val isUserAlreadyInTheTrip = trip.passengers.any { it.id == user.id }
         if (isUserAlreadyInTheTrip) return
@@ -61,12 +66,24 @@ class TripsRepositoryImpl @Inject constructor(
         db.collection(COLLECTION_TRIPS).document(trip.id).set(mapper.mapTo(trip)).await()
     }
 
-    override fun cancelTrip(trip: Trip) {
+    override suspend fun cancelTrip(trip: Trip) {
         println("Not yet implemented")
     }
 
-    override fun getTripHistory(): List<Trip> {
-        println("Not yet implemented")
-        return emptyList()
+    override suspend fun getTripHistory(userId: String): List<Trip> {
+        return db.collection(COLLECTION_TRIP_HISTORY).document(userId).get().await()
+            .toObject(TripHistory::class.java)
+            ?.history
+            ?.map(mapper::mapFrom)
+            ?: emptyList()
+    }
+
+    override suspend fun appendToTripHistory(userId: String, trip: Trip) {
+        val prevHistory = getTripHistory(userId)
+        val newHistory = prevHistory + trip
+
+        db.collection(COLLECTION_TRIP_HISTORY).document(userId).set(
+            TripHistory(newHistory.map(mapper::mapTo))
+        ).await()
     }
 }

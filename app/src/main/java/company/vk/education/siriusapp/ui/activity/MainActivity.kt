@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -30,6 +31,7 @@ import company.vk.education.siriusapp.ui.screens.main.MainScreen
 import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
 import company.vk.education.siriusapp.ui.screens.main.MainScreenViewEffect
 import company.vk.education.siriusapp.ui.screens.main.MainViewModel
+import company.vk.education.siriusapp.ui.screens.main.trip.TripCardButtonState
 import company.vk.education.siriusapp.ui.screens.main.trip.TripScreenTitle
 import company.vk.education.siriusapp.ui.theme.Blue
 import company.vk.education.siriusapp.ui.utils.*
@@ -70,6 +72,8 @@ class MainActivity : AppCompatActivity(), LocalMappersProvider {
     @Inject override lateinit var taxiServiceMapper: Mapper<TaxiService, Int>
     @Inject override lateinit var taxiVehicleClassMapper: Mapper<TaxiVehicleClass, Int>
     @Inject override lateinit var tripScreenTitleMapper: Mapper<TripScreenTitle, Int>
+    @Inject override lateinit var tripCardButtonTextMapper: Mapper<TripCardButtonState, Int>
+    @Inject override lateinit var tripCardButtonColorMapper: Mapper<TripCardButtonState, Color>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         MapKitFactory.initialize(this)

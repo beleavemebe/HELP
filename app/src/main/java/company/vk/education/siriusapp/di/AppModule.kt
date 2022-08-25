@@ -7,16 +7,14 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import company.vk.education.siriusapp.core.CurrentActivityProvider
 import company.vk.education.siriusapp.core.CurrentActivityProviderImpl
-import company.vk.education.siriusapp.data.AddressRepositoryImpl
-import company.vk.education.siriusapp.data.AuthServiceImpl
-import company.vk.education.siriusapp.data.ScheduledTripsServiceImpl
-import company.vk.education.siriusapp.data.TripsRepositoryImpl
+import company.vk.education.siriusapp.data.*
 import company.vk.education.siriusapp.data.db.AppDatabase
 import company.vk.education.siriusapp.data.db.AppDatabase.Companion.DATABASE_NAME
-import company.vk.education.siriusapp.data.db.ScheduledTripsDao
+import company.vk.education.siriusapp.data.mapper.CurrentTripStateMapper
 import company.vk.education.siriusapp.domain.repository.AddressRepository
 import company.vk.education.siriusapp.domain.repository.TripsRepository
 import company.vk.education.siriusapp.domain.service.AuthService
+import company.vk.education.siriusapp.domain.service.CurrentTripService
 import company.vk.education.siriusapp.domain.service.ScheduledTripsService
 import dagger.Binds
 import dagger.Module
@@ -62,6 +60,12 @@ interface AppModule {
     companion object {
         @Provides
         @Singleton
+        fun provideCurrentTripStateService(
+            @ApplicationContext context: Context,
+        ): CurrentTripService = CurrentTripServiceImpl(context, CurrentTripStateMapper())
+
+        @Provides
+        @Singleton
         fun provideFirestore(): FirebaseFirestore = Firebase.firestore
 
         @Provides
@@ -70,10 +74,10 @@ interface AppModule {
             @ApplicationContext context: Context,
         ): AppDatabase = Room.databaseBuilder(context, AppDatabase::class.java, DATABASE_NAME).build()
 
-        @Provides
-        @Singleton
-        fun provideScheduledTripsDao(
-            appDatabase: AppDatabase
-        ): ScheduledTripsDao = appDatabase.scheduledTripsDao()
+//        @Provides
+//        @Singleton
+//        fun provideScheduledTripsDao(
+//            appDatabase: AppDatabase
+//        ): ScheduledTripsDao = appDatabase.scheduledTripsDao()
     }
 }

@@ -2,8 +2,7 @@ package company.vk.education.siriusapp.ui.screens.main
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.unit.dp
 import com.yandex.mapkit.mapview.MapView
 import com.yandex.mapkit.user_location.UserLocationLayer
@@ -27,12 +26,17 @@ fun MainScreen(
     val bottomSheetState = rememberBottomSheetState(initialValue = BottomSheetValue.Collapsed)
     val scaffoldState = rememberBottomSheetScaffoldState(bottomSheetState = bottomSheetState)
     val sheetPeekHeight = if (state.mapState.isChoosingAddress) 0.dp else 186.dp
+    var previousState by remember { mutableStateOf(state.isBottomSheetExpanded) }
     scope.launch {
+        if (state.isBottomSheetExpanded == previousState) return@launch
+
         if (state.isBottomSheetExpanded) {
-            if (bottomSheetState.isExpanded.not()) bottomSheetState.expand()
+            bottomSheetState.expand()
         } else {
-            if (bottomSheetState.isCollapsed.not()) bottomSheetState.collapse()
+            bottomSheetState.collapse()
         }
+
+        previousState = state.isBottomSheetExpanded
     }
 
     BottomSheetScaffold(
@@ -46,7 +50,8 @@ fun MainScreen(
         MapScreen(mapView, userLocationLayer)
     }
 
-    if (state.userToShow != null) {
+    var previousUserSheetState by remember { mutableStateOf(state.isShowingUser) }
+    if (state.userState?.user != null) {
         val userSheetState = rememberModalBottomSheetState(
             initialValue = ModalBottomSheetValue.Hidden,
             skipHalfExpanded = true,
@@ -58,17 +63,22 @@ fun MainScreen(
             }
         )
 
-        UserModalSheet(state.userToShow, userSheetState)
+        UserModalSheet(state.userState, userSheetState)
 
         scope.launch {
+            if (state.isShowingUser == previousUserSheetState) return@launch
+
             if (state.isShowingUser) {
                 userSheetState.show()
             } else {
                 userSheetState.hide()
             }
+
+            previousUserSheetState = state.isShowingUser
         }
     }
 
+    var previousTripSheetState by remember { mutableStateOf(state.isShowingUser) }
     if (state.tripState != null) {
         val tripSheetState = rememberModalBottomSheetState(
             initialValue = ModalBottomSheetValue.Hidden,

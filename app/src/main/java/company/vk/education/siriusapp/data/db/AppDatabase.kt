@@ -9,7 +9,7 @@ import company.vk.education.siriusapp.data.model.ScheduledTrip
     version = 1
 )
 abstract class AppDatabase : RoomDatabase() {
-    abstract fun scheduledTripsDao(): ScheduledTripsDao
+//    abstract fun scheduledTripsDao(): ScheduledTripsDao
 
     companion object {
         const val DATABASE_NAME = "help.db"

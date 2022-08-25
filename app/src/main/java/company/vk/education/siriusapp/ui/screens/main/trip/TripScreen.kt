@@ -1,6 +1,7 @@
 package company.vk.education.siriusapp.ui.screens.main.trip
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -22,21 +23,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.yandex.mapkit.geometry.BoundingBoxHelper
 import com.yandex.mapkit.map.CameraPosition
 import com.yandex.mapkit.mapview.MapView
 import company.vk.education.siriusapp.R
-import company.vk.education.siriusapp.core.dist
-import company.vk.education.siriusapp.core.meters
 import company.vk.education.siriusapp.data.VK_USER_URL
 import company.vk.education.siriusapp.domain.model.*
 import company.vk.education.siriusapp.ui.LocalMappers
+import company.vk.education.siriusapp.ui.screens.main.MainViewModel
 import company.vk.education.siriusapp.ui.theme.*
-import company.vk.education.siriusapp.ui.utils.log
 
 @Composable
-fun TripScreen(tripState: TripState) {
+fun TripScreen(tripState: TripState, vm: MainViewModel = viewModel()) {
     Box(
         Modifier
             .fillMaxSize()
@@ -106,11 +106,11 @@ fun TripScreen(tripState: TripState) {
             }
 
             Card(stringResource(id = R.string.host)) {
-                ShowPassenger(tripState.trip.host, showContacts = true, showRating = true)
+                ShowPassenger(tripState.trip.host, showContacts = true, showRating = true, vm)
             }
 
             Card(stringResource(id = R.string.participants)) {
-                ShowParticipants(tripState.trip.passengers, tripState.trip.freePlaces)
+                ShowParticipants(tripState.trip.passengers, tripState.trip.freePlaces, vm)
             }
 
             if (tripState.showControls) {
@@ -135,12 +135,14 @@ fun TripControls(
     onEditTripClicked: () -> Unit,
     onCancelTripClicked: () -> Unit,
 ) {
+    return
     Card(title = stringResource(R.string.actions)) {
         Column {
             Spacer(modifier = Modifier.height(Spacing8dp))
             TripAction(stringResource(R.string.edit),  painterResource(id = R.drawable.ic_edit), Blue, onEditTripClicked)
             Spacer(modifier = Modifier.height(Spacing16dp))
             TripAction(stringResource(R.string.cancel_trip), painterResource(id = R.drawable.ic_trashcan), Red, onCancelTripClicked)
+            Spacer(modifier = Modifier.height(Spacing16dp))
         }
     }
 }
@@ -202,9 +204,13 @@ fun ShowRoute(
 }
 
 @Composable
-fun ShowParticipants(passengers: List<User>, freePlaces: Int) {
+fun ShowParticipants(passengers: List<User>, freePlaces: Int, viewModel: MainViewModel) {
     val passengersWithFree = passengers + List(freePlaces) { null }
-    passengersWithFree.forEach { ShowPassenger(it) }
+    passengersWithFree.forEach {
+        ShowPassenger(
+            it,
+        )
+    }
 }
 
 @Composable
@@ -212,11 +218,15 @@ fun ShowPassenger(
     user: User? = null,
     showContacts: Boolean = false,
     showRating: Boolean = false,
+    vm: MainViewModel = viewModel(),
 ) {
     val contentAlpha = if (user != null) 1.0F else 0.4F
     Row(
-        Modifier.padding(vertical = Spacing8dp),
+        Modifier
+            .padding(vertical = Spacing8dp)
+            .clickable { vm.showUser(user ?: return@clickable) },
         verticalAlignment = Alignment.CenterVertically,
+
     ) {
         AsyncImage(
             model = user?.imageUrl ?: "",
@@ -244,16 +254,10 @@ fun ShowPassenger(
                     )
                     Spacer(modifier = Modifier.width(Spacing4dp))
                     Text(
-                        text = user?.rating.toString() + "%",
+                        text = user?.rating?.toInt().toString() + "%",
                         style = AppTypography.caption2.copy(color = TextHint)
                     )
                 }
-            }
-        }
-        Spacer(modifier = Modifier.width(Spacing16dp))
-        if (showContacts) {
-            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-                Text(VK_USER_URL + (user?.id ?: "124124"), color = Blue)
             }
         }
     }

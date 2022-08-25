@@ -36,6 +36,7 @@
     <string name="participants">Участники</string>
     <string name="free_place">Свободное место</string>
     <string name="trip_info">%1$s · %2$s · %3$dм пешком</string>
+    <string name="trip_info_no_distance">%1$s · %2$s</string>
     <string name="route">Маршрут</string>
     <string name="today">Сегодня</string>
     <string name="tomorrow">Завтра</string>
@@ -53,5 +54,11 @@
     <string name="show">Показать</string>
     <string name="your_trip">Ваша поездка</string>
     <string name="reserved">Место забронировано</string>
+    <string name="conflict_with_another_trip">Конфликт с другой поездкой</string>
+    <string name="user">Профиль</string>
+    <string name="trips">Поездки</string>
+    <string name="empty" />
+    <string name="previous_trips">Прошедшие поездки</string>
+    <string name="scheduled_trips">Запланированные поездки</string>
     <integer name="com_vk_sdk_AppId">51403589</integer>
 </resources>

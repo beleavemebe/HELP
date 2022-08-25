@@ -5,6 +5,6 @@ import company.vk.education.siriusapp.domain.model.Trip
 data class TripCard(
     val trip: Trip,
     val dist: Int,
-    val disabled: Boolean,
-    val host: Boolean
+    val isCurrentTrip: Boolean,
+    val tripCardButtonState: TripCardButtonState,
 )
