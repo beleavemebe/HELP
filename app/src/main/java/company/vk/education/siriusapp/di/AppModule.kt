@@ -12,10 +12,8 @@ import company.vk.education.siriusapp.data.db.AppDatabase
 import company.vk.education.siriusapp.data.db.AppDatabase.Companion.DATABASE_NAME
 import company.vk.education.siriusapp.domain.repository.AddressRepository
 import company.vk.education.siriusapp.domain.repository.TripsRepository
-import company.vk.education.siriusapp.domain.service.AuthService
-import company.vk.education.siriusapp.domain.service.CurrentTripService
 import company.vk.education.siriusapp.data.FakeCurrentTripService
-import company.vk.education.siriusapp.domain.service.ScheduledTripsService
+import company.vk.education.siriusapp.domain.service.*
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -44,6 +42,12 @@ interface AppModule {
     fun bindScheduledTripsService(
         impl: ScheduledTripsServiceImpl
     ): ScheduledTripsService
+
+    @Binds
+    @Singleton
+    fun bindLocationService(
+        impl: LocationServiceImpl
+    ): LocationService
 
     @Binds
     @Singleton

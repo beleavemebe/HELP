@@ -1,7 +1,6 @@
 package company.vk.education.siriusapp.data
 
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ktx.toObject
 import company.vk.education.siriusapp.core.BiMapper
 import company.vk.education.siriusapp.core.dist
 import company.vk.education.siriusapp.data.model.TripDto
@@ -10,7 +9,6 @@ import company.vk.education.siriusapp.domain.model.Trip
 import company.vk.education.siriusapp.domain.model.TripRoute
 import company.vk.education.siriusapp.domain.repository.TripsRepository
 import company.vk.education.siriusapp.domain.service.AuthService
-import company.vk.education.siriusapp.ui.utils.log
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 

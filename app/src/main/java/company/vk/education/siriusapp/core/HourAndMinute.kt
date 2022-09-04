@@ -1,4 +1,4 @@
-package company.vk.education.siriusapp.ui.screens.main
+package company.vk.education.siriusapp.core
 
 import company.vk.education.siriusapp.ui.utils.HOUR_MS
 import company.vk.education.siriusapp.ui.utils.MINUTE_MS

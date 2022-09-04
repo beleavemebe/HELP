@@ -4,7 +4,6 @@ import company.vk.education.siriusapp.BuildConfig
 import company.vk.education.siriusapp.core.Mapper
 import company.vk.education.siriusapp.data.api.AddressResponse
 import company.vk.education.siriusapp.data.api.GeocoderAPI
-import company.vk.education.siriusapp.data.api.GeocoderMapper
 import company.vk.education.siriusapp.data.api.Response
 import company.vk.education.siriusapp.domain.model.Location
 import company.vk.education.siriusapp.domain.repository.AddressRepository

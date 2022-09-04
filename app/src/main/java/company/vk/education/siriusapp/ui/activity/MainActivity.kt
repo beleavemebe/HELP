@@ -3,134 +3,60 @@ package company.vk.education.siriusapp.ui.activity
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ModalBottomSheetValue
+import androidx.compose.material.rememberModalBottomSheetState
+import androidx.compose.runtime.remember
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
-import com.yandex.mapkit.MapKitFactory
-import com.yandex.mapkit.directions.DirectionsFactory
-import com.yandex.mapkit.layers.ObjectEvent
-import com.yandex.mapkit.mapview.MapView
-import com.yandex.mapkit.user_location.UserLocationLayer
-import com.yandex.mapkit.user_location.UserLocationObjectListener
-import com.yandex.mapkit.user_location.UserLocationView
-import com.yandex.runtime.image.ImageProvider
-import company.vk.education.siriusapp.R
-import company.vk.education.siriusapp.core.Mapper
-import company.vk.education.siriusapp.domain.model.TaxiService
-import company.vk.education.siriusapp.domain.model.TaxiVehicleClass
-import company.vk.education.siriusapp.ui.LocalMappers
-import company.vk.education.siriusapp.ui.LocalMappersProvider
-import company.vk.education.siriusapp.ui.screens.main.MainScreen
-import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
-import company.vk.education.siriusapp.ui.screens.main.MainScreenViewEffect
-import company.vk.education.siriusapp.ui.screens.main.MainViewModel
-import company.vk.education.siriusapp.ui.screens.main.trip.TripCardButtonState
-import company.vk.education.siriusapp.ui.screens.main.trip.TripScreenTitle
-import company.vk.education.siriusapp.ui.theme.Blue
-import company.vk.education.siriusapp.ui.utils.*
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.rememberNavController
+import com.google.accompanist.navigation.material.BottomSheetNavigator
+import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
+import com.google.accompanist.navigation.material.ModalBottomSheetLayout
+import com.google.accompanist.navigation.material.rememberBottomSheetNavigator
+import company.vk.education.siriusapp.ui.screens.Screens
+import company.vk.education.siriusapp.ui.screens.main.*
+import company.vk.education.siriusapp.ui.screens.main.trip.tripScreen
+import company.vk.education.siriusapp.ui.screens.trip.*
+import company.vk.education.siriusapp.ui.screens.user.UserScreenDeps
+import company.vk.education.siriusapp.ui.screens.user.userScreen
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity(), LocalMappersProvider {
-    private val viewModel: MainViewModel by viewModels()
+class MainActivity : AppCompatActivity() {
 
-    private lateinit var mapView: MapView
-    private lateinit var userLocationLayer: UserLocationLayer
+    @Inject lateinit var godOfMappers: GodOfMappers
 
-    private val userLocationListener = object : UserLocationObjectListener {
-        override fun onObjectAdded(userLocationView: UserLocationView) {
-            userLocationView.pin.setIcon(
-                ImageProvider.fromResource(
-                    this@MainActivity,
-                    R.drawable.ic_my_location
-                ),
-            )
-            userLocationView.accuracyCircle.fillColor = Blue.copy(alpha = 0.1F).toArgb()
-            lifecycleScope.launch {
-                delay(250)
-                val userLocation = userLocationLayer.cameraPosition()
-                    ?.pickedLocation ?: return@launch
-                viewModel.accept(MainScreenIntent.MapIntent.UserLocationAcquired(userLocation))
-            }
-        }
+    private val tripScreenDeps by lazy { TripScreenDeps(godOfMappers) }
+    private val mainScreenDeps by lazy { MainScreenDeps(godOfMappers) }
+    private val userScreenDeps by lazy { UserScreenDeps(godOfMappers) }
 
-        override fun onObjectRemoved(p0: UserLocationView) {}
-
-        override fun onObjectUpdated(p0: UserLocationView, p1: ObjectEvent) {}
-    }
-
-    @Inject override lateinit var taxiServiceMapper: Mapper<TaxiService, Int>
-    @Inject override lateinit var taxiVehicleClassMapper: Mapper<TaxiVehicleClass, Int>
-    @Inject override lateinit var tripScreenTitleMapper: Mapper<TripScreenTitle, Int>
-    @Inject override lateinit var tripCardButtonTextMapper: Mapper<TripCardButtonState, Int>
-    @Inject override lateinit var tripCardButtonColorMapper: Mapper<TripCardButtonState, Color>
-
+    @OptIn(ExperimentalMaterialNavigationApi::class, ExperimentalMaterialApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
-        MapKitFactory.initialize(this)
-        DirectionsFactory.initialize(this)
         super.onCreate(savedInstanceState)
         requestLocationPermission()
-        mapInit()
         setContent {
-            val mainScreenState by viewModel.viewState.collectAsState()
-            viewModel.collectViewEffects(::handleViewEffect)
-            CompositionLocalProvider(
-                LocalMappers provides this
-            ) {
-                MainScreen(
-                    state = mainScreenState,
-                    mapView = mapView,
-                    userLocationLayer = userLocationLayer,
-                    onDismissUserSheet = {
-                        viewModel.accept(MainScreenIntent.DismissUserModalSheet)
-                    },
-                    onDismissTripSheet = {
-                        viewModel.accept(MainScreenIntent.DismissTripModalSheet)
-                    }
-                )
+            val sheetState = rememberModalBottomSheetState(
+                initialValue = ModalBottomSheetValue.Hidden,
+                skipHalfExpanded = true
+            )
+            val bottomSheetNavigator = remember { BottomSheetNavigator(sheetState) }
+            val navController = rememberNavController(bottomSheetNavigator)
+
+            ModalBottomSheetLayout(bottomSheetNavigator) {
+                NavHost(
+                    navController = navController,
+                    startDestination = Screens.Main.route
+                ) {
+                    mainScreen(navController, mainScreenDeps)
+                    tripScreen(tripScreenDeps)
+                    userScreen(navController, userScreenDeps)
+                }
             }
         }
-    }
-
-    private fun handleViewEffect(viewEffect: MainScreenViewEffect) {
-        when (viewEffect) {
-            is MainScreenViewEffect.MoveMapToLocation -> {
-                mapView.moveToLocation(viewEffect.location)
-            }
-        }
-    }
-
-    override fun onStart() {
-        super.onStart()
-        MapKitFactory.getInstance().onStart()
-        mapView.onStart()
-    }
-
-    override fun onStop() {
-        mapView.onStop()
-        MapKitFactory.getInstance().onStop()
-        super.onStop()
-    }
-
-    private fun mapInit() {
-        mapView = MapView(this)
-        mapView.map.isRotateGesturesEnabled = false
-        val mapKit = MapKitFactory.getInstance()
-        mapKit.resetLocationManagerToDefault()
-        userLocationLayer = mapKit.createUserLocationLayer(mapView.mapWindow)
-        userLocationLayer.isVisible = true
-        userLocationLayer.isHeadingEnabled = true
-        userLocationLayer.setObjectListener(userLocationListener)
     }
 
     private fun requestLocationPermission() {
@@ -146,3 +72,4 @@ class MainActivity : AppCompatActivity(), LocalMappersProvider {
         }
     }
 }
+

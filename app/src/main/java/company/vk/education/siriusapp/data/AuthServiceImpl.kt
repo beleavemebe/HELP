@@ -11,6 +11,7 @@ import com.vk.sdk.api.account.AccountService
 import com.vk.sdk.api.account.dto.AccountUserSettings
 import com.vk.sdk.api.photos.PhotosService
 import com.vk.sdk.api.photos.dto.PhotosGetResponse
+import company.vk.education.siriusapp.BuildConfig
 import company.vk.education.siriusapp.core.CurrentActivityProvider
 import company.vk.education.siriusapp.domain.model.AuthState
 import company.vk.education.siriusapp.domain.model.User
@@ -18,16 +19,33 @@ import company.vk.education.siriusapp.domain.model.UserContacts
 import company.vk.education.siriusapp.domain.service.AuthService
 import company.vk.education.siriusapp.ui.utils.log
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
 class AuthServiceImpl @Inject constructor(
     private val currentActivityProvider: CurrentActivityProvider
 ) : AuthService {
-    private val _authState = MutableStateFlow(AuthState())
-    override val authState = _authState.asStateFlow()
+    private val _authState = MutableStateFlow(
+        if (BuildConfig.DEBUG) fakeAuthState() else AuthState()
+    )
 
+    private fun fakeAuthState(): AuthState {
+        return AuthState()
+        return AuthState(
+            isUnknown = false,
+            user = User(
+                "1488",
+                "Chelik",
+                null,
+                UserContacts(
+                    "+1 234 567 89 00",
+                ),
+                54.0
+            )
+        )
+    }
+
+    override val authState = _authState.asStateFlow()
 
     private val vkContract = ActivityResultCallback<VKAuthenticationResult> {
         when (it) {
@@ -47,6 +65,7 @@ class AuthServiceImpl @Inject constructor(
         if (!::vkLogin.isInitialized) {
             throw IllegalStateException("You should init service before calling 'auth' method")
         }
+        if (!authState.value.isUnknown && authState.value.user != null) return
         if (!VK.isLoggedIn()) {
             vkLogin.launch(
                 listOf(

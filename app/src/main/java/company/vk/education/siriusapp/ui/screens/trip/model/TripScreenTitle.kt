@@ -1,4 +1,4 @@
-package company.vk.education.siriusapp.ui.screens.main.trip
+package company.vk.education.siriusapp.ui.screens.trip.model
 
 enum class TripScreenTitle {
     TRIP_DETAILS,

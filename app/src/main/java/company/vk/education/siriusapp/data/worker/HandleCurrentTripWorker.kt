@@ -8,8 +8,8 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import company.vk.education.siriusapp.domain.service.CurrentTripService
-import company.vk.education.siriusapp.ui.nofifications.Notifications
-import company.vk.education.siriusapp.ui.nofifications.createMainNotificationChannel
+import company.vk.education.siriusapp.ui.notifications.Notifications
+import company.vk.education.siriusapp.ui.notifications.createMainNotificationChannel
 
 const val KEY_TRIP_ID = "keyTripId"
 

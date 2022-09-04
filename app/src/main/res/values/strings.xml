@@ -60,5 +60,9 @@
     <string name="empty" />
     <string name="previous_trips">Прошедшие поездки</string>
     <string name="scheduled_trips">Запланированные поездки</string>
+    <string name="uber">Uber</string>
+    <string name="uber_kids">Kids</string>
+    <string name="uber_select">Select</string>
+    <string name="uber_uberx">UberX</string>
     <integer name="com_vk_sdk_AppId">51403589</integer>
 </resources>

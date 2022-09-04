@@ -1,7 +1,7 @@
 package company.vk.education.siriusapp.ui.utils
 
 import android.text.format.DateUtils
-import company.vk.education.siriusapp.ui.screens.main.HourAndMinute
+import company.vk.education.siriusapp.core.HourAndMinute
 import java.util.*
 
 fun Date.calendar(): Calendar {

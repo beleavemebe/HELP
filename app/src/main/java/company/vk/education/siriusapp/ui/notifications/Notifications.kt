@@ -1,4 +1,4 @@
-package company.vk.education.siriusapp.ui.nofifications
+package company.vk.education.siriusapp.ui.notifications
 
 import android.content.Context
 import androidx.core.app.NotificationCompat

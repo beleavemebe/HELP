@@ -1,13 +1,5 @@
 package company.vk.education.siriusapp.ui.base
 
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
-
-interface HelpViewModel<State : BaseViewState, Intent : BaseViewIntent, Error, ViewEffect> {
-    val initialState: State
-    val viewState: StateFlow<State>
-    val errors: Flow<Error>
-    val viewEffects: Flow<ViewEffect>
-
-    fun accept(intent: Intent): Any
+interface HelpViewModel<State : BaseViewState, Intent : BaseViewIntent, Error : BaseError, ViewEffect : BaseViewEffect> :
+    StateContainer<State>, IntentConsumer<Intent>, ErrorSource<Error>, ViewEffectSource<ViewEffect> {
 }

@@ -12,6 +12,7 @@ class TaxiServiceToStringResMapper @Inject constructor() : Mapper<TaxiService, I
     override fun map(arg: TaxiService): Int {
         return when (arg) {
             is TaxiService.Yandex -> R.string.yandex_taxi
+            is TaxiService.Uber -> R.string.uber
         }
     }
 }

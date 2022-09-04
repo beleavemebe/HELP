@@ -7,7 +7,6 @@ import company.vk.education.siriusapp.CurrentTripStateMsg
 import company.vk.education.siriusapp.core.Mapper
 import company.vk.education.siriusapp.domain.model.CurrentTripState
 import company.vk.education.siriusapp.domain.service.CurrentTripService
-import company.vk.education.siriusapp.ui.nofifications.MAIN_CHANNEL_ID
 import company.vk.education.siriusapp.ui.utils.log
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope

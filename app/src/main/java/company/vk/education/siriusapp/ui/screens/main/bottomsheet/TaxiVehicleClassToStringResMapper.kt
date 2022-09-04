@@ -17,6 +17,9 @@ class TaxiVehicleClassToStringResMapper @Inject constructor(
             TaxiService.Yandex.YandexVehicleClass.Economy -> R.string.economy
             TaxiService.Yandex.YandexVehicleClass.Minivan -> R.string.minivan
             TaxiService.Yandex.YandexVehicleClass.Premier -> R.string.premier
+            TaxiService.Uber.UberVehicleClass.UberX -> R.string.uber_uberx
+            TaxiService.Uber.UberVehicleClass.Select -> R.string.uber_select
+            TaxiService.Uber.UberVehicleClass.Kids -> R.string.uber_kids
         }
     }
 }

@@ -25,7 +25,7 @@ abstract class BaseViewModel<State : BaseViewState, Intent : BaseViewIntent, Err
         viewStateMutex.unlock()
     }
 
-    override fun accept(intent: Intent): Any = Unit
+    override fun consume(intent: Intent): Any = Unit
 
     open fun mapThrowable(throwable: Throwable): Error = throw throwable
 
@@ -51,8 +51,10 @@ abstract class BaseViewModel<State : BaseViewState, Intent : BaseViewIntent, Err
 
     @ShitiusDsl
     protected fun viewEffect(viewEffect: suspend () -> ViewEffect?) = execute {
+        val effect = viewEffect()
+        log("View effect: $effect")
         _viewEffects.emit(
-            viewEffect() ?: return@execute
+            effect ?: return@execute
         )
     }
 }

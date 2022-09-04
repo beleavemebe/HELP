@@ -1,15 +1,7 @@
 package company.vk.education.siriusapp.ui.screens.main
 
 import androidx.lifecycle.viewModelScope
-import com.yandex.mapkit.RequestPoint
-import com.yandex.mapkit.RequestPointType
-import com.yandex.mapkit.directions.DirectionsFactory
-import com.yandex.mapkit.directions.driving.DrivingOptions
-import com.yandex.mapkit.directions.driving.DrivingRoute
-import com.yandex.mapkit.directions.driving.DrivingSession
-import com.yandex.mapkit.directions.driving.VehicleOptions
-import com.yandex.mapkit.map.CameraListener
-import com.yandex.runtime.Error
+import company.vk.education.siriusapp.core.HourAndMinute
 import company.vk.education.siriusapp.core.dist
 import company.vk.education.siriusapp.core.meters
 import company.vk.education.siriusapp.domain.model.*
@@ -17,19 +9,20 @@ import company.vk.education.siriusapp.domain.repository.AddressRepository
 import company.vk.education.siriusapp.domain.repository.TripsRepository
 import company.vk.education.siriusapp.domain.service.AuthService
 import company.vk.education.siriusapp.domain.service.CurrentTripService
+import company.vk.education.siriusapp.domain.service.LocationService
 import company.vk.education.siriusapp.domain.service.ScheduledTripsService
 import company.vk.education.siriusapp.ui.base.BaseViewModel
+import company.vk.education.siriusapp.ui.screens.Screens
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.BottomSheetScreenState
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.TaxiPreference
 import company.vk.education.siriusapp.ui.screens.main.map.MapViewState
-import company.vk.education.siriusapp.ui.screens.main.trip.TripCard
-import company.vk.education.siriusapp.ui.screens.main.trip.TripCardButtonState
-import company.vk.education.siriusapp.ui.screens.main.trip.TripScreenTitle
-import company.vk.education.siriusapp.ui.screens.main.trip.TripState
-import company.vk.education.siriusapp.ui.screens.main.user.UserState
+import company.vk.education.siriusapp.ui.library.trips.TripCard
+import company.vk.education.siriusapp.ui.library.trips.TripItemButtonState
+import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent.*
+import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent.BottomSheetIntent.*
+import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent.MapIntent.*
 import company.vk.education.siriusapp.ui.utils.log
 import company.vk.education.siriusapp.ui.utils.setHourAndMinute
-import company.vk.education.siriusapp.ui.utils.toPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -44,6 +37,7 @@ class MainViewModel @Inject constructor(
     private val tripsRepository: TripsRepository,
     private val scheduledTripsService: ScheduledTripsService,
     private val currentTripService: CurrentTripService,
+    private val locationService: LocationService
 ) : BaseViewModel<MainScreenState, MainScreenIntent, Nothing, MainScreenViewEffect>() {
     override val initialState =
         MainScreenState(
@@ -51,25 +45,10 @@ class MainViewModel @Inject constructor(
             bottomSheetScreenState = BottomSheetScreenState()
         )
 
-    private val _cameraListener = CameraListener { _, cameraPosition, _, finished ->
-        if (finished) {
-            updatePickedLocation(
-                Location(
-                    cameraPosition.target.latitude,
-                    cameraPosition.target.longitude
-                )
-            )
-        }
-    }
-
-    val cameraListener: CameraListener
-        get() = _cameraListener
-
     init {
         authService.authState
             .onEach(::updateState)
             .launchIn(viewModelScope)
-
         authService.auth()
 
         currentTripService.currentTripState
@@ -90,105 +69,99 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private fun jumpToCurrentTrip(currentTripId: String) = reduce {
-        val trip = tripsRepository.getTripDetails(currentTripId)
-        it.copy(
-            tripState = createTripState(trip).copy(
-                title = TripScreenTitle.CURRENT_TRIP,
-                showControls = trip.host == authService.authState.value.user
-            )
-        )
+    private fun jumpToCurrentTrip(currentTripId: String) = viewEffect {
+        MainScreenViewEffect.Navigate(Screens.Trip.buildRoute(currentTripId))
     }
 
-    override fun accept(intent: MainScreenIntent): Any {
+    override fun consume(intent: MainScreenIntent): Any {
         log("Got intent: $intent")
         return when (intent) {
-            is MainScreenIntent.MapIntent.ShowProfile -> authOrViewMyProfile()
-            is MainScreenIntent.BottomSheetIntent.PickStartOnTheMap -> pickTripStart()
-            is MainScreenIntent.BottomSheetIntent.PickEndOnTheMap -> pickTripEnd()
-            is MainScreenIntent.BottomSheetIntent.PickTripDate -> pickTripDate()
-            is MainScreenIntent.BottomSheetIntent.PickTripTime -> pickTripTime()
-            is MainScreenIntent.BottomSheetIntent.PickTaxiPreference -> pickTaxiPreference(intent.preference)
-            is MainScreenIntent.BottomSheetIntent.DismissTaxiPreferenceMenu -> dismissTaxiPreferenceMenu(intent.preference)
-            is MainScreenIntent.MapIntent.AddressChosen -> {
+            is ShowMyProfile -> authOrViewMyProfile()
+            is PickStartOnTheMap -> pickTripStart()
+            is PickEndOnTheMap -> pickTripEnd()
+            is PickTripDate -> pickTripDate()
+            is PickTripTime -> pickTripTime()
+            is PickTaxiPreference -> pickTaxiPreference(intent.preference)
+            is DismissTaxiPreferenceMenu -> dismissTaxiPreferenceMenu(intent.preference)
+            is AddressChosen -> {
                 val addressLocation = intent.addressLocation
                 val addressToChoose = intent.addressToChoose
                 chooseAddress(addressLocation, addressToChoose)
             }
-            is MainScreenIntent.MapIntent.UpdatePickedLocation -> updatePickedLocation(intent.location)
-            is MainScreenIntent.BottomSheetIntent.TripDatePicked -> setTripDate(intent.date)
-            is MainScreenIntent.BottomSheetIntent.TripTimePicked -> setTripTime(intent.hourAndMinute)
-            is MainScreenIntent.DismissUserModalSheet -> hideUserSheet()
-            is MainScreenIntent.MapIntent.UserLocationAcquired -> setStartLocationIfNotAlready(intent.location)
-            is MainScreenIntent.BottomSheetIntent.TaxiServicePicked -> setTaxiService(intent.taxiService)
-            is MainScreenIntent.BottomSheetIntent.TaxiVehicleClassPicked -> setTaxiVehicleClass(intent.taxiVehicleClass)
-            is MainScreenIntent.BottomSheetIntent.CreateTrip -> createTrip()
-            is MainScreenIntent.BottomSheetIntent.SetFreePlacesAmount -> setFreePlacesAmount(intent.freePlaces)
-            is MainScreenIntent.BottomSheetIntent.PublishTrip -> publishTrip()
-            is MainScreenIntent.BottomSheetIntent.CancelCreatingTrip -> cancelCreatingTrip()
-            is MainScreenIntent.ShowTripDetails -> openTripModalSheet(intent.trip)
-            is MainScreenIntent.DismissTripModalSheet -> dismissTripModalSheet()
-            is MainScreenIntent.BottomSheetIntent.JoinTrip -> joinTrip(intent.trip)
-        }
-    }
-
-    private fun joinTrip(trip: Trip) = reduce {
-        tripsRepository.joinTrip(trip)
-        val updatedTrip = tripsRepository.getTripDetails(trip.id)
-        scheduleTrip(updatedTrip)
-        it.copy(
-            tripState = createTripState(updatedTrip)
-        )
-    }
-
-    private val driveRouter = DirectionsFactory.getInstance().createDrivingRouter()
-    private val routeListener = object : DrivingSession.DrivingRouteListener {
-        override fun onDrivingRoutes(p0: MutableList<DrivingRoute>) {
-            if (p0.isEmpty()) return
-            reduce {
-                it.copy(
-                    tripState = it.tripState?.copy(tripRoutePolyline = p0.first().geometry)
-                )
+            is UpdatePickedLocation -> updatePickedLocation(intent.location)
+            is TripDatePicked -> setTripDate(intent.date)
+            is TripTimePicked -> setTripTime(intent.hourAndMinute)
+            is UserLocationAcquired -> {
+                locationService.setCurrentLocation(intent.location)
+                setStartLocationIfNotAlready(intent.location)
             }
-        }
-
-        override fun onDrivingRoutesError(p0: Error) {
-            log("error $p0")
+            is TaxiServicePicked -> setTaxiService(intent.taxiService)
+            is TaxiVehicleClassPicked -> setTaxiVehicleClass(intent.taxiVehicleClass)
+            is CreateTrip -> createTrip()
+            is SetFreePlacesAmount -> setFreePlacesAmount(intent.freePlaces)
+            is PublishTrip -> publishTrip()
+            is CancelCreatingTrip -> cancelCreatingTrip()
+            is ShowTripDetails -> openTripModalSheet(intent.trip)
+            is JoinTrip -> joinTrip(intent.trip)
+            is ShowUser -> showUser(intent.user)
+            is CollapseBottomSheet -> collapseBottomSheet()
+            is ExpandBottomSheet -> expandBottomSheet()
+            is MoveToUserLocation -> moveMapToLocation(locationService.currentLocation.value)
+            is InvalidateChosenAddress -> invalidateChosenLocation()
         }
     }
 
-    private fun driveRoute(route: TripRoute) {
-        val list = listOf(
-            RequestPoint(route.startLocation.toPoint(), RequestPointType.WAYPOINT, null),
-            RequestPoint(route.endLocation.toPoint(), RequestPointType.WAYPOINT, null)
+    private fun invalidateChosenLocation() = reduce {
+        it.copy(
+            mapState = it.mapState.copy(
+                currentlyChosenAddress = null,
+                currentlyChosenLocation = null
+            )
         )
-        driveRouter.requestRoutes(list, DrivingOptions(), VehicleOptions(), routeListener)
+    }
+
+    private fun expandBottomSheet() = reduce {
+        it.copy(
+            isBottomSheetExpanded = true
+        )
+    }
+
+    private fun collapseBottomSheet() = reduce {
+        it.copy(
+            isBottomSheetExpanded = false
+        )
+    }
+
+    private fun joinTrip(trip: Trip) {
+        execute {
+            tripsRepository.joinTrip(trip)
+            tripsRepository.appendToTripHistory(
+                authService.authState.value.user!!.id,
+                trip
+            ) // todo pizdec
+            scheduleTrip(trip)
+        }
+
+        reduce {
+            // todo replace with live updates in TripsRepositoryImpl
+            val updatedTrips = tripsRepository.getTrips(trip.route)
+            it.copy(
+                bottomSheetScreenState = it.bottomSheetScreenState.copy(
+                    trips = updatedTrips.toTripCards(trip.route)
+                )
+            )
+        }
+
+        viewEffect {
+            MainScreenViewEffect.Navigate(Screens.Trip.buildRoute(trip.id))
+        }
     }
 
 
     private fun openTripModalSheet(trip: Trip) {
-        reduce {
-            val updatedTrip = tripsRepository.getTripDetails(trip.id)
-            it.copy(
-                tripState = createTripState(updatedTrip).copy(
-                    showControls = updatedTrip.host == authService.authState.value.user
-                )
-            )
+        viewEffect {
+            MainScreenViewEffect.Navigate(Screens.Trip.buildRoute(trip.id))
         }
-        driveRoute(trip.route)
-    }
-
-    private suspend fun createTripState(trip: Trip) =
-        TripState(
-            trip,
-            addressRepository.getAddressOfLocation(trip.route.startLocation),
-            addressRepository.getAddressOfLocation(trip.route.endLocation)
-        )
-
-    private fun dismissTripModalSheet() = reduce {
-        it.copy(
-            tripState = null
-        )
     }
 
     private fun cancelCreatingTrip() = reduce {
@@ -206,7 +179,11 @@ class MainViewModel @Inject constructor(
         reduce {
             val bss = it.bottomSheetScreenState
             val trip = Trip(
-                route = TripRoute(startLocation = bss.startLocation, endLocation = bss.endLocation, date = bss.date!!),
+                route = TripRoute(
+                    startLocation = bss.startLocation,
+                    endLocation = bss.endLocation,
+                    date = bss.date!!
+                ),
                 freePlaces = bss.freePlaces!!,
                 host = authService.authState.value.user!!,
                 passengers = emptyList(),
@@ -215,27 +192,31 @@ class MainViewModel @Inject constructor(
             )
 
             tripsRepository.publishTrip(trip)
+            tripsRepository.appendToTripHistory(
+                authService.authState.value.user!!.id,
+                trip
+            )
             scheduleTrip(trip)
 
+            // todo replace with live updates in TripsRepositoryImpl
             val updatedTrips = tripsRepository.getTrips(trip.route)
-            val newState = it.copy(
+
+            viewEffect {
+                MainScreenViewEffect.Navigate(Screens.Trip.buildRoute(trip.id))
+            }
+
+            it.copy(
                 bottomSheetScreenState = bss.copy(
                     trips = updatedTrips.toTripCards(trip.route),
                     isSearchingTrips = true,
                 ),
                 isBottomSheetExpanded = false,
-                tripState = createTripState(trip).copy(
-                    title = TripScreenTitle.TRIP_CREATED,
-                    showControls = true
-                )
             )
-
-
-            newState
         }
     }
 
     private fun scheduleTrip(trip: Trip) = execute {
+        return@execute
         scheduledTripsService.scheduleTripAt(
             trip.route.date,
             tripsRepository.getTripDetails(trip.id)
@@ -292,7 +273,8 @@ class MainViewModel @Inject constructor(
         it.copy(
             bottomSheetScreenState = it.bottomSheetScreenState.copy(
                 taxiService = taxiService,
-                isShowingPickTaxiServiceMenu = false
+                isShowingPickTaxiServiceMenu = false,
+                taxiVehicleClass = null
             )
         )
     }
@@ -315,18 +297,20 @@ class MainViewModel @Inject constructor(
             chooseAddress(location, AddressToChoose.START)
         }
 
-        viewEffect {
+        moveMapToLocation(location)
+    }
+
+    private fun moveMapToLocation(location: Location) = viewEffect {
+        if (location == Location.LOCATION_UNKNOWN) {
+            null
+        } else {
             MainScreenViewEffect.MoveMapToLocation(location)
         }
     }
 
-    private fun hideUserSheet() = reduce {
-        it.copy(isShowingUser = false, userState = null)
-    }
-
     private fun authOrViewMyProfile() {
         val authState = authService.authState.value
-        if (authState.isUnknown) return
+//        if (authState.isUnknown) return
         if (authState.user == null) {
             authService.auth()
         } else {
@@ -334,21 +318,10 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun showUser(
+    private fun showUser(
         user: User,
-    ) = reduce {
-        val tripHistory = tripsRepository.getTripHistory(user.id)
-        it.copy(
-            isShowingUser = true,
-            userState = UserState(
-                user = user,
-                currentTrip = currentTripService.currentTripState.value.currentTripId
-                    ?.takeUnless { it == "" }
-                    ?.let { tripsRepository.getTripDetails(it) },
-                scheduledTrips = tripHistory.filter { it.route.date >= Date() },
-                previousTrips = tripHistory.filter { it.route.date < Date() }
-            )
-        )
+    ) = viewEffect {
+        MainScreenViewEffect.Navigate(Screens.User.buildRoute(user.id))
     }
 
     private fun pickTripDate() = reduce {
@@ -397,12 +370,17 @@ class MainViewModel @Inject constructor(
     }
 
     private fun updatePickedLocation(location: Location) = reduce {
-        if (viewState.value.mapState.isChoosingAddress.not()) {
+        if (it.mapState.isChoosingAddress.not()) {
             it
         } else {
             log(location.toString())
             val address = addressRepository.getAddressOfLocation(location)
-            it.copy(mapState = it.mapState.copy(currentlyChosenAddress = address))
+            it.copy(
+                mapState = it.mapState.copy(
+                    currentlyChosenAddress = address,
+                    currentlyChosenLocation = location
+                )
+            )
         }
     }
 
@@ -502,11 +480,11 @@ class MainViewModel @Inject constructor(
                 trip = trip,
                 dist = round((route dist trip.route).meters()).toInt(),
                 isCurrentTrip = trip.id == currentTripId,
-                tripCardButtonState = when {
-                    trip.host == currentUser -> TripCardButtonState.HOST
-                    currentUser in trip.passengers -> TripCardButtonState.BOOKED
-                    scheduledTripsService.isTripScheduledAt(trip.route.date) -> TripCardButtonState.CONFLICT
-                    else -> TripCardButtonState.JOIN
+                tripItemButtonState = when {
+                    trip.host == currentUser -> TripItemButtonState.HOST
+                    currentUser in trip.passengers -> TripItemButtonState.BOOKED
+                    scheduledTripsService.isTripScheduledAt(trip.route.date) -> TripItemButtonState.CONFLICT
+                    else -> TripItemButtonState.JOIN
                 }
             )
         }

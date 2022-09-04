@@ -9,105 +9,52 @@ import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.yandex.mapkit.mapview.MapView
-import com.yandex.mapkit.user_location.UserLocationLayer
+import com.yandex.mapkit.MapKitFactory
 import company.vk.education.siriusapp.R
-import company.vk.education.siriusapp.ui.screens.main.AddressToChoose
-import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
-import company.vk.education.siriusapp.ui.screens.main.MainViewModel
+import company.vk.education.siriusapp.ui.library.yandexmaps.YandexMap
+import company.vk.education.siriusapp.ui.screens.main.*
 import company.vk.education.siriusapp.ui.theme.*
-import company.vk.education.siriusapp.ui.utils.log
-import company.vk.education.siriusapp.ui.utils.moveToUser
-import company.vk.education.siriusapp.ui.utils.pickedLocation
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
-
-
-val MainViewModel.mapState: StateFlow<MapViewState>
-    get() = viewState
-        .map { it.mapState }
-        .stateIn(
-            viewModelScope,
-            SharingStarted.Lazily,
-            initialState.mapState
-        )
 
 @Composable
-fun MapScreen(
-    mapView: MapView,
-    userLocationLayer: UserLocationLayer,
-    viewModel: MainViewModel = viewModel()
-) {
-    val state by viewModel.mapState.collectAsState()
-
-    Map(
-        mapView = mapView,
-        userLocationLayer = userLocationLayer,
-        state = state,
-        onProfileClicked = { viewModel.accept(MainScreenIntent.MapIntent.ShowProfile) },
-        onLocationChosen = { addressToChoose ->
-            val location = mapView.pickedLocation
-            viewModel.accept(
-                MainScreenIntent.MapIntent.AddressChosen(addressToChoose, location)
-            )
-        }
-    )
-
-    LaunchedEffect(key1 = null, block = {
-        log("launched effect")
-        mapView.map.addCameraListener(viewModel.cameraListener)
-    })
-}
-
-
-@Composable
-fun Map(
-    mapView: MapView,
-    userLocationLayer: UserLocationLayer,
+fun MapLayer(
     state: MapViewState,
-    onLocationChosen: (AddressToChoose) -> Unit,
-    onProfileClicked: () -> Unit
 ) {
     Box(contentAlignment = Alignment.TopEnd) {
-        AndroidView(factory = { mapView })
-        ChooseLocation(state = state, map = mapView, onClick = onLocationChosen)
-        ProfileView(state = state, onProfileClicked = onProfileClicked)
-        ToUserLocationFAB(mapView, userLocationLayer)
+        Map()
+        ChooseLocation(state = state)
+        ProfileView(state = state)
+        ToUserLocationFAB()
     }
 }
 
 @Composable
-private fun ToUserLocationFAB(
-    mapView: MapView,
-    userLocationLayer: UserLocationLayer
-) {
-    Box(contentAlignment = Alignment.BottomEnd, modifier = Modifier.padding(Spacing16dp).fillMaxSize()) {
+private fun ToUserLocationFAB() {
+    val intentConsumer = LocalMainScreenIntentConsumer.current
+    Box(contentAlignment = Alignment.BottomEnd, modifier = Modifier
+        .padding(Spacing16dp)
+        .fillMaxSize()) {
         Column {
             Button(
-                onClick = { mapView.moveToUser(userLocationLayer) },
+                onClick = {
+                    intentConsumer.consume(MainScreenIntent.MapIntent.MoveToUserLocation)
+                },
                 colors = ButtonDefaults.buttonColors(backgroundColor = OnBlue),
                 contentPadding = PaddingValues(Spacing8dp),
                 modifier = Modifier
                     .clip(CircleShape)
                     .size(FabSize)
-//                    .border(2.dp, Blue, CircleShape)
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_place),
@@ -123,8 +70,11 @@ private fun ToUserLocationFAB(
 }
 
 @Composable
-fun ChooseLocation(state: MapViewState, map: MapView, onClick: (AddressToChoose) -> Unit) {
+fun ChooseLocation(
+    state: MapViewState
+) {
     if (state.isChoosingAddress) {
+        val intentConsumer = LocalMainScreenIntentConsumer.current
         require(state.addressToChoose != null) {
             "State does not specify which address is being chosen. $state"
         }
@@ -158,10 +108,21 @@ fun ChooseLocation(state: MapViewState, map: MapView, onClick: (AddressToChoose)
                 style = AppTypography.headlineMedium
             )
         }
-        Box(modifier = Modifier.fillMaxSize().padding(Spacing16dp, 0.dp), contentAlignment = Alignment.BottomCenter) {
+        Box(
+            contentAlignment = Alignment.BottomCenter,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(Spacing16dp, 0.dp)
+        ) {
             Column {
                 Button(
-                    onClick = { onClick(state.addressToChoose) },
+                    onClick = {
+                        state.currentlyChosenLocation?.let {
+                            intentConsumer.consume(
+                                MainScreenIntent.MapIntent.AddressChosen(state.addressToChoose, it)
+                            )
+                        }
+                    },
                     colors = ButtonDefaults.buttonColors(Blue),
                     shape = Shapes.medium,
                     elevation = null,
@@ -182,8 +143,9 @@ fun ChooseLocation(state: MapViewState, map: MapView, onClick: (AddressToChoose)
 }
 
 @Composable
-fun ProfileView(state: MapViewState, onProfileClicked: () -> Unit) {
+fun ProfileView(state: MapViewState) {
     if (state.isChoosingAddress) return
+    val intentConsumer = LocalMainScreenIntentConsumer.current
     AsyncImage(
         model = state.profilePicUrl,
         contentDescription = stringResource(id = R.string.profile_pic),
@@ -194,27 +156,43 @@ fun ProfileView(state: MapViewState, onProfileClicked: () -> Unit) {
             .padding(top = Spacing16dp, end = Spacing16dp)
             .size(FabSize)
             .clip(CircleShape)
-            .border(2.dp, Blue, CircleShape)
-            .clickable { onProfileClicked() }
+            .border(2.dp, Grey, CircleShape)
+            .clickable {
+                intentConsumer.consume(MainScreenIntent.MapIntent.ShowMyProfile)
+            }
     )
 }
 
 @Composable
-fun ProfileView(url: String? = null, onClick: () -> Unit) {
-    AsyncImage(
-        model = url,
-        contentDescription = stringResource(id = R.string.profile_pic),
-        placeholder = painterResource(
-            id = R.drawable.profile_avatar_placeholder
-        ),
-        error = painterResource(
-            id = R.drawable.profile_avatar_placeholder
-        ),
-        contentScale = ContentScale.Crop,
-        modifier = Modifier
-            .padding(top = Spacing16dp, end = Spacing16dp)
-            .size(64.dp)
-            .clip(CircleShape)
-            .clickable { onClick() }
-    )
+fun Map() {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val intentConsumer = LocalMainScreenIntentConsumer.current
+    val effectSource = LocalMainScreenViewEffectSource.current
+
+    val cameraListener by remember {
+        lazy {
+            CurrentlyPickedLocationCameraListener(intentConsumer)
+        }
+    }
+
+    val userLocationListener by remember {
+        lazy {
+            UserLocationListener(context, scope) {
+                intentConsumer.consume(MainScreenIntent.MapIntent.UserLocationAcquired(it))
+            }
+        }
+    }
+
+    YandexMap(effectSource.viewEffects, ::toMapViewEffect) {
+        map.isRotateGesturesEnabled = false
+        map.addCameraListener(cameraListener)
+        MapKitFactory.getInstance()
+            .createUserLocationLayer(mapWindow).apply {
+                isVisible = true
+                isHeadingEnabled = true
+                setObjectListener(userLocationListener)
+            }
+    }
 }
+

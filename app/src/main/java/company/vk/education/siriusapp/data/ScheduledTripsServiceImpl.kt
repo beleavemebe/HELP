@@ -44,7 +44,7 @@ class ScheduledTripsServiceImpl @Inject constructor(
         val listener = AlarmManager.OnAlarmListener {
             val workRequest = OneTimeWorkRequestBuilder<Worker>()
                 .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
-                .setConstraints(Constraints())
+                .setConstraints(Constraints.Builder().build())
                 .setInputData(Data.Builder().putString(KEY_TRIP_ID, trip.id).build())
                 .build()
 

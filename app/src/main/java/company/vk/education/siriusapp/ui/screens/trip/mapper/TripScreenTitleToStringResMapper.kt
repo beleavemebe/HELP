@@ -1,7 +1,8 @@
-package company.vk.education.siriusapp.ui.screens.main.trip
+package company.vk.education.siriusapp.ui.screens.trip.mapper
 
 import company.vk.education.siriusapp.R
 import company.vk.education.siriusapp.core.Mapper
+import company.vk.education.siriusapp.ui.screens.trip.model.TripScreenTitle
 import javax.inject.Inject
 
 class TripScreenTitleToStringResMapper @Inject constructor() : Mapper<TripScreenTitle, Int> {

@@ -14,7 +14,7 @@ fun TripModalSheet(tripState: TripState, sheetState: ModalBottomSheetState) {
         sheetState = sheetState,
         sheetShape = RoundedCornerShape(32.dp, 32.dp, 0.dp, 0.dp),
         sheetContent = {
-            TripScreen(tripState)
+            TripScreenContent(tripState)
         }
     ) {}
 }
