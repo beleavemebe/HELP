@@ -10,11 +10,11 @@ import company.vk.education.siriusapp.core.CurrentActivityProviderImpl
 import company.vk.education.siriusapp.data.*
 import company.vk.education.siriusapp.data.db.AppDatabase
 import company.vk.education.siriusapp.data.db.AppDatabase.Companion.DATABASE_NAME
-import company.vk.education.siriusapp.data.mapper.CurrentTripStateMapper
 import company.vk.education.siriusapp.domain.repository.AddressRepository
 import company.vk.education.siriusapp.domain.repository.TripsRepository
 import company.vk.education.siriusapp.domain.service.AuthService
 import company.vk.education.siriusapp.domain.service.CurrentTripService
+import company.vk.education.siriusapp.data.FakeCurrentTripService
 import company.vk.education.siriusapp.domain.service.ScheduledTripsService
 import dagger.Binds
 import dagger.Module
@@ -58,11 +58,16 @@ interface AppModule {
     ): TripsRepository
 
     companion object {
+//        @Provides
+//        @Singleton
+//        fun provideCurrentTripStateService(
+//            @ApplicationContext context: Context,
+//        ): CurrentTripService = CurrentTripServiceImpl(context, CurrentTripStateMapper())
+
         @Provides
         @Singleton
         fun provideCurrentTripStateService(
-            @ApplicationContext context: Context,
-        ): CurrentTripService = CurrentTripServiceImpl(context, CurrentTripStateMapper())
+        ): CurrentTripService = FakeCurrentTripService()
 
         @Provides
         @Singleton
