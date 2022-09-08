@@ -13,6 +13,7 @@ import company.vk.education.siriusapp.data.db.AppDatabase.Companion.DATABASE_NAM
 import company.vk.education.siriusapp.domain.repository.AddressRepository
 import company.vk.education.siriusapp.domain.repository.TripsRepository
 import company.vk.education.siriusapp.data.FakeCurrentTripService
+import company.vk.education.siriusapp.data.api.gis.GisAddressRepository
 import company.vk.education.siriusapp.domain.service.*
 import dagger.Binds
 import dagger.Module
@@ -52,7 +53,7 @@ interface AppModule {
     @Binds
     @Singleton
     fun bindAddressRepository(
-        impl: AddressRepositoryImpl
+        impl: GisAddressRepository
     ): AddressRepository
 
     @Binds

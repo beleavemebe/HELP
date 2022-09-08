@@ -5,4 +5,9 @@ import javax.inject.Qualifier
 @Qualifier
 @MustBeDocumented
 @kotlin.annotation.Retention(AnnotationRetention.RUNTIME)
-annotation class GeoQualifier
+annotation class YandexGeocoder
+
+@Qualifier
+@MustBeDocumented
+@kotlin.annotation.Retention(AnnotationRetention.RUNTIME)
+annotation class GisGeocoder

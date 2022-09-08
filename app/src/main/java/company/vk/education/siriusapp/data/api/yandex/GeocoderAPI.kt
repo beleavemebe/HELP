@@ -1,4 +1,4 @@
-package company.vk.education.siriusapp.data.api
+package company.vk.education.siriusapp.data.api.yandex
 
 import retrofit2.http.GET
 import retrofit2.http.Query

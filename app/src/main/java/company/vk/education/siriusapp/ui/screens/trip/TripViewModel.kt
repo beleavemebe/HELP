@@ -1,5 +1,6 @@
 package company.vk.education.siriusapp.ui.screens.trip
 
+import androidx.lifecycle.viewModelScope
 import com.yandex.mapkit.RequestPoint
 import com.yandex.mapkit.RequestPointType
 import com.yandex.mapkit.directions.DirectionsFactory
@@ -17,6 +18,8 @@ import company.vk.education.siriusapp.ui.utils.log
 import company.vk.education.siriusapp.ui.utils.toPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 
 
@@ -35,15 +38,19 @@ class TripViewModel @Inject constructor(
         }
     }
 
-    private fun loadTrip(tripId: String) = reduce {
-        val trip = tripsRepository.getTripDetails(tripId)
-        driveRoute(trip.route)
-        it.copy(
-            isLoading = false,
-            trip = trip,
-            startAddress = addressRepository.getAddressOfLocation(trip.route.startLocation),
-            endAddress = addressRepository.getAddressOfLocation(trip.route.endLocation),
-        )
+    private fun loadTrip(tripId: String) {
+        tripsRepository.getTripDetailsFlow(tripId)
+            .onEach { trip ->
+                driveRoute(trip.route)
+                reduce {
+                    it.copy(
+                        isLoading = false,
+                        trip = trip,
+                        startAddress = addressRepository.getAddressOfLocation(trip.route.startLocation),
+                        endAddress = addressRepository.getAddressOfLocation(trip.route.endLocation),
+                    )
+                }
+            }.launchIn(viewModelScope)
     }
 
     private val driveRouter by lazy { DirectionsFactory.getInstance().createDrivingRouter() }

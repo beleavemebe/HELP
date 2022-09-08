@@ -3,9 +3,9 @@ package company.vk.education.siriusapp.di
 import androidx.compose.ui.graphics.Color
 import company.vk.education.siriusapp.core.BiMapper
 import company.vk.education.siriusapp.core.Mapper
-import company.vk.education.siriusapp.data.api.AddressResponse
-import company.vk.education.siriusapp.data.api.GeocoderMapper
-import company.vk.education.siriusapp.data.api.Response
+import company.vk.education.siriusapp.data.api.yandex.AddressResponse
+import company.vk.education.siriusapp.data.api.yandex.GeocoderMapper
+import company.vk.education.siriusapp.data.api.yandex.Response
 import company.vk.education.siriusapp.data.mapper.TripDtoMapper
 import company.vk.education.siriusapp.data.mapper.UserDtoMapper
 import company.vk.education.siriusapp.data.model.TripDto

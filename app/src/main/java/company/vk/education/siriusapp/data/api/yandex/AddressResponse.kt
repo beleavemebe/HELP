@@ -1,4 +1,4 @@
-package company.vk.education.siriusapp.data.api
+package company.vk.education.siriusapp.data.api.yandex
 
 import com.google.gson.annotations.SerializedName
 import company.vk.education.siriusapp.domain.model.Location

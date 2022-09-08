@@ -9,6 +9,10 @@ import company.vk.education.siriusapp.domain.model.Trip
 import company.vk.education.siriusapp.domain.model.TripRoute
 import company.vk.education.siriusapp.domain.repository.TripsRepository
 import company.vk.education.siriusapp.domain.service.AuthService
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.channels.trySendBlocking
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -83,5 +87,18 @@ class TripsRepositoryImpl @Inject constructor(
         db.collection(COLLECTION_TRIP_HISTORY).document(userId).set(
             TripHistory(newHistory.map(mapper::mapTo))
         ).await()
+    }
+
+    override fun getTripDetailsFlow(id: String): Flow<Trip> {
+        return callbackFlow {
+            db.collection(COLLECTION_TRIPS).document(id)
+                .addSnapshotListener { value, _ ->
+                    value?.toObject(TripDto::class.java)
+                        ?.let { mapper.mapFrom(it) }
+                        ?.let { trySend(it) }
+                }
+
+            awaitClose()
+        }
     }
 }
