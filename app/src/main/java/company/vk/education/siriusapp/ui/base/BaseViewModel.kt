@@ -22,7 +22,7 @@ abstract class BaseViewModel<State : BaseViewState, Intent : BaseViewIntent, Err
         val newState = f(_viewState.value)
         _viewState.value = newState
         log("New state: $newState")
-        viewStateMutex.unlock()
+        viewStateMutex.unlock() // FIXME! never unlocks if `f` throws
     }
 
     override fun consume(intent: Intent): Any = Unit
