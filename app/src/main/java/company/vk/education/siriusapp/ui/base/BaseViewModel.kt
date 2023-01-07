@@ -19,10 +19,15 @@ abstract class BaseViewModel<State : BaseViewState, Intent : BaseViewIntent, Err
     @ShitiusDsl
     protected fun reduce(f: suspend (prevState: State) -> State) = execute {
         viewStateMutex.lock()
-        val newState = f(_viewState.value)
-        _viewState.value = newState
-        log("New state: $newState")
-        viewStateMutex.unlock() // FIXME! never unlocks if `f` throws
+        try {
+            val newState = f(_viewState.value)
+            _viewState.value = newState
+            log("New state: $newState")
+        } catch (throwable: Throwable) {
+            throw throwable
+        } finally {
+            viewStateMutex.unlock()
+        }
     }
 
     override fun consume(intent: Intent): Any = Unit
@@ -50,8 +55,8 @@ abstract class BaseViewModel<State : BaseViewState, Intent : BaseViewIntent, Err
     override val viewEffects = _viewEffects.asSharedFlow()
 
     @ShitiusDsl
-    protected fun viewEffect(viewEffect: suspend () -> ViewEffect?) = execute {
-        val effect = viewEffect()
+    protected fun postViewEffect(produceViewEffect: suspend () -> ViewEffect?) = execute {
+        val effect = produceViewEffect()
         log("View effect: $effect")
         _viewEffects.emit(
             effect ?: return@execute

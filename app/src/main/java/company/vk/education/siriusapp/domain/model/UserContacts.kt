@@ -5,3 +5,5 @@ data class UserContacts(
     val vkLink: String? = null,
     val tgLink: String? = null,
 )
+
+val fakeUserContacts = UserContacts("+1 234 567 89 00")

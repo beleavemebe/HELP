@@ -22,6 +22,7 @@ import androidx.compose.ui.zIndex
 import coil.compose.AsyncImage
 import company.vk.education.siriusapp.R
 import company.vk.education.siriusapp.domain.model.Trip
+import company.vk.education.siriusapp.ui.library.trips.TripItemButtonState.*
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.LocalTaxiInfoMappers
 import company.vk.education.siriusapp.ui.utils.formatDate
 import company.vk.education.siriusapp.ui.utils.formatTime
@@ -49,7 +50,7 @@ fun TripItem(
             }
     ) {
         Column(Modifier.padding(Spacing16dp)) {
-            if (tripCard.tripItemButtonState == TripItemButtonState.HOST) {
+            if (tripCard.tripItemButtonState == HOST) {
                 Text(
                     stringResource(id = R.string.your_trip),
                     style = AppTypography.caption1,
@@ -89,8 +90,6 @@ fun TripItem(
 
             val serviceMapper = LocalTaxiInfoMappers.current.taxiServiceMapper
             val vehicleClassMapper = LocalTaxiInfoMappers.current.taxiVehicleClassMapper
-            val buttonColorMapper = LocalTripItemMappers.current.tripItemButtonColorMapper
-            val buttonTextMapper = LocalTripItemMappers.current.tripItemButtonTextMapper
             val taxiService = stringResource(id = serviceMapper.map(trip.taxiService))
             val vehicleClass = stringResource(id = vehicleClassMapper.map(trip.taxiVehicleClass))
             Text(
@@ -103,7 +102,7 @@ fun TripItem(
                 style = AppTypography.caption1,
                 color = textSecondaryColor
             )
-            if (tripCard.tripItemButtonState != TripItemButtonState.INVISIBLE) {
+            if (tripCard.tripItemButtonState != INVISIBLE) {
                 Spacer(modifier = Modifier.height(Spacing12dp))
                 Button(
                     modifier = Modifier
@@ -111,25 +110,19 @@ fun TripItem(
                         .height(32.dp),
                     shape = RoundedCornerShape(Spacing8dp),
                     colors = ButtonDefaults.buttonColors(
-                        backgroundColor = buttonColorMapper.map(tripCard.tripItemButtonState)
+                        backgroundColor = tripCard.tripItemButtonState.buttonColor
                     ),
                     elevation = null,
                     onClick = {
                         when (tripCard.tripItemButtonState) {
-                            TripItemButtonState.HOST, TripItemButtonState.BOOKED -> {
-                                onShowTripClicked(trip)
-                            }
-                            TripItemButtonState.JOIN -> {
-                                onJoinTripClicked(trip)
-                            }
-                            TripItemButtonState.CONFLICT, TripItemButtonState.INVISIBLE -> {}
+                            HOST, BOOKED -> onShowTripClicked(trip)
+                            JOIN -> onJoinTripClicked(trip)
+                            else -> {}
                         }
                     }
                 ) {
                     Text(
-                        stringResource(
-                            id = buttonTextMapper.map(tripCard.tripItemButtonState)
-                        ),
+                        stringResource(tripCard.tripItemButtonState.buttonTextRes),
                         style = AppTypography.caption2Medium,
                         color = OnBlue
                     )

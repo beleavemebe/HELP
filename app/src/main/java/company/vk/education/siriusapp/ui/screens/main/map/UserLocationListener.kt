@@ -3,14 +3,12 @@ package company.vk.education.siriusapp.ui.screens.main.map
 import android.content.Context
 import androidx.compose.ui.graphics.toArgb
 import com.yandex.mapkit.layers.ObjectEvent
-import com.yandex.mapkit.user_location.UserLocationLayer
 import com.yandex.mapkit.user_location.UserLocationObjectListener
 import com.yandex.mapkit.user_location.UserLocationView
 import com.yandex.runtime.image.ImageProvider
 import company.vk.education.siriusapp.R
 import company.vk.education.siriusapp.domain.model.Location
 import company.vk.education.siriusapp.ui.theme.Blue
-import company.vk.education.siriusapp.ui.utils.pickedLocation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

@@ -1,7 +1,7 @@
 package company.vk.education.siriusapp.di
 
 import androidx.compose.ui.graphics.Color
-import company.vk.education.siriusapp.core.BiMapper
+import company.vk.education.siriusapp.core.DtoMapper
 import company.vk.education.siriusapp.core.Mapper
 import company.vk.education.siriusapp.data.api.yandex.AddressResponse
 import company.vk.education.siriusapp.data.api.yandex.GeocoderMapper
@@ -16,9 +16,10 @@ import company.vk.education.siriusapp.domain.model.Trip
 import company.vk.education.siriusapp.domain.model.User
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.TaxiServiceToStringResMapper
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.TaxiVehicleClassToStringResMapper
-import company.vk.education.siriusapp.ui.screens.main.trip.*
 import company.vk.education.siriusapp.ui.screens.trip.mapper.TripScreenTitleToStringResMapper
 import company.vk.education.siriusapp.ui.library.trips.TripItemButtonState
+import company.vk.education.siriusapp.ui.screens.trip.mapper.TripItemButtonStateToColorMapper
+import company.vk.education.siriusapp.ui.screens.trip.mapper.TripItemButtonStateToStringResMapper
 import company.vk.education.siriusapp.ui.screens.trip.model.TripScreenTitle
 import dagger.Binds
 import dagger.Module
@@ -39,13 +40,13 @@ interface MapperBindingsModule {
     @Singleton
     fun bindTripDtoMapper(
         impl: TripDtoMapper,
-    ): BiMapper<Trip, TripDto>
+    ): DtoMapper<Trip, TripDto>
 
     @Binds
     @Singleton
     fun bindUserDtoMapper(
         impl: UserDtoMapper,
-    ): BiMapper<User, UserDto>
+    ): DtoMapper<User, UserDto>
 
     @Binds
     @Singleton

@@ -1,4 +1,4 @@
-package company.vk.education.siriusapp.ui.screens.trip
+package company.vk.education.siriusapp.ui.screens.trip.model
 
 import company.vk.education.siriusapp.domain.model.User
 import company.vk.education.siriusapp.ui.base.BaseViewIntent

@@ -1,4 +1,4 @@
-package company.vk.education.siriusapp.ui.screens.main.trip
+package company.vk.education.siriusapp.ui.screens.trip
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
@@ -6,6 +6,7 @@ import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
+import company.vk.education.siriusapp.ui.screens.trip.model.TripState
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable

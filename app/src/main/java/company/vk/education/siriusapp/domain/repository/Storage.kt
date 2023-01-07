@@ -4,5 +4,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface Storage<T> {
     suspend fun save(data: T)
-    fun read() : Flow<T?>
+    suspend fun read(): T?
+    fun readFlow(): Flow<T?>
 }

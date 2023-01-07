@@ -6,16 +6,17 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import company.vk.education.siriusapp.core.BiMapper
+import company.vk.education.siriusapp.core.DtoMapper
 import company.vk.education.siriusapp.domain.repository.Storage
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 
-class DataStoreStorage<T> @Inject constructor(
+open class DataStoreStorage<T> @Inject constructor(
     name: String,
-    private val mapper: BiMapper<T, String>,
+    private val mapper: DtoMapper<T, String>,
     @ApplicationContext context: Context
 ) : Storage<T> {
 
@@ -25,10 +26,15 @@ class DataStoreStorage<T> @Inject constructor(
 
     override suspend fun save(data: T) {
         datastore.edit {
-            it[dataKey] = mapper.mapTo(data)
+            it[dataKey] = mapper.mapToDto(data)
         }
     }
 
-    override fun read() =
-        datastore.data.map { data -> data[dataKey]?.let { mapper.mapFrom(it) } }
+    override fun readFlow() = datastore.data.map {
+        data -> data[dataKey]?.let {
+            mapper.mapToEntity(it)
+        }
+    }
+
+    override suspend fun read(): T? = readFlow().lastOrNull()
 }

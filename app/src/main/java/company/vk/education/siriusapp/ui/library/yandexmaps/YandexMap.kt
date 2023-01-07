@@ -10,6 +10,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.LifecycleOwner
 import com.yandex.mapkit.Animation
 import com.yandex.mapkit.geometry.BoundingBoxHelper
+import com.yandex.mapkit.geometry.Point
+import com.yandex.mapkit.geometry.Polyline
 import com.yandex.mapkit.map.CameraPosition
 import com.yandex.mapkit.mapview.MapView
 import company.vk.education.siriusapp.ui.base.BaseViewEffect
@@ -38,38 +40,17 @@ fun <VE : BaseViewEffect> YandexMap(
             fun renderViewEffect(viewEffect: MapViewEffect) {
                 when (viewEffect) {
                     is MapViewEffect.MoveToPoint -> {
-                        mapView.map.move(
-                            CameraPosition(
-                                viewEffect.point,
-                                viewEffect.zoom,
-                                viewEffect.azimuth,
-                                viewEffect.tilt
-                            ),
-                            Animation(
-                                viewEffect.animationType,
-                                viewEffect.animationDuration,
-                            ),
-                            null
+                        mapView.moveToPoint(
+                            viewEffect.point,
+                            viewEffect.zoom,
+                            viewEffect.azimuth,
+                            viewEffect.tilt,
+                            viewEffect.animationType,
+                            viewEffect.animationDuration,
                         )
                     }
                     is MapViewEffect.RenderRoute -> {
-                        val mapObj = mapView.map.mapObjects.addCollection()
-                        mapObj.addPolyline(viewEffect.polyline)
-                        if (viewEffect.moveToRoute) {
-                            with(mapView.map) {
-                                val camera = cameraPosition(
-                                    BoundingBoxHelper.getBounds(viewEffect.polyline)
-                                )
-                                move(
-                                    CameraPosition(
-                                        camera.target,
-                                        camera.zoom - 0.25f,
-                                        MapViewEffect.AZIMUTH_DEFAULT,
-                                        MapViewEffect.TILT_DEFAULT
-                                    )
-                                )
-                            }
-                        }
+                        mapView.renderRoute(viewEffect.polyline, viewEffect.moveToRoute)
                     }
                 }
             }
@@ -88,5 +69,47 @@ fun <VE : BaseViewEffect> YandexMap(
                 addView(effectReceivingView)
             }
         }
+    )
+}
+
+fun MapView.renderRoute(
+    polyline: Polyline,
+    alsoZoomToRoute: Boolean
+) {
+    val mapObj = map.mapObjects.addCollection()
+    mapObj.addPolyline(polyline)
+    if (alsoZoomToRoute) {
+        val camera = map.cameraPosition(BoundingBoxHelper.getBounds(polyline))
+        map.move(
+            CameraPosition(
+                camera.target,
+                camera.zoom - 0.25f,
+                MapViewEffect.AZIMUTH_DEFAULT,
+                MapViewEffect.TILT_DEFAULT
+            )
+        )
+    }
+}
+
+fun MapView.moveToPoint(
+    point: Point,
+    zoom: Float,
+    azimuth: Float,
+    tilt: Float,
+    animationType: Animation.Type,
+    animationDuration: Float,
+) {
+    map.move(
+        CameraPosition(
+            point,
+            zoom,
+            azimuth,
+            tilt
+        ),
+        Animation(
+            animationType,
+            animationDuration,
+        ),
+        null
     )
 }

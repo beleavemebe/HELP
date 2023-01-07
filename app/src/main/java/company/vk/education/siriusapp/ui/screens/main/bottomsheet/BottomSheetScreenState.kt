@@ -21,6 +21,11 @@ data class BottomSheetScreenState(
     val isShowingPickTaxiVehicleClassMenu: Boolean = false,
     val taxiService: TaxiService? = null,
     val taxiVehicleClass: TaxiVehicleClass? = null,
-    val verifyInstantly: Boolean = false,
-    val trips: List<TripCard>? = null
+    val trips: List<TripCard>? = null,
+    val startAddressErrorMsg: String? = null,
+    val endAddressErrorMsg: String? = null,
+    val dateErrorMsg: String? = null,
+    val freePlacesErrorMsg: String? = null,
+    val taxiServiceErrorMsg: String? = null,
+    val taxiVehicleClassErrorMsg: String? = null,
 )

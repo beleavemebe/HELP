@@ -1,13 +1,13 @@
 package company.vk.education.siriusapp.data.mapper
 
-import company.vk.education.siriusapp.core.BiMapper
+import company.vk.education.siriusapp.core.DtoMapper
 import company.vk.education.siriusapp.data.model.UserDto
 import company.vk.education.siriusapp.domain.model.User
 import company.vk.education.siriusapp.domain.model.UserContacts
 import javax.inject.Inject
 
-class UserDtoMapper @Inject constructor() : BiMapper<User, UserDto> {
-    override fun mapTo(arg: User): UserDto {
+class UserDtoMapper @Inject constructor() : DtoMapper<User, UserDto> {
+    override fun mapToDto(arg: User): UserDto {
         return UserDto(
             id = arg.id,
             name = arg.name,
@@ -19,7 +19,7 @@ class UserDtoMapper @Inject constructor() : BiMapper<User, UserDto> {
         )
     }
 
-    override fun mapFrom(arg: UserDto): User {
+    override fun mapToEntity(arg: UserDto): User {
         return User(
             id = arg.id!!,
             name = arg.name!!,

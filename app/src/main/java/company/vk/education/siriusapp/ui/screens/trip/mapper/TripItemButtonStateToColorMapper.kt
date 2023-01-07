@@ -1,4 +1,4 @@
-package company.vk.education.siriusapp.ui.screens.main.trip
+package company.vk.education.siriusapp.ui.screens.trip.mapper
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.White

@@ -1,4 +1,4 @@
-package company.vk.education.siriusapp.ui.screens.main.trip
+package company.vk.education.siriusapp.ui.screens.trip
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -41,6 +41,7 @@ import company.vk.education.siriusapp.ui.library.yandexmaps.YandexMap
 import company.vk.education.siriusapp.ui.screens.Screens
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.Loading
 import company.vk.education.siriusapp.ui.screens.trip.*
+import company.vk.education.siriusapp.ui.screens.trip.model.*
 import company.vk.education.siriusapp.ui.theme.*
 
 @OptIn(ExperimentalMaterialNavigationApi::class)
@@ -254,7 +255,6 @@ fun ShowParticipants(passengers: List<User>, freePlaces: Int) {
     }
 }
 
-@OptIn(ExperimentalMaterialNavigationApi::class)
 @Composable
 fun ShowPassenger(
     user: User? = null,

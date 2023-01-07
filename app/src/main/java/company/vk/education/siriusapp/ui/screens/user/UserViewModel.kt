@@ -4,7 +4,6 @@ import company.vk.education.siriusapp.domain.repository.TripsRepository
 import company.vk.education.siriusapp.domain.service.AuthService
 import company.vk.education.siriusapp.ui.base.BaseViewModel
 import company.vk.education.siriusapp.ui.screens.Screens
-import company.vk.education.siriusapp.ui.screens.main.trip.TripScreen
 import company.vk.education.siriusapp.ui.utils.log
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.*
@@ -25,7 +24,7 @@ class UserViewModel @Inject constructor(
         }
     }
 
-    private fun showTrip(id: String) = viewEffect {
+    private fun showTrip(id: String) = postViewEffect {
         UserScreenViewEffect.Navigate(Screens.Trip.buildRoute(id))
     }
 

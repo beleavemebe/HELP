@@ -1,4 +1,4 @@
-package company.vk.education.siriusapp.ui.screens.trip
+package company.vk.education.siriusapp.ui.screens.trip.model
 
 import com.yandex.mapkit.geometry.Polyline
 import company.vk.education.siriusapp.ui.base.BaseViewEffect

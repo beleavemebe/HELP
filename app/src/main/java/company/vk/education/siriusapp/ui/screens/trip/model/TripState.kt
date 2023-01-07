@@ -1,9 +1,8 @@
-package company.vk.education.siriusapp.ui.screens.main.trip
+package company.vk.education.siriusapp.ui.screens.trip.model
 
 import com.yandex.mapkit.geometry.Polyline
 import company.vk.education.siriusapp.domain.model.Trip
 import company.vk.education.siriusapp.ui.base.BaseViewState
-import company.vk.education.siriusapp.ui.screens.trip.model.TripScreenTitle
 
 data class TripState(
     val isLoading: Boolean = true,

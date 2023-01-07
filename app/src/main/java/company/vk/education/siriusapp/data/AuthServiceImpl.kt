@@ -16,6 +16,7 @@ import company.vk.education.siriusapp.core.CurrentActivityProvider
 import company.vk.education.siriusapp.domain.model.AuthState
 import company.vk.education.siriusapp.domain.model.User
 import company.vk.education.siriusapp.domain.model.UserContacts
+import company.vk.education.siriusapp.domain.model.unknownAuthState
 import company.vk.education.siriusapp.domain.service.AuthService
 import company.vk.education.siriusapp.ui.utils.log
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,24 +27,8 @@ class AuthServiceImpl @Inject constructor(
     private val currentActivityProvider: CurrentActivityProvider
 ) : AuthService {
     private val _authState = MutableStateFlow(
-        if (BuildConfig.DEBUG) fakeAuthState() else AuthState()
+        if (BuildConfig.DEBUG) unknownAuthState else AuthState()
     )
-
-    private fun fakeAuthState(): AuthState {
-        return AuthState()
-        return AuthState(
-            isUnknown = false,
-            user = User(
-                "1488",
-                "Chelik",
-                null,
-                UserContacts(
-                    "+1 234 567 89 00",
-                ),
-                54.0
-            )
-        )
-    }
 
     override val authState = _authState.asStateFlow()
 
@@ -61,11 +46,23 @@ class AuthServiceImpl @Inject constructor(
 
     private lateinit var vkLogin: ActivityResultLauncher<Collection<VKScope>>
 
+    override fun prepare() {
+        vkLogin = VK.login(
+            currentActivityProvider.currentActivity
+                ?: throw IllegalStateException("Activity is not initialized"),
+            vkContract
+        )
+    }
+
     override fun auth() {
         if (!::vkLogin.isInitialized) {
-            throw IllegalStateException("You should init service before calling 'auth' method")
+            throw IllegalStateException("Service was not prepared")
         }
-        if (!authState.value.isUnknown && authState.value.user != null) return
+
+        if (authState.value.isUnknown.not() && authState.value.user != null) {
+            return
+        }
+
         if (!VK.isLoggedIn()) {
             vkLogin.launch(
                 listOf(
@@ -89,7 +86,7 @@ class AuthServiceImpl @Inject constructor(
                 }
 
                 override fun success(result: AccountUserSettings) {
-                    log(result.toString())
+                    log("User info: $result")
                     with(result) {
                         val user = User(
                             id.toString(),
@@ -129,12 +126,4 @@ class AuthServiceImpl @Inject constructor(
     }
 
     private fun buildProfileURL(userId: UserId) = "$VK_USER_URL$userId"
-
-    override fun prepare() {
-        log("AuthService initialization")
-        vkLogin = VK.login(
-            currentActivityProvider.currentActivity
-                ?: throw IllegalStateException("Activity is not initialized"), vkContract
-        )
-    }
 }
