@@ -8,7 +8,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
-import company.vk.education.siriusapp.ui.library.trips.LocalTripItemMappers
 import company.vk.education.siriusapp.ui.screens.Screens
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.BottomSheet
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.LocalTaxiInfoMappers
@@ -35,7 +34,7 @@ fun NavGraphBuilder.mainScreen(
         CompositionLocalProvider(
             LocalMainScreenIntentConsumer provides viewModel,
             LocalMainScreenViewEffectSource provides viewModel,
-            LocalTripItemMappers provides mainScreenDeps.bottomSheetMappers,
+            LocalMainScreenDeps provides mainScreenDeps,
             LocalTaxiInfoMappers provides mainScreenDeps.bottomSheetMappers,
         ) {
             MainScreen(mainScreenState)

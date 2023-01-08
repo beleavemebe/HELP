@@ -25,4 +25,6 @@ sealed class MapViewEffect {
         val polyline: Polyline,
         val moveToRoute: Boolean = false
     ) : MapViewEffect()
+
+    object LocationPermissionGranted : MapViewEffect()
 }

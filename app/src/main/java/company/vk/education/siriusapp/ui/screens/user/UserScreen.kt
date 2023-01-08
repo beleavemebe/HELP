@@ -26,13 +26,14 @@ import coil.compose.AsyncImage
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.google.accompanist.navigation.material.bottomSheet
 import company.vk.education.siriusapp.R
-import company.vk.education.siriusapp.ui.library.trips.LocalTripItemMappers
+import company.vk.education.siriusapp.domain.model.Trip
+import company.vk.education.siriusapp.domain.model.User
+import company.vk.education.siriusapp.ui.library.trips.TripCard
+import company.vk.education.siriusapp.ui.library.trips.TripItem
+import company.vk.education.siriusapp.ui.library.trips.TripItemButtonState
 import company.vk.education.siriusapp.ui.screens.Screens
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.Loading
-import company.vk.education.siriusapp.ui.library.trips.TripItem
-import company.vk.education.siriusapp.ui.library.trips.TripCard
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.LocalTaxiInfoMappers
-import company.vk.education.siriusapp.ui.library.trips.TripItemButtonState
 import company.vk.education.siriusapp.ui.theme.*
 import company.vk.education.siriusapp.ui.utils.collectViewEffects
 
@@ -63,7 +64,6 @@ fun NavGraphBuilder.userScreen(
 
         CompositionLocalProvider(
             LocalUserScreenIntentConsumer provides viewModel,
-            LocalTripItemMappers provides userScreenDeps.userScreenMappers,
             LocalTaxiInfoMappers provides userScreenDeps.userScreenMappers,
         ) {
             UserScreen(userId, viewModel)
@@ -76,7 +76,7 @@ fun UserScreen(
     userId: String? = null,
     viewModel: UserViewModel,
 ) {
-    viewModel.consume(UserScreenIntent.OnUserIdAcquired(userId))
+    viewModel.consume(UserScreenIntent.OnUserIdAcquired(userId)) // fixme! side effect
     val userState by viewModel.viewState.collectAsState()
     UserScreenContent(state = userState)
 }
@@ -97,12 +97,14 @@ fun UserScreenContent(state: UserState) {
 
                 Spacer(modifier = Modifier.height(Spacing16dp))
 
-                UserInfo(state)
+                if (state.user != null) {
+                    UserInfo(state.user)
+                }
 
                 Spacer(modifier = Modifier.height(Spacing16dp))
 
                 if (state.currentTrip != null) {
-                    UserCurrentTrip(state)
+                    UserCurrentTrip(state.currentTrip)
                 }
 
                 if (state.scheduledTrips.isNotEmpty()) {
@@ -121,53 +123,49 @@ fun UserScreenContent(state: UserState) {
 
 @Composable
 private fun UserPreviousTrips(state: UserState) {
-    val intentConsumer = LocalUserScreenIntentConsumer.current
-    Text(
-        text = stringResource(id = R.string.previous_trips),
-        style = AppTypography.headline
+    TripsAndHeader(
+        headerText = stringResource(id = R.string.previous_trips),
+        trips = state.previousTrips
     )
-    Spacer(modifier = Modifier.height(Spacing8dp))
-    state.previousTrips.forEach {
-        TripItem(
-            tripCard = TripCard(
-                it,
-                0,
-                isCurrentTrip = false,
-                TripItemButtonState.INVISIBLE
-            ),
-            { intentConsumer.consume(UserScreenIntent.ShowTripDetails(it)) },  // todo
-            {} // todo
-        )
-    }
 }
 
 @Composable
 private fun UserScheduledTrips(state: UserState) {
+    TripsAndHeader(
+        headerText = stringResource(id = R.string.scheduled_trips),
+        trips = state.scheduledTrips
+    )
+}
+
+@Composable
+private fun TripsAndHeader(
+    headerText: String,
+    trips: List<Trip>
+) {
     val intentConsumer = LocalUserScreenIntentConsumer.current
     Text(
-        text = stringResource(id = R.string.scheduled_trips),
+        text = headerText,
         style = AppTypography.headline
     )
     Spacer(modifier = Modifier.height(Spacing8dp))
-    state.scheduledTrips.forEach {
+    trips.forEach { trip ->
         TripItem(
             tripCard = TripCard(
-                it,
+                trip,
                 0,
                 isCurrentTrip = false,
                 TripItemButtonState.INVISIBLE
             ),
-            { intentConsumer.consume(UserScreenIntent.ShowTripDetails(it)) }, // todo,
-            {} // todo
+            onShowTripClicked = { intentConsumer.consume(UserScreenIntent.ShowTripDetails(it)) },  // todo
+            onJoinTripClicked = {} // todo
         )
     }
 }
 
 @Composable
 private fun UserCurrentTrip(
-    state: UserState
+    currentTrip: Trip
 ) {
-    require(state.currentTrip != null) // todo: already checked it, fix.
     val intentConsumer = LocalUserScreenIntentConsumer.current
 
     Text(
@@ -177,12 +175,12 @@ private fun UserCurrentTrip(
     Spacer(modifier = Modifier.height(Spacing8dp))
     TripItem(
         tripCard = TripCard(
-            trip = state.currentTrip,
+            trip = currentTrip,
             dist = 0,
             isCurrentTrip = true,
             tripItemButtonState = TripItemButtonState.INVISIBLE
         ),
-        onShowTripClicked = { intentConsumer.consume(UserScreenIntent.ShowTripDetails(state.currentTrip)) },
+        onShowTripClicked = { intentConsumer.consume(UserScreenIntent.ShowTripDetails(currentTrip)) },
         onJoinTripClicked = { /* error? */ } // todo
     )
 }
@@ -221,17 +219,15 @@ private fun UserScreenHeader() {
 }
 
 @Composable
-private fun UserInfo(state: UserState) {
+private fun UserInfo(user: User) {
     Box(
         contentAlignment = Alignment.CenterStart,
         modifier = Modifier
             .wrapContentHeight()
             .fillMaxWidth()
     ) {
-        require(state.user != null)
         Column {
-
-            Text(text = state.user.name, style = AppTypography.headlineMedium)
+            Text(text = user.name, style = AppTypography.headlineMedium)
 
             Spacer(modifier = Modifier.height(Spacing4dp))
 
@@ -243,7 +239,7 @@ private fun UserInfo(state: UserState) {
                 )
                 Spacer(modifier = Modifier.width(Spacing12dp))
                 Text(
-                    text = state.user.rating.toInt().toString() + "%",
+                    text = user.rating.toInt().toString() + "%",
                     style = AppTypography.subhead.copy(color = TextHint)
                 )
             }
@@ -258,7 +254,7 @@ private fun UserInfo(state: UserState) {
                 )
                 Spacer(modifier = Modifier.width(Spacing12dp))
                 Text(
-                    text = "id${state.user.id}",
+                    text = "id${user.id}",
                     style = AppTypography.subhead.copy(color = TextHint)
                 )
             }
@@ -267,7 +263,7 @@ private fun UserInfo(state: UserState) {
         Box(contentAlignment = Alignment.TopEnd) {
             Spacer(modifier = Modifier.fillMaxWidth())
             AsyncImage(
-                model = state.user.imageUrl,
+                model = user.imageUrl,
                 contentDescription = stringResource(id = R.string.profile_pic),
                 placeholder = painterResource(
                     id = R.drawable.profile_avatar_placeholder

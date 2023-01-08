@@ -1,6 +1,5 @@
 package company.vk.education.siriusapp.ui.screens.main.map
 
-import android.Manifest
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -10,7 +9,6 @@ import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,12 +19,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.google.accompanist.permissions.*
 import com.yandex.mapkit.MapKitFactory
 import company.vk.education.siriusapp.R
-import company.vk.education.siriusapp.ui.activity.MainActivity
-import company.vk.education.siriusapp.ui.fuckpermissiosn.LocationPermissionStatus
-import company.vk.education.siriusapp.ui.fuckpermissiosn.LocationPermissionTracker
+import company.vk.education.siriusapp.ui.activity.LocationPermissionStatus.*
 import company.vk.education.siriusapp.ui.library.yandexmaps.YandexMap
 import company.vk.education.siriusapp.ui.screens.main.*
 import company.vk.education.siriusapp.ui.theme.*
@@ -44,37 +39,40 @@ fun MapLayer(
     }
 }
 
-@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 private fun ToUserLocationFAB() {
-    Sample()
-    val locationPermissionsState = rememberMultiplePermissionsState(
-        listOf(
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        )
-    )
     val intentConsumer = LocalMainScreenIntentConsumer.current
-    Box(contentAlignment = Alignment.BottomEnd, modifier = Modifier
-        .padding(Spacing16dp)
-        .fillMaxSize()) {
+    val locationPermissionHandler = LocalMainScreenDeps.current.locationPermissionHandler
+    val locationPermissionStatus by locationPermissionHandler.status.collectAsState()
+    LaunchedEffect(key1 = locationPermissionStatus) {
+        if (locationPermissionStatus == GRANTED) {
+            intentConsumer.consume(MainScreenIntent.MapIntent.LocationPermissionGranted)
+        }
+    }
+
+    Box(
+        contentAlignment = Alignment.BottomEnd,
+        modifier = Modifier
+            .padding(Spacing16dp)
+            .fillMaxSize()
+    ) {
         Column {
             Button(
                 onClick = {
-                    if (locationPermissionsState.allPermissionsGranted) {
-                        intentConsumer.consume(MainScreenIntent.MapIntent.MoveToUserLocation)
-                    } else {
-                        if (locationPermissionsState.shouldShowRationale) {
-                            log("rationale")
-                        } else {
-                            log("no rationale")
+                    when (locationPermissionStatus) {
+                        GRANTED -> {
+                            intentConsumer.consume(MainScreenIntent.MapIntent.MoveToUserLocation)
                         }
-
-                        if (locationPermissionsState.isPermanentlyDenied()) {
-                            log("permanently denied")
+                        NEEDS_EXPLANATION -> {
+                            log("explain") // todo
+                            locationPermissionHandler.requestLocationPermissions()
                         }
-
-                        locationPermissionsState.launchMultiplePermissionRequest()
+                        PERMANENTLY_DENIED -> {
+                            log("explain & lead to settings") // todo
+                        }
+                        else -> {
+                            locationPermissionHandler.requestLocationPermissions()
+                        }
                     }
                 },
                 colors = ButtonDefaults.buttonColors(backgroundColor = OnBlue),
@@ -83,83 +81,16 @@ private fun ToUserLocationFAB() {
                     .clip(CircleShape)
                     .size(FabSize)
             ) {
+                val iconTint = if (locationPermissionStatus == GRANTED) Blue else Grey
                 Image(
                     painter = painterResource(id = R.drawable.ic_place),
                     contentDescription = stringResource(id = R.string.my_location),
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.FillHeight,
-                    colorFilter = ColorFilter.tint(Blue)
+                    colorFilter = ColorFilter.tint(iconTint)
                 )
             }
             Spacer(Modifier.height(175.dp + Spacing32dp + Spacing8dp))
-        }
-    }
-}
-
-@OptIn(ExperimentalPermissionsApi::class)
-private fun MultiplePermissionsState.isPermanentlyDenied(): Boolean {
-    return permissions.all {
-        it.isPermanentlyDenied()
-    }
-}
-
-@OptIn(ExperimentalPermissionsApi::class)
-private fun PermissionState.isPermanentlyDenied(): Boolean {
-    return status.isGranted.not() && status.shouldShowRationale.not()
-}
-
-@OptIn(ExperimentalPermissionsApi::class)
-@Composable
-private fun Sample(
-
-) {
-    val status: LocationPermissionStatus? by MainActivity.fuckYou!!.get().status.collectAsState()
-    Text(text = status.toString())
-
-    val locationPermissionsState = rememberMultiplePermissionsState(
-        listOf(
-            android.Manifest.permission.ACCESS_COARSE_LOCATION,
-            android.Manifest.permission.ACCESS_FINE_LOCATION,
-        )
-    )
-
-    if (locationPermissionsState.allPermissionsGranted) {
-//        Text("Thanks! I can access your exact location :D")
-    } else {
-        Column {
-            val allPermissionsRevoked =
-                locationPermissionsState.permissions.size ==
-                        locationPermissionsState.revokedPermissions.size
-
-            val textToShow = if (!allPermissionsRevoked) {
-                // If not all the permissions are revoked, it's because the user accepted the COARSE
-                // location permission, but not the FINE one.
-                "Yay! Thanks for letting me access your approximate location. " +
-                        "But you know what would be great? If you allow me to know where you " +
-                        "exactly are. Thank you!"
-            } else if (locationPermissionsState.shouldShowRationale) {
-                // Both location permissions have been denied
-                "Getting your exact location is important for this app. " +
-                        "Please grant us fine location. Thank you :D"
-            } else {
-                // First time the user sees this feature or the user doesn't want to be asked again
-                "This feature requires location permission"
-            }
-
-            val buttonText = if (!allPermissionsRevoked) {
-                "Allow precise location"
-            } else {
-                "Request permissions"
-            }
-
-//            Text(text = textToShow)
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(onClick = {
-//                locationPermissionsState.launchMultiplePermissionRequest()
-                MainActivity.fuckYou!!.get().requestLocationPermissions()
-            }) {
-                Text(buttonText)
-            }
         }
     }
 }

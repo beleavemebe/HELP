@@ -21,6 +21,7 @@ sealed class MainScreenIntent : BaseViewIntent {
         object MoveToUserLocation : MapIntent()
         object ShowMyProfile : MapIntent()
         object InvalidateChosenAddress : MainScreenIntent()
+        object LocationPermissionGranted : MainScreenIntent()
     }
 
     sealed class BottomSheetIntent : MainScreenIntent() {
@@ -43,5 +44,6 @@ sealed class MainScreenIntent : BaseViewIntent {
     }
 }
 
-val LocalMainScreenIntentConsumer =
-    compositionLocalOf<IntentConsumer<MainScreenIntent>> { IntentConsumer {} }
+val LocalMainScreenIntentConsumer = compositionLocalOf {
+    IntentConsumer<MainScreenIntent> {}
+}

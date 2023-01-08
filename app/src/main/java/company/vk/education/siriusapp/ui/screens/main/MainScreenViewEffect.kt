@@ -12,9 +12,11 @@ val LocalMainScreenViewEffectSource = unprovidedCompositionLocalOf<ViewEffectSou
 open class MainScreenViewEffect private constructor() : BaseViewEffect {
     data class MoveMapToLocation(val location: Location) : MainScreenViewEffect()
     data class Navigate(val route: String) : MainScreenViewEffect()
+    object LocationPermissionGranted : MainScreenViewEffect()
 }
 
 fun toMapViewEffect(viewEffect: MainScreenViewEffect): MapViewEffect? = when (viewEffect) {
+    is MainScreenViewEffect.LocationPermissionGranted -> MapViewEffect.LocationPermissionGranted
     is MainScreenViewEffect.MoveMapToLocation ->
         MapViewEffect.MoveToPoint(
             Point(viewEffect.location.latitude, viewEffect.location.longitude),

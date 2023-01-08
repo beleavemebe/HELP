@@ -113,7 +113,12 @@ class MainViewModel @Inject constructor(
             is ExpandBottomSheet -> expandBottomSheet()
             is MoveToUserLocation -> moveMapToLocation(locationService.currentLocation.value)
             is InvalidateChosenAddress -> invalidateChosenLocation()
+            is LocationPermissionGranted -> signalLocationPermissionGranted()
         }
+    }
+
+    private fun signalLocationPermissionGranted() = postViewEffect {
+        MainScreenViewEffect.LocationPermissionGranted
     }
 
     private fun invalidateChosenLocation() = reduce { prevState ->

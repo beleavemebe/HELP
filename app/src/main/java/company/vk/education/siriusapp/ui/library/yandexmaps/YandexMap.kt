@@ -9,6 +9,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.LifecycleOwner
 import com.yandex.mapkit.Animation
+import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.geometry.BoundingBoxHelper
 import com.yandex.mapkit.geometry.Point
 import com.yandex.mapkit.geometry.Polyline
@@ -52,10 +53,13 @@ fun <VE : BaseViewEffect> YandexMap(
                     is MapViewEffect.RenderRoute -> {
                         mapView.renderRoute(viewEffect.polyline, viewEffect.moveToRoute)
                     }
+                    is MapViewEffect.LocationPermissionGranted -> {
+                        MapKitFactory.getInstance().resetLocationManagerToDefault()
+                    }
                 }
             }
 
-            val effectReceivingView = ComposeView(context).apply {
+            val effectReceiver = ComposeView(context).apply {
                 setContent {
                     LaunchedEffect(key1 = true) {
                         effects.map(toMapViewEffect).filterNotNull()
@@ -66,7 +70,7 @@ fun <VE : BaseViewEffect> YandexMap(
 
             FrameLayout(context).apply {
                 addView(mapView)
-                addView(effectReceivingView)
+                addView(effectReceiver)
             }
         }
     )
@@ -74,11 +78,11 @@ fun <VE : BaseViewEffect> YandexMap(
 
 fun MapView.renderRoute(
     polyline: Polyline,
-    alsoZoomToRoute: Boolean
+    zoomTheRoute: Boolean
 ) {
     val mapObj = map.mapObjects.addCollection()
     mapObj.addPolyline(polyline)
-    if (alsoZoomToRoute) {
+    if (zoomTheRoute) {
         val camera = map.cameraPosition(BoundingBoxHelper.getBounds(polyline))
         map.move(
             CameraPosition(

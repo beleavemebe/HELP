@@ -1,11 +1,13 @@
 package company.vk.education.siriusapp.ui.screens.trip.model
 
+import androidx.compose.runtime.compositionLocalOf
 import company.vk.education.siriusapp.domain.model.User
 import company.vk.education.siriusapp.ui.base.BaseViewIntent
 import company.vk.education.siriusapp.ui.base.IntentConsumer
-import company.vk.education.siriusapp.ui.utils.unprovidedCompositionLocalOf
 
-val LocalTripScreenIntentConsumer = unprovidedCompositionLocalOf<IntentConsumer<TripScreenIntent>>()
+val LocalTripScreenIntentConsumer = compositionLocalOf {
+    IntentConsumer<TripScreenIntent> {}
+}
 
 sealed class TripScreenIntent : BaseViewIntent {
     data class OnTripIdAcquired(val tripId: String) : TripScreenIntent()
