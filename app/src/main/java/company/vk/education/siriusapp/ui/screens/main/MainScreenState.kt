@@ -8,7 +8,4 @@ data class MainScreenState(
     val mapState: MapViewState,
     val isBottomSheetExpanded: Boolean = false,
     val bottomSheetScreenState: BottomSheetScreenState,
-//    val isShowingUser: Boolean = false,
-//    val userState: UserState? = null,
-//    val tripState: TripState? = null
 ) : BaseViewState

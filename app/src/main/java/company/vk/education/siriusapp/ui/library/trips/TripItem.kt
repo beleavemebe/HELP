@@ -31,8 +31,8 @@ import company.vk.education.siriusapp.ui.theme.*
 @Composable
 fun TripItem(
     tripCard: TripCard,
-    onShowTripClicked: (Trip) -> Unit,
-    onJoinTripClicked: (Trip) -> Unit,
+    onCardClicked: (Trip) -> Unit,
+    onButtonClicked: (Trip) -> Unit,
 ) {
     val trip = tripCard.trip
     val cardColor = if (tripCard.isCurrentTrip) Blue.copy(alpha = 0.9F) else Color.White
@@ -46,7 +46,7 @@ fun TripItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-                onShowTripClicked(trip)
+                onCardClicked(trip)
             }
     ) {
         Column(Modifier.padding(Spacing16dp)) {
@@ -114,11 +114,7 @@ fun TripItem(
                     ),
                     elevation = null,
                     onClick = {
-                        when (tripCard.tripItemButtonState) {
-                            HOST, BOOKED -> onShowTripClicked(trip)
-                            JOIN -> onJoinTripClicked(trip)
-                            else -> {}
-                        }
+                        onButtonClicked(trip)
                     }
                 ) {
                     Text(

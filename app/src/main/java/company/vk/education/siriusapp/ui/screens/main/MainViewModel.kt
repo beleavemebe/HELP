@@ -336,13 +336,22 @@ class MainViewModel @Inject constructor(
     }
 
     private fun setTaxiService(taxiService: TaxiService) = reduce { prevState ->
-        prevState.copy(
-            bottomSheetScreenState = prevState.bottomSheetScreenState.copy(
-                taxiService = taxiService,
-                isShowingPickTaxiServiceMenu = false,
-                taxiVehicleClass = null
+        val prevTaxiService = prevState.bottomSheetScreenState.taxiService
+        if (taxiService == prevTaxiService) {
+            prevState.copy(
+                bottomSheetScreenState = prevState.bottomSheetScreenState.copy(
+                    isShowingPickTaxiServiceMenu = false,
+                )
             )
-        )
+        } else {
+            prevState.copy(
+                bottomSheetScreenState = prevState.bottomSheetScreenState.copy(
+                    taxiService = taxiService,
+                    isShowingPickTaxiServiceMenu = false,
+                    taxiVehicleClass = null
+                )
+            )
+        }
     }
 
     private fun setTaxiVehicleClass(vehicleClass: TaxiVehicleClass) = reduce { prevState ->

@@ -29,6 +29,7 @@ import company.vk.education.siriusapp.ui.library.trips.TripItem
 import company.vk.education.siriusapp.ui.screens.main.LocalMainScreenIntentConsumer
 import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
 import company.vk.education.siriusapp.ui.library.trips.TripCard
+import company.vk.education.siriusapp.ui.library.trips.TripItemButtonState
 import company.vk.education.siriusapp.ui.theme.*
 import company.vk.education.siriusapp.ui.utils.formatDate
 import company.vk.education.siriusapp.ui.utils.formatTime
@@ -538,15 +539,25 @@ fun Trips(
         items(trips) { tripCard ->
             TripItem(
                 tripCard = tripCard,
-                onShowTripClicked = {
+                onCardClicked = { trip ->
                     intentConsumer.consume(
-                        MainScreenIntent.BottomSheetIntent.ShowTripDetails(it)
+                        MainScreenIntent.BottomSheetIntent.ShowTripDetails(trip)
                     )
                 },
-                onJoinTripClicked = {
-                    intentConsumer.consume(
-                        MainScreenIntent.BottomSheetIntent.JoinTrip(it)
-                    )
+                onButtonClicked = { trip ->
+                    when (tripCard.tripItemButtonState) {
+                        TripItemButtonState.HOST, TripItemButtonState.BOOKED -> {
+                            intentConsumer.consume(
+                                MainScreenIntent.BottomSheetIntent.ShowTripDetails(trip)
+                            )
+                        }
+                        TripItemButtonState.JOIN -> {
+                            intentConsumer.consume(
+                                MainScreenIntent.BottomSheetIntent.JoinTrip(trip)
+                            )
+                        }
+                        else -> {}
+                    }
                 }
             )
         }

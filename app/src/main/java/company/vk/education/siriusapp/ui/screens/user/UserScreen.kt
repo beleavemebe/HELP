@@ -156,8 +156,8 @@ private fun TripsAndHeader(
                 isCurrentTrip = false,
                 TripItemButtonState.INVISIBLE
             ),
-            onShowTripClicked = { intentConsumer.consume(UserScreenIntent.ShowTripDetails(it)) },  // todo
-            onJoinTripClicked = {} // todo
+            onCardClicked = { intentConsumer.consume(UserScreenIntent.ShowTripDetails(it)) },
+            onButtonClicked = { error("invisible button was clicked") }
         )
     }
 }
@@ -167,7 +167,6 @@ private fun UserCurrentTrip(
     currentTrip: Trip
 ) {
     val intentConsumer = LocalUserScreenIntentConsumer.current
-
     Text(
         text = stringResource(id = R.string.current_trip),
         style = AppTypography.headline
@@ -180,8 +179,8 @@ private fun UserCurrentTrip(
             isCurrentTrip = true,
             tripItemButtonState = TripItemButtonState.INVISIBLE
         ),
-        onShowTripClicked = { intentConsumer.consume(UserScreenIntent.ShowTripDetails(currentTrip)) },
-        onJoinTripClicked = { /* error? */ } // todo
+        onCardClicked = { intentConsumer.consume(UserScreenIntent.ShowTripDetails(currentTrip)) },
+        onButtonClicked = { error("invisible button was clicked") }
     )
 }
 
