@@ -1,14 +1,12 @@
 package company.vk.education.siriusapp.ui.screens.main.bottomsheet
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
@@ -19,118 +17,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.White
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
-import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
 import company.vk.education.siriusapp.R
 import company.vk.education.siriusapp.domain.model.TaxiService
 import company.vk.education.siriusapp.domain.model.TaxiVehicleClass
-import company.vk.education.siriusapp.domain.model.Trip
-import company.vk.education.siriusapp.ui.screens.main.HourAndMinute
+import company.vk.education.siriusapp.ui.library.trips.TripItem
+import company.vk.education.siriusapp.ui.screens.main.LocalMainScreenIntentConsumer
 import company.vk.education.siriusapp.ui.screens.main.MainScreenIntent
-import company.vk.education.siriusapp.ui.screens.main.MainViewModel
-import company.vk.education.siriusapp.ui.screens.main.trip.TripCard
+import company.vk.education.siriusapp.ui.library.trips.TripCard
+import company.vk.education.siriusapp.ui.library.trips.TripItemButtonState
 import company.vk.education.siriusapp.ui.theme.*
-import company.vk.education.siriusapp.ui.utils.*
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
-import java.util.*
-
-val MainViewModel.bottomSheetState
-    get() = viewState
-        .map { it.bottomSheetScreenState }
-        .stateIn(
-            viewModelScope,
-            SharingStarted.Lazily,
-            initialState.bottomSheetScreenState
-        )
-
-@Composable
-fun BottomSheetScreen(
-    viewModel: MainViewModel = viewModel()
-) {
-    val state by viewModel.bottomSheetState.collectAsState()
-    BottomSheet(
-        state = state,
-        onPickStartOnTheMapClicked = {
-            viewModel.accept(MainScreenIntent.BottomSheetIntent.PickStartOnTheMap)
-        },
-        onPickEndOnTheMapClicked = {
-            viewModel.accept(MainScreenIntent.BottomSheetIntent.PickEndOnTheMap)
-        },
-        onDateClicked = {
-            viewModel.accept(MainScreenIntent.BottomSheetIntent.PickTripDate)
-        },
-        onTimeClicked = {
-            viewModel.accept(MainScreenIntent.BottomSheetIntent.PickTripTime)
-        },
-        onDatePicked = {
-            viewModel.accept(MainScreenIntent.BottomSheetIntent.TripDatePicked(it))
-        },
-        onTimePicked = {
-            viewModel.accept(MainScreenIntent.BottomSheetIntent.TripTimePicked(it))
-        },
-        onPickTaxiPreference = {
-            viewModel.accept(MainScreenIntent.BottomSheetIntent.PickTaxiPreference(it))
-        },
-        onTaxiServicePicked = {
-            viewModel.accept(MainScreenIntent.BottomSheetIntent.TaxiServicePicked(it))
-        },
-        onTaxiVehicleClassPicked = {
-            viewModel.accept(MainScreenIntent.BottomSheetIntent.TaxiVehicleClassPicked(it))
-        },
-        onDismissPreferenceMenu = {
-            viewModel.accept(MainScreenIntent.BottomSheetIntent.DismissTaxiPreferenceMenu(it))
-        },
-        onCreateTripClicked = {
-            viewModel.accept(MainScreenIntent.BottomSheetIntent.CreateTrip)
-        },
-        onFreePlacesAmountChanged = {
-            viewModel.accept(MainScreenIntent.BottomSheetIntent.SetFreePlacesAmount(it))
-        },
-        onPublishTripClicked = {
-            viewModel.accept(MainScreenIntent.BottomSheetIntent.PublishTrip)
-        },
-        onCancelClicked = {
-            viewModel.accept(MainScreenIntent.BottomSheetIntent.CancelCreatingTrip)
-        },
-        onTripClicked = {
-            viewModel.accept(MainScreenIntent.ShowTripDetails(it))
-        },
-        onJoinTripClicked = {
-            viewModel.accept(MainScreenIntent.BottomSheetIntent.JoinTrip(it))
-        },
-    )
-}
+import company.vk.education.siriusapp.ui.utils.formatDate
+import company.vk.education.siriusapp.ui.utils.formatTime
 
 @Composable
 fun BottomSheet(
     state: BottomSheetScreenState,
-    onPickStartOnTheMapClicked: () -> Unit,
-    onPickEndOnTheMapClicked: () -> Unit,
-    onDateClicked: () -> Unit,
-    onTimeClicked: () -> Unit,
-    onDatePicked: (Date?) -> Unit,
-    onTimePicked: (HourAndMinute) -> Unit,
-    onPickTaxiPreference: (TaxiPreference) -> Unit,
-    onTaxiServicePicked: (TaxiService) -> Unit,
-    onTaxiVehicleClassPicked: (TaxiVehicleClass) -> Unit,
-    onDismissPreferenceMenu: (TaxiPreference) -> Unit,
-    onCreateTripClicked: () -> Unit,
-    onFreePlacesAmountChanged: (Int) -> Unit,
-    onPublishTripClicked: () -> Unit,
-    onCancelClicked: () -> Unit,
-    onTripClicked: (Trip) -> Unit,
-    onJoinTripClicked: (Trip) -> Unit,
 ) {
+    val intentConsumer = LocalMainScreenIntentConsumer.current
     Column {
         Box(
             Modifier
@@ -146,59 +54,42 @@ fun BottomSheet(
         TripMainControls(
             state.startAddress,
             state.endAddress,
-            onPickStartOnTheMapClicked,
-            onPickEndOnTheMapClicked,
             formatDate(state.date),
-            formatTime(state.date),
-            onDateClicked,
-            onTimeClicked
+            formatTime(state.date)
         )
 
         if (state.isSearchingTrips) {
-            SearchTrips(
-                state,
-                onCreateTripClicked,
-                onTripClicked,
-                onJoinTripClicked,
-            )
+            SearchTrips(state)
         } else {
-            CreateTrip(
-                state,
-                onPickTaxiPreference,
-                onTaxiServicePicked,
-                onTaxiVehicleClassPicked,
-                onDismissPreferenceMenu,
-                onFreePlacesAmountChanged,
-                onPublishTripClicked,
-                onCancelClicked
+            TripCreationControls(
+                freePlaces = state.freePlaces,
+                taxiService = state.taxiService,
+                taxiVehicleClass = state.taxiVehicleClass,
+                isShowingPickTaxiServiceMenu = state.isShowingPickTaxiServiceMenu,
+                isShowingPickTaxiVehicleClassMenu = state.isShowingPickTaxiVehicleClassMenu,
             )
         }
 
         if (state.isShowingDatePicker) {
-            DatePicker(prevDate = state.date, onDatePicked = { onDatePicked(it) })
+            DatePicker(
+                prevDate = state.date, 
+                onDatePicked = { 
+                    intentConsumer.consume(MainScreenIntent.BottomSheetIntent.TripDatePicked(it))
+                }
+            )
         } else if (state.isShowingTimePicker) {
             require(state.date != null) {
                 "Cannot set time when the date is null"
             }
 
-            TimePicker(pickedDate = state.date, onTimePicked = { onTimePicked(it) })
+            TimePicker(
+                pickedDate = state.date, 
+                onTimePicked = { 
+                    intentConsumer.consume(MainScreenIntent.BottomSheetIntent.TripTimePicked(it))
+                }
+            )
         }
     }
-}
-
-@Composable
-fun formatDate(date: Date?): String {
-    return if (date?.isToday == true) {
-        stringResource(R.string.today)
-    } else if (date?.isTomorrow == true) {
-        stringResource(R.string.tomorrow)
-    } else {
-        date.formatOrEmpty("d MMM")
-    }
-}
-
-fun formatTime(date: Date?): String {
-    return date.formatOrEmpty("H:mm")
 }
 
 @Composable
@@ -206,16 +97,10 @@ fun TripCreationControls(
     freePlaces: Int?,
     taxiService: TaxiService?,
     taxiVehicleClass: TaxiVehicleClass?,
-    onPickTaxiPreference: (TaxiPreference) -> Unit,
     isShowingPickTaxiServiceMenu: Boolean,
     isShowingPickTaxiVehicleClassMenu: Boolean,
-    onTaxiServicePicked: (TaxiService) -> Unit,
-    onTaxiVehicleClassPicked: (TaxiVehicleClass) -> Unit,
-    onDismissPreferenceMenu: (TaxiPreference) -> Unit,
-    onFreePlacesAmountChanged: (Int) -> Unit,
-    onPublishTripClicked: () -> Unit,
-    onCancelClicked: () -> Unit,
 ) {
+    val intentConsumer = LocalMainScreenIntentConsumer.current
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             Modifier.padding(
@@ -237,7 +122,7 @@ fun TripCreationControls(
                             it.toInt()
                         }.getOrDefault(0)
                         freePlacesAmount = amount
-                        onFreePlacesAmountChanged(amount)
+                        intentConsumer.consume(MainScreenIntent.BottomSheetIntent.SetFreePlacesAmount(amount))
                     },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -245,7 +130,7 @@ fun TripCreationControls(
 
             Spacer(modifier = Modifier.height(Spacing16dp))
 
-            val serviceMapper = LocalTaxiServiceToStringResMapper.current
+            val serviceMapper = LocalTaxiInfoMappers.current.taxiServiceMapper
             val pickedTaxiService = taxiService?.let { stringResource(id = serviceMapper.map(it)) }
             IconAndTextField(
                 iconPainter = painterResource(id = R.drawable.ic_car),
@@ -257,9 +142,7 @@ fun TripCreationControls(
                     onValueChange = { },
                     readOnly = true,
                     interactionSource = textFieldInteractionSource {
-                        onPickTaxiPreference(
-                            TaxiPreference.TAXI_SERVICE
-                        )
+                        intentConsumer.consume(MainScreenIntent.BottomSheetIntent.PickTaxiPreference(TaxiPreference.TAXI_SERVICE))
                     },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -267,14 +150,18 @@ fun TripCreationControls(
             Box(Modifier.padding(start = 48.dp)) {
                 DropdownMenu(
                     expanded = isShowingPickTaxiServiceMenu,
-                    onDismissRequest = { onDismissPreferenceMenu(TaxiPreference.TAXI_SERVICE) },
+                    onDismissRequest = {
+                        intentConsumer.consume(MainScreenIntent.BottomSheetIntent.DismissTaxiPreferenceMenu(TaxiPreference.TAXI_SERVICE))
+                    },
                     modifier = Modifier.background(White)
                 ) {
                     Column {
                         TaxiService.SERVICES.forEach { service ->
                             val text = stringResource(id = serviceMapper.map(service))
                             DropdownMenuItem(
-                                onClick = { onTaxiServicePicked(service) }
+                                onClick = {
+                                    intentConsumer.consume(MainScreenIntent.BottomSheetIntent.TaxiServicePicked(service))
+                                }
                             ) {
                                 Text(text, style = AppTypography.text)
                             }
@@ -285,7 +172,7 @@ fun TripCreationControls(
 
             Spacer(modifier = Modifier.height(Spacing16dp))
 
-            val vehicleClassMapper = LocalTaxiVehicleClassToStringResMapper.current
+            val vehicleClassMapper = LocalTaxiInfoMappers.current.taxiVehicleClassMapper
             val pickedTaxiVehicleClass = taxiVehicleClass?.let {
                 stringResource(id = vehicleClassMapper.map(it))
             }
@@ -299,9 +186,7 @@ fun TripCreationControls(
                     onValueChange = { },
                     readOnly = true,
                     interactionSource = textFieldInteractionSource {
-                        onPickTaxiPreference(
-                            TaxiPreference.TAXI_VEHICLE_CLASS
-                        )
+                        intentConsumer.consume(MainScreenIntent.BottomSheetIntent.PickTaxiPreference(TaxiPreference.TAXI_VEHICLE_CLASS))
                     },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -309,14 +194,18 @@ fun TripCreationControls(
             Box(Modifier.padding(start = 48.dp)) {
                 DropdownMenu(
                     expanded = isShowingPickTaxiVehicleClassMenu,
-                    onDismissRequest = { onDismissPreferenceMenu(TaxiPreference.TAXI_VEHICLE_CLASS) },
+                    onDismissRequest = {
+                        intentConsumer.consume(MainScreenIntent.BottomSheetIntent.DismissTaxiPreferenceMenu(TaxiPreference.TAXI_VEHICLE_CLASS))
+                    },
                     modifier = Modifier.background(White)
                 ) {
                     Column {
                         taxiService?.classes?.forEach { vehicleClass ->
                             val text = stringResource(id = vehicleClassMapper.map(vehicleClass))
                             DropdownMenuItem(
-                                onClick = { onTaxiVehicleClassPicked(vehicleClass) }
+                                onClick = {
+                                    intentConsumer.consume(MainScreenIntent.BottomSheetIntent.TaxiVehicleClassPicked(vehicleClass))
+                                }
                             ) {
                                 Text(text, style = AppTypography.text)
                             }
@@ -336,7 +225,9 @@ fun TripCreationControls(
         ) {
             Column {
                 Button(
-                    onClick = { onPublishTripClicked() },
+                    onClick = {
+                        intentConsumer.consume(MainScreenIntent.BottomSheetIntent.PublishTrip)
+                    },
                     colors = ButtonDefaults.buttonColors(Blue),
                     shape = Shapes.medium,
                     elevation = null,
@@ -354,7 +245,9 @@ fun TripCreationControls(
                 Spacer(modifier = Modifier.height(Spacing16dp))
 
                 Button(
-                    onClick = { onCancelClicked() },
+                    onClick = {
+                        intentConsumer.consume(MainScreenIntent.BottomSheetIntent.CancelCreatingTrip)
+                    },
                     colors = ButtonDefaults.buttonColors(OnBlue),
                     shape = Shapes.medium,
                     elevation = null,
@@ -377,64 +270,16 @@ fun TripCreationControls(
 @Composable
 @Preview
 fun TripCreationControlsPreview() = AppTheme {
-    var service by remember { mutableStateOf<TaxiService?>(null) }
-    var vehicleClass by remember { mutableStateOf<TaxiVehicleClass?>(null) }
-    var isShowingPickTaxiServiceMenu by remember { mutableStateOf(false) }
-    var isShowingPickTaxiVehicleClassMenu by remember { mutableStateOf(false) }
+    val service by remember { mutableStateOf<TaxiService?>(null) }
+    val vehicleClass by remember { mutableStateOf<TaxiVehicleClass?>(null) }
+    val isShowingPickTaxiServiceMenu by remember { mutableStateOf(false) }
+    val isShowingPickTaxiVehicleClassMenu by remember { mutableStateOf(false) }
     TripCreationControls(
         freePlaces = 2,
         taxiService = service,
         taxiVehicleClass = vehicleClass,
-        onPickTaxiPreference = {
-            when (it) {
-                TaxiPreference.TAXI_SERVICE -> isShowingPickTaxiServiceMenu = true
-                TaxiPreference.TAXI_VEHICLE_CLASS -> isShowingPickTaxiVehicleClassMenu = true
-            }
-        },
         isShowingPickTaxiServiceMenu = isShowingPickTaxiServiceMenu,
         isShowingPickTaxiVehicleClassMenu = isShowingPickTaxiVehicleClassMenu,
-        onTaxiServicePicked = {
-            service = it
-        },
-        onTaxiVehicleClassPicked = {
-            vehicleClass = it
-        },
-        onDismissPreferenceMenu = {
-            when (it) {
-                TaxiPreference.TAXI_SERVICE -> isShowingPickTaxiServiceMenu = false
-                TaxiPreference.TAXI_VEHICLE_CLASS -> isShowingPickTaxiVehicleClassMenu = false
-            }
-        },
-        onFreePlacesAmountChanged = {},
-        onPublishTripClicked = {},
-        onCancelClicked = {},
-    )
-}
-
-@Composable
-fun CreateTrip(
-    state: BottomSheetScreenState,
-    onPickTaxiPreference: (TaxiPreference) -> Unit,
-    onTaxiServicePicked: (TaxiService) -> Unit,
-    onTaxiVehicleClassPicked: (TaxiVehicleClass) -> Unit,
-    onDismissPreferenceMenu: (TaxiPreference) -> Unit,
-    onFreePlacesAmountChanged: (Int) -> Unit,
-    onPublishTripClicked: () -> Unit,
-    onCancelClicked: () -> Unit,
-) {
-    TripCreationControls(
-        freePlaces = state.freePlaces,
-        taxiService = state.taxiService,
-        taxiVehicleClass = state.taxiVehicleClass,
-        onPickTaxiPreference = onPickTaxiPreference,
-        isShowingPickTaxiServiceMenu = state.isShowingPickTaxiServiceMenu,
-        isShowingPickTaxiVehicleClassMenu = state.isShowingPickTaxiVehicleClassMenu,
-        onTaxiServicePicked = onTaxiServicePicked,
-        onTaxiVehicleClassPicked = onTaxiVehicleClassPicked,
-        onDismissPreferenceMenu = onDismissPreferenceMenu,
-        onFreePlacesAmountChanged = onFreePlacesAmountChanged,
-        onPublishTripClicked = onPublishTripClicked,
-        onCancelClicked = onCancelClicked,
     )
 }
 
@@ -442,9 +287,6 @@ fun CreateTrip(
 @Composable
 fun SearchTrips(
     state: BottomSheetScreenState,
-    onCreateTripClicked: () -> Unit,
-    onTripClicked: (Trip) -> Unit,
-    onJoinTripClicked: (Trip) -> Unit,
 ) {
     Column(
         Modifier.padding(horizontal = Spacing16dp)
@@ -457,8 +299,9 @@ fun SearchTrips(
             if (state.trips.isEmpty()) {
                 NoTripsFound()
             } else {
-                TripsHeader(state.trips.size, onCreateTripClicked)
-                Trips(trips = state.trips, onTripClicked, onJoinTripClicked)
+                TripsHeader(state.trips.size)
+                Spacer(modifier = Modifier.height(Spacing4dp))
+                Trips(trips = state.trips)
             }
         }
     }
@@ -467,11 +310,12 @@ fun SearchTrips(
 @Composable
 @Preview
 fun TripsHeaderPreview() = AppTheme {
-    TripsHeader(count = 5) {}
+    TripsHeader(count = 5)
 }
 
 @Composable
-fun TripsHeader(count: Int, onCreateTripClicked: () -> Unit) {
+fun TripsHeader(count: Int) {
+    val intentConsumer = LocalMainScreenIntentConsumer.current
     Box(
         modifier = Modifier
             .wrapContentHeight()
@@ -488,14 +332,16 @@ fun TripsHeader(count: Int, onCreateTripClicked: () -> Unit) {
                 text = stringResource(R.string.create),
                 color = Blue,
                 style = AppTypography.subhead,
-                modifier = Modifier.clickable { onCreateTripClicked() }
+                modifier = Modifier.clickable {
+                    intentConsumer.consume(MainScreenIntent.BottomSheetIntent.CreateTrip)
+                }
             )
         }
     }
 }
 
 @Composable
-private fun Loading() {
+fun Loading() {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         CircularProgressIndicator(color = Blue)
     }
@@ -524,10 +370,6 @@ fun TripControlsPreview() {
                 endAddress = "",
                 tripDate = "",
                 tripTime = "",
-                onDateClicked = {},
-                onTimeClicked = {},
-                onPickEndOnTheMapClicked = {},
-                onPickStartOnTheMapClicked = {},
             )
         }
     }
@@ -537,13 +379,10 @@ fun TripControlsPreview() {
 fun TripMainControls(
     startAddress: String,
     endAddress: String,
-    onPickStartOnTheMapClicked: () -> Unit,
-    onPickEndOnTheMapClicked: () -> Unit,
     tripDate: String,
-    tripTime: String,
-    onDateClicked: () -> Unit,
-    onTimeClicked: () -> Unit
+    tripTime: String
 ) {
+    val intentConsumer = LocalMainScreenIntentConsumer.current
     Column(
         Modifier.padding(Spacing16dp)
     ) {
@@ -556,8 +395,11 @@ fun TripMainControls(
                 hint = stringResource(id = R.string.my_location),
                 onValueChange = { /*tripStartLocation = it*/ },
                 modifier = Modifier.fillMaxWidth(),
+                readOnly = true,
                 trailingIcon = {
-                    TextFieldMapIcon(onPickStartOnTheMapClicked)
+                    TextFieldMapIcon {
+                        intentConsumer.consume(MainScreenIntent.BottomSheetIntent.PickStartOnTheMap)
+                    }
                 }
             )
         }
@@ -573,8 +415,11 @@ fun TripMainControls(
                 hint = stringResource(id = R.string.location),
                 onValueChange = { /*tripEndLocation = it*/ },
                 modifier = Modifier.fillMaxWidth(),
+                readOnly = true,
                 trailingIcon = {
-                    TextFieldMapIcon(onPickEndOnTheMapClicked)
+                    TextFieldMapIcon {
+                        intentConsumer.consume(MainScreenIntent.BottomSheetIntent.PickEndOnTheMap)
+                    }
                 }
             )
         }
@@ -590,7 +435,9 @@ fun TripMainControls(
                     hint = stringResource(id = R.string.date),
                     onValueChange = {},
                     readOnly = true,
-                    interactionSource = textFieldInteractionSource(onDateClicked)
+                    interactionSource = textFieldInteractionSource {
+                        intentConsumer.consume(MainScreenIntent.BottomSheetIntent.PickTripDate)
+                    }
                 )
                 Spacer(modifier = Modifier.width(Spacing8dp))
             }
@@ -606,7 +453,9 @@ fun TripMainControls(
                     hint = stringResource(id = R.string.time),
                     onValueChange = {},
                     readOnly = true,
-                    interactionSource = textFieldInteractionSource(onTimeClicked)
+                    interactionSource = textFieldInteractionSource {
+                        intentConsumer.consume(MainScreenIntent.BottomSheetIntent.PickTripTime)
+                    }
                 )
             }
         }
@@ -642,24 +491,36 @@ private fun TextFieldMapIcon(
     }
 }
 
-@Preview
 @Composable
-fun NoTripsFound(
-    vm: MainViewModel = viewModel()
-) {
+fun NoTripsFound() {
+    val intentConsumer = LocalMainScreenIntentConsumer.current
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxSize()
     ) {
         Spacer(modifier = Modifier.fillMaxHeight(0.3f))
 
-        Text(text = stringResource(R.string.no_trips_found))
+        Text(text = stringResource(R.string.no_trips_found), color = TextHint)
 
         Spacer(modifier = Modifier.fillMaxHeight(0.2f))
 
-        Text(text = stringResource(R.string.create_a_trip) + " (todo)", Modifier.clickable {
-            vm.accept(MainScreenIntent.BottomSheetIntent.CreateTrip)
-        })
+        Button(
+            onClick = {
+                intentConsumer.consume(MainScreenIntent.BottomSheetIntent.CreateTrip)
+            },
+            colors = ButtonDefaults.buttonColors(Blue),
+            shape = Shapes.medium,
+            elevation = null,
+            modifier = Modifier
+                .wrapContentWidth()
+                .height(TextFieldHeight)
+        ) {
+            Text(
+                stringResource(R.string.create_a_trip),
+                style = AppTypography.subheadMedium,
+                color = OnBlue
+            )
+        }
 
         Spacer(modifier = Modifier.fillMaxHeight(0.3f))
     }
@@ -668,117 +529,38 @@ fun NoTripsFound(
 @Composable
 fun Trips(
     trips: List<TripCard>,
-    onTripClicked: (Trip) -> Unit,
-    onJoinTripClicked: (Trip) -> Unit,
 ) {
+    val intentConsumer = LocalMainScreenIntentConsumer.current
     LazyColumn(
         Modifier
             .fillMaxSize()
             .padding(top = Spacing4dp)
     ) {
-        items(trips) {
-            TripItem(it, onTripClicked, onJoinTripClicked)
-        }
-    }
-}
-
-@Composable
-fun TripItem(
-    tripCard: TripCard,
-    onTripClicked: (Trip) -> Unit,
-    onJoinTripClicked: (Trip) -> Unit
-) {
-    val trip = tripCard.trip
-    Spacer(modifier = Modifier.height(Spacing4dp))
-    Surface(
-        shape = RoundedCornerShape(16.dp),
-        elevation = 4.dp,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onTripClicked(trip) }
-    ) {
-        Column(Modifier.padding(Spacing16dp)) {
-            if (tripCard.host) {
-                Text(
-                    stringResource(id = R.string.your_trip),
-                    style = AppTypography.caption1,
-                    color = Grey
-                )
-            }
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .height(Spacing32dp),
-                Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val date = formatDate(trip.route.date)
-                val time = formatTime(trip.route.date)
-                Text(
-                    stringResource(R.string.in_placeholder, date, time),
-                    style = AppTypography.headline,
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy((-8).dp)) {
-                    (listOf(trip.host) + trip.passengers).forEachIndexed { i, user ->
-                        AsyncImage(
-                            model = user.imageUrl, contentDescription = "userPhoto",
-                            placeholder = painterResource(id = R.drawable.profile_avatar_placeholder),
-                            error = painterResource(id = R.drawable.profile_avatar_placeholder),
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .border(1.dp, OnBlue, CircleShape)
-                                .zIndex(5 - i.toFloat())
-                        )
-                    }
-                }
-            }
-
-            val serviceMapper = LocalTaxiServiceToStringResMapper.current
-            val vehicleClassMapper = LocalTaxiVehicleClassToStringResMapper.current
-            val taxiService = stringResource(id = serviceMapper.map(trip.taxiService))
-            val vehicleClass = stringResource(id = vehicleClassMapper.map(trip.taxiVehicleClass))
-            Text(
-                stringResource(
-                    id = R.string.trip_info,
-                    taxiService,
-                    vehicleClass,
-                    tripCard.dist
-                ),
-                style = AppTypography.caption1,
-                color = Grey
-            )
-            Spacer(modifier = Modifier.height(Spacing12dp))
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(32.dp),
-                shape = RoundedCornerShape(Spacing8dp),
-                colors = ButtonDefaults.buttonColors(backgroundColor = if (tripCard.disabled) Green else Blue),
-                elevation = null,
-                onClick = {
-                    if (tripCard.disabled || tripCard.host) {
-                        onTripClicked(trip)
-                    } else {
-                        onJoinTripClicked(trip)
-                        log("Присоединяюсь")
-                    }
-                }
-            ) {
-                Text(
-                    stringResource(
-                        id = when {
-                            tripCard.host -> R.string.show
-                            tripCard.disabled -> R.string.reserved
-                            else -> R.string.join
+        items(trips) { tripCard ->
+            TripItem(
+                tripCard = tripCard,
+                onCardClicked = { trip ->
+                    intentConsumer.consume(
+                        MainScreenIntent.BottomSheetIntent.ShowTripDetails(trip)
+                    )
+                },
+                onButtonClicked = { trip ->
+                    when (tripCard.tripItemButtonState) {
+                        TripItemButtonState.HOST, TripItemButtonState.BOOKED -> {
+                            intentConsumer.consume(
+                                MainScreenIntent.BottomSheetIntent.ShowTripDetails(trip)
+                            )
                         }
-                    ),
-                    style = AppTypography.caption2Medium,
-                    color = OnBlue
-                )
-            }
+                        TripItemButtonState.JOIN -> {
+                            intentConsumer.consume(
+                                MainScreenIntent.BottomSheetIntent.JoinTrip(trip)
+                            )
+                        }
+                        else -> {}
+                    }
+                }
+            )
         }
     }
-    Spacer(modifier = Modifier.height(Spacing12dp))
 }
+

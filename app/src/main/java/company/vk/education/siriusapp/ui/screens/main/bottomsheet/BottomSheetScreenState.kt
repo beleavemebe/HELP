@@ -3,8 +3,7 @@ package company.vk.education.siriusapp.ui.screens.main.bottomsheet
 import company.vk.education.siriusapp.domain.model.Location
 import company.vk.education.siriusapp.domain.model.TaxiService
 import company.vk.education.siriusapp.domain.model.TaxiVehicleClass
-import company.vk.education.siriusapp.domain.model.Trip
-import company.vk.education.siriusapp.ui.screens.main.trip.TripCard
+import company.vk.education.siriusapp.ui.library.trips.TripCard
 import java.util.*
 
 data class BottomSheetScreenState(
@@ -22,6 +21,11 @@ data class BottomSheetScreenState(
     val isShowingPickTaxiVehicleClassMenu: Boolean = false,
     val taxiService: TaxiService? = null,
     val taxiVehicleClass: TaxiVehicleClass? = null,
-    val verifyInstantly: Boolean = false,
-    val trips: List<TripCard>? = null
+    val trips: List<TripCard>? = null,
+    val startAddressErrorMsg: String? = null,
+    val endAddressErrorMsg: String? = null,
+    val dateErrorMsg: String? = null,
+    val freePlacesErrorMsg: String? = null,
+    val taxiServiceErrorMsg: String? = null,
+    val taxiVehicleClassErrorMsg: String? = null,
 )

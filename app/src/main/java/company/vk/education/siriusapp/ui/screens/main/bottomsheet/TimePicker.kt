@@ -4,7 +4,7 @@ import android.app.TimePickerDialog
 import android.widget.TimePicker
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-import company.vk.education.siriusapp.ui.screens.main.HourAndMinute
+import company.vk.education.siriusapp.core.HourAndMinute
 import company.vk.education.siriusapp.ui.utils.calendar
 import java.util.*
 

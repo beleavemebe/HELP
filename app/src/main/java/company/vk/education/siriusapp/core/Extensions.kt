@@ -19,4 +19,4 @@ infix fun TripRoute.dist(route: TripRoute) =
 const val SHIFT = 20
 const val KM_IN_ONE = 111
 
-fun Double.meters() = times(KM_IN_ONE + SHIFT) * 1000
+fun Double.meters(exact: Boolean = false) = times(KM_IN_ONE + if (exact) 0 else SHIFT) * 1000

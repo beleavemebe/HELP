@@ -1,7 +1,9 @@
 package company.vk.education.siriusapp.di
 
-import company.vk.education.siriusapp.data.GEOCODER_URL
-import company.vk.education.siriusapp.data.api.GeocoderAPI
+import company.vk.education.siriusapp.data.GIS_GEOCODER_URL
+import company.vk.education.siriusapp.data.YANDEX_GEOCODER_URL
+import company.vk.education.siriusapp.data.api.yandex.GeocoderAPI
+import company.vk.education.siriusapp.data.api.gis.GisGeocoderAPI
 import company.vk.education.siriusapp.ui.utils.log
 import dagger.Module
 import dagger.Provides
@@ -27,26 +29,32 @@ class NetworkModule {
     }
 
     @Provides
+    @GisGeocoder
     fun provideRetrofit(client: OkHttpClient) : Retrofit {
         return Retrofit.Builder()
-            .baseUrl("")
+            .baseUrl(GIS_GEOCODER_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .client(client)
             .build()
     }
 
     @Provides
-    @GeoQualifier
+    @YandexGeocoder
     fun provideGeoRetrofit(client: OkHttpClient) : Retrofit {
         return Retrofit.Builder()
-            .baseUrl(GEOCODER_URL)
+            .baseUrl(YANDEX_GEOCODER_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .client(client)
             .build()
     }
 
     @Provides
-    fun provideApiService(@GeoQualifier retrofit: Retrofit) : GeocoderAPI {
+    fun provideYandexApiService(@YandexGeocoder retrofit: Retrofit) : GeocoderAPI {
         return retrofit.create(GeocoderAPI::class.java)
+    }
+
+    @Provides
+    fun provideGisApiService(@GisGeocoder retrofit: Retrofit) : GisGeocoderAPI {
+        return retrofit.create(GisGeocoderAPI::class.java)
     }
 }

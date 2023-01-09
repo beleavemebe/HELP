@@ -1,25 +1,27 @@
 package company.vk.education.siriusapp.ui.screens.main
 
-import company.vk.education.siriusapp.domain.model.Location
-import company.vk.education.siriusapp.domain.model.TaxiService
-import company.vk.education.siriusapp.domain.model.TaxiVehicleClass
-import company.vk.education.siriusapp.domain.model.Trip
+import androidx.compose.runtime.compositionLocalOf
+import company.vk.education.siriusapp.core.HourAndMinute
+import company.vk.education.siriusapp.domain.model.*
 import company.vk.education.siriusapp.ui.base.BaseViewIntent
+import company.vk.education.siriusapp.ui.base.IntentConsumer
 import company.vk.education.siriusapp.ui.screens.main.bottomsheet.TaxiPreference
-import kotlinx.coroutines.CoroutineScope
 import java.util.*
 
 sealed class MainScreenIntent : BaseViewIntent {
-    object DismissUserModalSheet : MainScreenIntent()
+    object CollapseBottomSheet : MainScreenIntent()
+    object ExpandBottomSheet : MainScreenIntent()
 
-    data class ShowTripDetails(val trip: Trip) : MainScreenIntent()
-    object DismissTripModalSheet : MainScreenIntent()
+    data class ShowUser(val user: User): MainScreenIntent()
 
     sealed class MapIntent : MainScreenIntent() {
         data class UpdatePickedLocation(val location: Location) : MapIntent()
         data class AddressChosen(val addressToChoose: AddressToChoose, val addressLocation: Location) : MapIntent()
         data class UserLocationAcquired(val location: Location) : MainScreenIntent()
-        object ShowProfile : MapIntent()
+        object MoveToUserLocation : MapIntent()
+        object ShowMyProfile : MapIntent()
+        object InvalidateChosenAddress : MainScreenIntent()
+        object LocationPermissionGranted : MainScreenIntent()
     }
 
     sealed class BottomSheetIntent : MainScreenIntent() {
@@ -37,6 +39,11 @@ sealed class MainScreenIntent : BaseViewIntent {
         data class SetFreePlacesAmount(val freePlaces: Int) : BottomSheetIntent()
         object PublishTrip : BottomSheetIntent()
         object CancelCreatingTrip : BottomSheetIntent()
+        data class ShowTripDetails(val trip: Trip) : MainScreenIntent()
         data class JoinTrip(val trip: Trip) : BottomSheetIntent()
     }
+}
+
+val LocalMainScreenIntentConsumer = compositionLocalOf {
+    IntentConsumer<MainScreenIntent> {}
 }

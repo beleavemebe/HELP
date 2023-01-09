@@ -31,8 +31,23 @@ sealed interface TaxiService {
         }
     }
 
+    object Uber : TaxiService {
+        override val alias = "uber"
+        override val classes = listOf(
+            UberVehicleClass.UberX,
+            UberVehicleClass.Select,
+            UberVehicleClass.Kids
+        )
+
+        sealed class UberVehicleClass(override val alias: String): TaxiVehicleClass {
+            object UberX : UberVehicleClass("uberx")
+            object Select : UberVehicleClass("select")
+            object Kids : UberVehicleClass("kids")
+        }
+    }
+
     companion object {
-        val SERVICES: List<TaxiService> = listOf(Yandex)
+        val SERVICES: List<TaxiService> = listOf(Yandex, Uber)
     }
 }
 

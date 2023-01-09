@@ -11,3 +11,11 @@ data class User(
 
     override fun hashCode() = id.hashCode()
 }
+
+val fakeUser = User(
+    "1488",
+    "Chelik",
+    "http://pics.wikireality.ru/upload/c/c6/Alexej_Shevtsov_yt_userpic.jpg",
+    fakeUserContacts,
+    54.0
+)
