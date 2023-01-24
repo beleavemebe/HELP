@@ -1,27 +1,25 @@
 package com.help.android.ui.screens.main
 
 import androidx.lifecycle.viewModelScope
-import com.help.android.domain.model.*
 import com.help.android.core.HourAndMinute
 import com.help.android.core.dist
 import com.help.android.core.meters
+import com.help.android.domain.model.*
 import com.help.android.domain.repository.AddressRepository
 import com.help.android.domain.repository.TripsRepository
 import com.help.android.domain.service.AuthService
-import com.help.android.domain.service.CurrentTripService
 import com.help.android.domain.service.LocationService
-import com.help.android.domain.service.ScheduledTripsService
 import com.help.android.ui.base.BaseViewModel
-import com.help.android.ui.screens.Screens
-import com.help.android.ui.screens.main.bottomsheet.BottomSheetScreenState
-import com.help.android.ui.screens.main.bottomsheet.TaxiPreference
-import com.help.android.ui.screens.main.map.MapViewState
 import com.help.android.ui.library.trips.TripCard
 import com.help.android.ui.library.trips.TripItemButtonState
+import com.help.android.ui.screens.Screens
 import com.help.android.ui.screens.main.MainScreenIntent.*
 import com.help.android.ui.screens.main.MainScreenIntent.BottomSheetIntent.*
 import com.help.android.ui.screens.main.MainScreenIntent.MapIntent.*
 import com.help.android.ui.screens.main.MainViewModel.InvalidInputException.*
+import com.help.android.ui.screens.main.bottomsheet.BottomSheetScreenState
+import com.help.android.ui.screens.main.bottomsheet.TaxiPreference
+import com.help.android.ui.screens.main.map.MapViewState
 import com.help.android.ui.utils.log
 import com.help.android.ui.utils.setHourAndMinute
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -36,8 +34,6 @@ class MainViewModel @Inject constructor(
     private val authService: AuthService,
     private val addressRepository: AddressRepository,
     private val tripsRepository: TripsRepository,
-    private val scheduledTripsService: ScheduledTripsService,
-    private val currentTripService: CurrentTripService,
     private val locationService: LocationService
 ) : BaseViewModel<MainScreenState, MainScreenIntent, Nothing, MainScreenViewEffect>() {
     override val initialState =
@@ -55,27 +51,11 @@ class MainViewModel @Inject constructor(
             .onEach(::refreshAuthInfo)
             .launchIn(viewModelScope)
         authService.auth()
-
-        currentTripService.currentTripState
-            .onEach(::displayCurrentTrip)
-            .launchIn(viewModelScope)
     }
 
     private fun refreshAuthInfo(authState: AuthState) = reduce { prevState ->
         val newMapState = prevState.mapState.copy(profilePicUrl = authState.user?.imageUrl)
         prevState.copy(mapState = newMapState)
-    }
-
-    private fun displayCurrentTrip(currentTripState: CurrentTripState) {
-        if (!currentTripState.isUnknown.not()) return
-
-        currentTripState.currentTripId
-            ?.takeUnless { it.isBlank() }
-            ?.let(::jumpToCurrentTrip)
-    }
-
-    private fun jumpToCurrentTrip(currentTripId: String) = postViewEffect {
-        MainScreenViewEffect.Navigate(Screens.Trip.buildRoute(currentTripId))
     }
 
     override fun consume(intent: MainScreenIntent): Any {
@@ -145,9 +125,6 @@ class MainViewModel @Inject constructor(
     private fun joinTrip(trip: Trip) {
         execute {
             tripsRepository.joinTrip(trip)
-            // todo implement on the backend
-//            tripsRepository.appendToTripHistory(userId, trip)
-//            scheduleTrip(trip)
         }
 
         reduce { prevState ->
@@ -189,11 +166,8 @@ class MainViewModel @Inject constructor(
         }
 
         tripsRepository.publishTrip(trip)
-        // todo implement on the backend
-//        tripsRepository.appendToTripHistory(userId, trip)
-//        scheduleTrip(trip)
 
-        // todo replace with live updates in TripsRepositoryImpl
+        // todo replace with live updates in TripsRepositoryImpl via long polling
         val updatedTrips = tripsRepository.getTrips(trip.route)
 
         postViewEffect {
@@ -248,6 +222,7 @@ class MainViewModel @Inject constructor(
         object MissingTaxiVehicleClass : InvalidInputException()
     }
 
+    // TODO: impl on the backend?
     private fun buildTripFromInputs(state: BottomSheetScreenState): Result<Trip> {
         val user = authService.authState.value.user
             ?: return Result.failure(NotAuthenticated)
@@ -277,15 +252,6 @@ class MainViewModel @Inject constructor(
                 taxiService = taxiService,
                 taxiVehicleClass = taxiVehicleClass
             )
-        )
-    }
-
-    // todo implement on the backend
-    private fun scheduleTrip(trip: Trip) = execute {
-        return@execute
-        scheduledTripsService.scheduleTripAt(
-            trip.route.date,
-            tripsRepository.getTripDetails(trip.id)
         )
     }
 
@@ -544,20 +510,19 @@ class MainViewModel @Inject constructor(
         )
     }
 
-    private suspend fun List<Trip>.toTripCards(
+    private fun List<Trip>.toTripCards(
         route: TripRoute,
     ): List<TripCard> {
         val currentUser = authService.authState.value.user
-        val currentTripId = currentTripService.currentTripState.value.currentTripId
         return map { trip ->
             TripCard(
                 trip = trip,
                 dist = round((route dist trip.route).meters()).toInt(),
-                isCurrentTrip = trip.id == currentTripId,
+                isCurrentTrip = false, // TODO: implement on the backend. create a separate composable
                 tripItemButtonState = when {
                     trip.host == currentUser -> TripItemButtonState.HOST
                     currentUser in trip.passengers -> TripItemButtonState.BOOKED
-                    scheduledTripsService.isTripScheduledAt(trip.route.date) -> TripItemButtonState.CONFLICT
+                    false -> TripItemButtonState.CONFLICT // TODO: implement on the backend.
                     else -> TripItemButtonState.JOIN
                 }
             )
