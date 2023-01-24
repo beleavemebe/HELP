@@ -16,7 +16,6 @@
         android:roundIcon="@drawable/help"
         android:supportsRtl="true"
         android:theme="@style/Theme.Shitius"
-        android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
             android:name="com.help.android.ui.activity.MainActivity"
