@@ -28,6 +28,7 @@ import com.help.android.ui.utils.formatDate
 import com.help.android.ui.utils.formatTime
 import com.help.android.ui.theme.*
 
+// TODO: create separate composables for each TripCard variation (dumb ui)
 @Composable
 fun TripItem(
     tripCard: TripCard,
